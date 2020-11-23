@@ -65,4 +65,13 @@ public class PublicityPrint implements java.io.Serializable {
      * 更新者
      */
     private String updateUp;
+    /**
+     * 流程状态
+     */
+    private Integer state;
+    /**
+     * 删除状态
+     */
+    private Boolean deleteFlag;
+
 }
