@@ -40,4 +40,10 @@ public class SummaryGoodsVO implements Serializable {
 
     @Schema(description = "业务单式/宣传单页(0/1)")
     private Integer type;
+
+    @Schema(description = "状态")
+    private String state;
+
+    @Schema(description = "日期")
+    private String time;
 }

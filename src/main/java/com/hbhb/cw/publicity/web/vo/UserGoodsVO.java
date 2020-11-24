@@ -14,15 +14,18 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class GoodsReqVO implements Serializable {
-    private static final long serialVersionUID = -6469305293332933203L;
+public class UserGoodsVO implements Serializable {
+    private static final long serialVersionUID = 8658857851897419907L;
 
     @Schema(description = "单位id")
     private Integer unitId;
 
+    @Schema(description = "营业厅id")
+    private Integer hallId;
+
     @Schema(description = "时间")
     private String time;
 
-    @Schema(description = "营业厅id")
-    private Long hallId;
+    @Schema(description = "次序")
+    private Integer goodsIndex;
 }
