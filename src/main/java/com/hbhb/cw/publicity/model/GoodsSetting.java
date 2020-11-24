@@ -1,11 +1,11 @@
 package com.hbhb.cw.publicity.model;
 
+import java.io.Serializable;
+import java.util.Date;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.io.Serializable;
-import java.util.Date;
 
 /**
  * @author wangxiaogang
@@ -13,7 +13,7 @@ import java.util.Date;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class PublicityGoodsSet implements Serializable {
+public class GoodsSetting implements Serializable {
     private static final long serialVersionUID = 8280311819381564938L;
     private Long id;
     /**
@@ -32,4 +32,8 @@ public class PublicityGoodsSet implements Serializable {
      * 是否发起签报
      */
     private Date isEnd;
+    /**
+     * 相关内容
+     */
+    private String contents;
 }

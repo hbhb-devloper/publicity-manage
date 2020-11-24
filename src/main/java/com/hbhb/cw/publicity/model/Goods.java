@@ -1,11 +1,11 @@
 package com.hbhb.cw.publicity.model;
 
+import java.io.Serializable;
+import java.util.Date;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.io.Serializable;
-import java.util.Date;
 
 /**
  * @author wangxiaogang
@@ -13,7 +13,7 @@ import java.util.Date;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class PublicityGoods implements Serializable {
+public class Goods implements Serializable {
     private static final long serialVersionUID = 476064199771710497L;
     private Long id;
     /**
@@ -51,11 +51,11 @@ public class PublicityGoods implements Serializable {
     /**
      * 是否加盖杭州分公司合同章
      */
-    private Integer isSeal;
+    private Integer hasSeal;
     /**
      * 是否有编号
      */
-    private Integer isNum;
+    private Integer hasNum;
     /**
      * 是否使用
      */
@@ -69,6 +69,14 @@ public class PublicityGoods implements Serializable {
      */
     private String picture;
     /**
+     * 添加页面提示内容
+     */
+    private String tips;
+    /**
+     * 0业务单式，1宣传单页
+     */
+    private Integer type;
+    /**
      * 编辑时间
      */
     private Date updateTime;
@@ -77,11 +85,11 @@ public class PublicityGoods implements Serializable {
      */
     private String updateBy;
     /**
-     * 添加页面提示内容
+     * 创建时间
      */
-    private String tips;
+    private Date createTime;
     /**
-     * 0业务单式，1宣传单页
+     * 创建者
      */
-    private Integer type;
+    private String createBy;
 }
