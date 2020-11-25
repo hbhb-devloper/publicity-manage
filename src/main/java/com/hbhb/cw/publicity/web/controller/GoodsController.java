@@ -1,19 +1,24 @@
 package com.hbhb.cw.publicity.web.controller;
 
+import com.hbhb.core.utils.DateUtil;
 import com.hbhb.cw.publicity.service.GoodsService;
 import com.hbhb.cw.publicity.web.vo.ApplicationVO;
+import com.hbhb.cw.publicity.web.vo.GoodsChangerVO;
 import com.hbhb.cw.publicity.web.vo.GoodsReqVO;
 import com.hbhb.cw.publicity.web.vo.GoodsResVO;
+import com.hbhb.cw.publicity.web.vo.PurchaseGoods;
 import com.hbhb.cw.publicity.web.vo.SummaryGoodsVO;
-import com.hbhb.cw.publicity.web.vo.UserGoodsVO;
-import com.hbhb.web.annotation.UserId;
+import com.hbhb.cw.publicity.web.vo.SummaryUnitGoodsVO;
+import com.hbhb.cw.publicity.web.vo.UnitGoodsStateVO;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Date;
 import java.util.List;
 
 import javax.annotation.Resource;
@@ -35,7 +40,7 @@ public class GoodsController {
     @Resource
     private GoodsService goodsService;
 
-    @GetMapping("/goods")
+    @GetMapping("/list")
     @Operation(summary = "营业厅物料产品申请列表")
     public GoodsResVO getGoods(GoodsReqVO goodsReqVO) {
         return goodsService.getList(goodsReqVO);
@@ -47,12 +52,6 @@ public class GoodsController {
         goodsService.applyGoods(list, goodsReqVO);
     }
 
-    @GetMapping("")
-    @Operation(summary = "物料导航条信息")
-    public UserGoodsVO getUserGoods(@UserId Integer userId) {
-        return goodsService.getUserGoods(userId);
-    }
-
     @GetMapping("time")
     @Operation(summary = "通过时间得到第几月的第几次")
     public Integer getUserGoods(String time) {
@@ -61,37 +60,80 @@ public class GoodsController {
 
     @GetMapping("/simplex")
     @Operation(summary = "营业厅物料业务单式分公司汇总")
-    public SummaryGoodsVO getSimplexGoods(GoodsReqVO goodsReqVO) {
+    public List<SummaryGoodsVO>getSimplexGoods(GoodsReqVO goodsReqVO) {
         return goodsService.getSimplexList(goodsReqVO);
     }
 
     @GetMapping("/single")
-    @Operation(summary = "营业厅物料宣传打野分公司汇总")
-    public SummaryGoodsVO getSingleGoods( GoodsReqVO goodsReqVO) {
+    @Operation(summary = "营业厅物料宣传单页分公司汇总")
+    public List<SummaryGoodsVO> getSingleGoods( GoodsReqVO goodsReqVO) {
         return goodsService.getSingleList(goodsReqVO);
     }
 
     @GetMapping("/audit/simplex")
     @Operation(summary = "营业厅物料业务单式分公司汇总(审核)")
-    public SummaryGoodsVO getAuditSimplexGoods(GoodsReqVO goodsReqVO, Integer state) {
+    public List<SummaryGoodsVO> getAuditSimplexGoods(GoodsReqVO goodsReqVO, Integer state) {
+        if (goodsReqVO.getTime()==null){
+            goodsReqVO.setTime(DateUtil.dateToString(new Date()));
+        }
         return goodsService.getAuditSimplexList(goodsReqVO, state);
     }
 
     @GetMapping("/audit/single")
-    @Operation(summary = "营业厅物料宣传打野分公司汇总(审核)")
-    public SummaryGoodsVO getAuditSingleGoods( GoodsReqVO goodsReqVO, Integer state) {
+    @Operation(summary = "营业厅物料宣传单页分公司汇总(审核)")
+    public List<SummaryGoodsVO> getAuditSingleGoods( GoodsReqVO goodsReqVO, Integer state) {
+        if (goodsReqVO.getTime()==null){
+            goodsReqVO.setTime(DateUtil.dateToString(new Date()));
+        }
         return goodsService.getAuditSingleList(goodsReqVO, state);
     }
 
+    @PostMapping("/save")
+    @Operation(summary = "分公司保存物料")
+    public void saveGoods(@RequestBody List<Long> list){
+        goodsService.saveGoods(list);
+    }
+
+    @PostMapping("/submit")
+    @Operation(summary = "分公司保存物料")
+    public void submitGoods(@RequestBody List<Long> list){
+        goodsService.submitGoods(list);
+    }
+
+    @PutMapping("/changer")
+    @Operation(summary = "分公司修改修改后申请数量")
+    public void changerModifyAmount(List<GoodsChangerVO> list){
+        goodsService.changerModifyAmount(list);
+    }
+
+    @GetMapping("/unit/goods")
+    @Operation(summary = "营业厅物料分公司汇总（政企/市场部）")
+    public List<SummaryUnitGoodsVO> getUnitGoods(GoodsReqVO goodsReqVO, Integer state) {
+        return goodsService.getUnitGoodsList(goodsReqVO);
+    }
+
     @GetMapping("/unit/simplex")
-    @Operation(summary = "营业厅物料业务单式分公司汇总")
-    public SummaryGoodsVO getUnitSimplexGoods(GoodsReqVO goodsReqVO, Integer state) {
-        return goodsService.getUnitSimplexList(goodsReqVO, state);
+    @Operation(summary = "营业厅物料业务单式分公司汇总（政企/市场部）")
+    public List<SummaryUnitGoodsVO> getUnitSimplexGoods(GoodsReqVO goodsReqVO) {
+        return goodsService.getUnitSimplexList(goodsReqVO);
     }
 
     @GetMapping("/unit/single")
-    @Operation(summary = "营业厅物料宣传打野分公司汇总")
-    public SummaryGoodsVO getUnitSingleGoods( GoodsReqVO goodsReqVO, Integer state) {
-        return goodsService.getUnitSingleList(goodsReqVO, state);
+    @Operation(summary = "营业厅物料宣传单页分公司汇总（政企/市场部）")
+    public List<SummaryUnitGoodsVO> getUnitSingleGoods( GoodsReqVO goodsReqVO) {
+        return goodsService.getUnitSingleList(goodsReqVO);
     }
+
+    @GetMapping("/unit/state")
+    @Operation(summary = "营业厅物料宣传单页分公司汇总状态（政企/市场部）")
+    public List<UnitGoodsStateVO> getUnitGoodsState(GoodsReqVO goodsReqVO) {
+        return goodsService.getUnitGoodsStateList(goodsReqVO);
+    }
+
+    @GetMapping("/purchase")
+    @Operation(summary = "营业厅物料采购需求汇总")
+    public List<PurchaseGoods> getPurchaseGoods(GoodsReqVO goodsReqVO) {
+        return goodsService.getPurchaseGoodsList(goodsReqVO);
+    }
+
 }

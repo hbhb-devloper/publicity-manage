@@ -35,7 +35,11 @@ public class Application implements java.io.Serializable {
     /**
      * 表单内容是否可更改
      */
-    private Integer editable;
+    private Boolean editable;
+    /**
+     * 是否提交
+     */
+    private Boolean submit;
     /**
      * 审批状态
      */

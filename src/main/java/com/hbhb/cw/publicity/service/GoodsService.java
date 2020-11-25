@@ -1,10 +1,13 @@
 package com.hbhb.cw.publicity.service;
 
 import com.hbhb.cw.publicity.web.vo.ApplicationVO;
+import com.hbhb.cw.publicity.web.vo.GoodsChangerVO;
 import com.hbhb.cw.publicity.web.vo.GoodsReqVO;
 import com.hbhb.cw.publicity.web.vo.GoodsResVO;
+import com.hbhb.cw.publicity.web.vo.PurchaseGoods;
 import com.hbhb.cw.publicity.web.vo.SummaryGoodsVO;
-import com.hbhb.cw.publicity.web.vo.UserGoodsVO;
+import com.hbhb.cw.publicity.web.vo.SummaryUnitGoodsVO;
+import com.hbhb.cw.publicity.web.vo.UnitGoodsStateVO;
 
 import java.util.List;
 
@@ -29,11 +32,6 @@ public interface GoodsService {
     void applyGoods(List<ApplicationVO> list, GoodsReqVO goodsReqVO);
 
     /**
-     * 通过id得到该用户信息
-     */
-    UserGoodsVO getUserGoods(Integer userId);
-
-    /**
      * 通过时间获得次序
      */
     Integer getGoodsSetting(String time);
@@ -44,7 +42,7 @@ public interface GoodsService {
      * @return 营业厅产品申请信息
      *
      */
-    SummaryGoodsVO getSimplexList(GoodsReqVO goodsReqVO);
+    List<SummaryGoodsVO> getSimplexList(GoodsReqVO goodsReqVO);
 
     /**
      *
@@ -52,14 +50,14 @@ public interface GoodsService {
      * @return 营业厅产品申请信息
      *
      */
-    SummaryGoodsVO getSingleList(GoodsReqVO goodsReqVO);
+    List<SummaryGoodsVO> getSingleList(GoodsReqVO goodsReqVO);
     /**
      *
      * 获取用户产品（审核）
      * @return 营业厅产品申请信息
      *
      */
-    SummaryGoodsVO getAuditSimplexList(GoodsReqVO goodsReqVO, Integer state);
+    List<SummaryGoodsVO> getAuditSimplexList(GoodsReqVO goodsReqVO, Integer state);
 
     /**
      *
@@ -67,20 +65,54 @@ public interface GoodsService {
      * @return 营业厅产品申请信息
      *
      */
-    SummaryGoodsVO getAuditSingleList(GoodsReqVO goodsReqVO, Integer state);
+    List<SummaryGoodsVO> getAuditSingleList(GoodsReqVO goodsReqVO, Integer state);
+
     /**
-     *
-     * 政企或市场部汇总
-     * @return 营业厅产品申请信息
-     *
+     * 分公司保存物料
      */
-    SummaryGoodsVO getUnitSimplexList(GoodsReqVO goodsReqVO, Integer state);
+    void saveGoods(List<Long> list);
+
+    /**
+     * 分公司提交物料
+     */
+    void submitGoods(List<Long> list);
+
+    /**
+     * 调整修改申请数量
+     */
+    void changerModifyAmount(List<GoodsChangerVO> list);
+
+    /**
+     * 分公司提交汇总
+     * @return 分公司提交状态
+     */
+    List<SummaryUnitGoodsVO> getUnitGoodsList(GoodsReqVO goodsReqVO);
 
     /**
      *
-     * 政企或市场部汇总
+     * 政企或市场部汇总（详情）
      * @return 营业厅产品申请信息
      *
      */
-    SummaryGoodsVO getUnitSingleList(GoodsReqVO goodsReqVO, Integer state);
+    List<SummaryUnitGoodsVO> getUnitSimplexList(GoodsReqVO goodsReqVO);
+
+    /**
+     *
+     * 政企或市场部汇总（详情）
+     * @return 营业厅产品申请信息
+     *
+     */
+    List<SummaryUnitGoodsVO> getUnitSingleList(GoodsReqVO goodsReqVO);
+
+    /**
+     * 分公司提交状态
+     * @return 分公司提交状态
+     */
+    List<UnitGoodsStateVO> getUnitGoodsStateList(GoodsReqVO goodsReqVO);
+
+    /**
+     * 物料采购汇总
+     * @return 物料采购汇总
+     */
+    List<PurchaseGoods> getPurchaseGoodsList(GoodsReqVO goodsReqVO);
 }

@@ -1,4 +1,4 @@
-package com.hbhb.cw.publicity.common;
+package com.hbhb.cw.publicity.enums;
 
 /**
  * @author yzc
