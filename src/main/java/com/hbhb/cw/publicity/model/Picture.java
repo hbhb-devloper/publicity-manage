@@ -15,7 +15,7 @@ import java.util.Date;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PublicityPictureSet implements Serializable {
+public class Picture implements Serializable {
     private static final long serialVersionUID = -5115313482160428847L;
     private Long id;
     /**

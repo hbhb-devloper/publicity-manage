@@ -3,21 +3,19 @@ package com.hbhb.cw.publicity.web.controller;
 import com.hbhb.cw.publicity.web.vo.PrintInfoVO;
 import com.hbhb.cw.publicity.web.vo.PrintReqVO;
 import com.hbhb.cw.publicity.web.vo.PrintResVO;
+import com.hbhb.cw.systemcenter.vo.FileDetailVO;
 import com.hbhb.web.annotation.UserId;
-
-import org.beetl.sql.core.page.PageResult;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
+import org.beetl.sql.core.page.PageResult;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author wangxiaogang
@@ -52,20 +50,27 @@ public class PrintController {
 
     @Operation(summary = "下载业务单式模板")
     @PostMapping("/export/business")
-    public void exportBusiness() {
+    public void exportBusiness(HttpServletRequest request, HttpServletResponse response) {
 
     }
 
 
     @Operation(summary = "下载宣传单页模板")
     @PostMapping("/export/publicity")
-    public void exportPublicity() {
+    public void exportPublicity(HttpServletRequest request, HttpServletResponse response) {
 
     }
 
     @Operation(summary = "导入")
-    @PostMapping("/import")
-    public void printImport() {
+    @PostMapping(value = "/import", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public void printImport(@RequestPart(required = false, value = "file") MultipartFile file, Long printId) {
 
     }
+
+    @Operation(summary = "上传附件")
+    @PostMapping(value = "/upload", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public FileDetailVO uploadPrintFile(@RequestPart(required = false, value = "file") MultipartFile file) {
+        return null;
+    }
+
 }

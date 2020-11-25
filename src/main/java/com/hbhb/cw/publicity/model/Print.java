@@ -10,7 +10,7 @@ import java.util.Date;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PublicityPrint implements java.io.Serializable {
+public class Print implements java.io.Serializable {
     private static final long serialVersionUID = -922348690978064283L;
     private Long id;
     /**

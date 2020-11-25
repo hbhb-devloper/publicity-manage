@@ -13,13 +13,13 @@ import java.util.Date;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PublicityPrintFlow implements Serializable {
-    private static final long serialVersionUID = 2989186283780499645L;
+public class PictureFlow implements Serializable {
+    private static final long serialVersionUID = -3695984971845346722L;
     private Long id;
     /**
-     * 印刷品id
+     * 画面设置id
      */
-    private Long printId;
+    private Long pictureId;
     /**
      * 流程节点id
      */

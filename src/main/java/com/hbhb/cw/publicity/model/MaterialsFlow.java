@@ -13,7 +13,7 @@ import java.util.Date;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PublicityMaterialsFlow implements Serializable {
+public class MaterialsFlow implements Serializable {
     private static final long serialVersionUID = -2498834507956031338L;
     private Long id;
     /**
