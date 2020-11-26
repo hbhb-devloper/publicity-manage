@@ -9,23 +9,23 @@ import lombok.NoArgsConstructor;
 
 /**
  * @author yzc
- * @since 2020-11-24
+ * @since 2020-11-26
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class GoodsReqVO implements Serializable {
+public class LibraryReqVO implements Serializable {
     private static final long serialVersionUID = -6469305293332933203L;
 
-    @Schema(description = "单位id")
-    private Integer unitId;
+    @Schema(description = "父类id")
+    private Long parentId;
 
-    @Schema(description = "时间")
-    private String time;
+    @Schema(description = "为活动/为产品")
+    private Boolean flag;
 
-    @Schema(description = "营业厅id")
-    private Long hallId;
+    @Schema(description = "名称")
+    private String name;
 
-    @Schema(description = "次序")
-    private Integer goodsIndex;
+    @Schema(description = "是否启用")
+    private Boolean state;
 }

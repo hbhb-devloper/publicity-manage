@@ -7,9 +7,11 @@ import com.hbhb.cw.publicity.web.vo.GoodsChangerVO;
 import com.hbhb.cw.publicity.web.vo.GoodsReqVO;
 import com.hbhb.cw.publicity.web.vo.GoodsResVO;
 import com.hbhb.cw.publicity.web.vo.PurchaseGoods;
-import com.hbhb.cw.publicity.web.vo.SummaryGoodsVO;
+import com.hbhb.cw.publicity.web.vo.SummaryGoodsResVO;
+import com.hbhb.cw.publicity.web.vo.SummaryUnitGoodsResVO;
 import com.hbhb.cw.publicity.web.vo.SummaryUnitGoodsVO;
 import com.hbhb.cw.publicity.web.vo.UnitGoodsStateVO;
+import com.hbhb.web.annotation.UserId;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -60,19 +62,19 @@ public class GoodsController {
 
     @GetMapping("/simplex")
     @Operation(summary = "营业厅物料业务单式分公司汇总")
-    public List<SummaryGoodsVO>getSimplexGoods(GoodsReqVO goodsReqVO) {
+    public SummaryGoodsResVO getSimplexGoods(GoodsReqVO goodsReqVO) {
         return goodsService.getSimplexList(goodsReqVO);
     }
 
     @GetMapping("/single")
     @Operation(summary = "营业厅物料宣传单页分公司汇总")
-    public List<SummaryGoodsVO> getSingleGoods( GoodsReqVO goodsReqVO) {
+    public SummaryGoodsResVO getSingleGoods( GoodsReqVO goodsReqVO) {
         return goodsService.getSingleList(goodsReqVO);
     }
 
     @GetMapping("/audit/simplex")
     @Operation(summary = "营业厅物料业务单式分公司汇总(审核)")
-    public List<SummaryGoodsVO> getAuditSimplexGoods(GoodsReqVO goodsReqVO, Integer state) {
+    public SummaryGoodsResVO getAuditSimplexGoods(GoodsReqVO goodsReqVO, Integer state) {
         if (goodsReqVO.getTime()==null){
             goodsReqVO.setTime(DateUtil.dateToString(new Date()));
         }
@@ -81,7 +83,7 @@ public class GoodsController {
 
     @GetMapping("/audit/single")
     @Operation(summary = "营业厅物料宣传单页分公司汇总(审核)")
-    public List<SummaryGoodsVO> getAuditSingleGoods( GoodsReqVO goodsReqVO, Integer state) {
+    public SummaryGoodsResVO getAuditSingleGoods( GoodsReqVO goodsReqVO, Integer state) {
         if (goodsReqVO.getTime()==null){
             goodsReqVO.setTime(DateUtil.dateToString(new Date()));
         }
@@ -90,8 +92,8 @@ public class GoodsController {
 
     @PostMapping("/save")
     @Operation(summary = "分公司保存物料")
-    public void saveGoods(@RequestBody List<Long> list){
-        goodsService.saveGoods(list);
+    public void saveGoods(@RequestBody List<Long> list, @UserId Integer userId){
+        goodsService.saveGoods(list,userId);
     }
 
     @PostMapping("/submit")
@@ -108,7 +110,7 @@ public class GoodsController {
 
     @GetMapping("/unit/goods")
     @Operation(summary = "营业厅物料分公司汇总（政企/市场部）")
-    public List<SummaryUnitGoodsVO> getUnitGoods(GoodsReqVO goodsReqVO, Integer state) {
+    public SummaryUnitGoodsResVO getUnitGoods(GoodsReqVO goodsReqVO, Integer state) {
         return goodsService.getUnitGoodsList(goodsReqVO);
     }
 

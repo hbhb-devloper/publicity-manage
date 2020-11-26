@@ -10,6 +10,8 @@ import lombok.Getter;
 @Getter
 public enum GoodsErrorCode {
     NOT_SERVICE_HALL("800","无营业厅!"),
+    ALREADY_CLOSE("801","本次已截止"),
+    PARENT_NOT_ACTIVITY("802","货物只能在活动之下！"),
     ;
 
     private String code;

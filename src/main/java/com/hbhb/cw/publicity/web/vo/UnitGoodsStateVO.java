@@ -18,8 +18,8 @@ public class UnitGoodsStateVO implements Serializable {
     private static final long serialVersionUID = -213345646498657058L;
 
     @Schema(description = "单位名称")
-    private Integer unitName;
+    private String unitName;
 
     @Schema(description = "分公司提交状态")
-    private Integer state;
+    private String state;
 }

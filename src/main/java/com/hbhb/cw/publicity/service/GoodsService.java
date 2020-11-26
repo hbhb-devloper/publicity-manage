@@ -5,7 +5,8 @@ import com.hbhb.cw.publicity.web.vo.GoodsChangerVO;
 import com.hbhb.cw.publicity.web.vo.GoodsReqVO;
 import com.hbhb.cw.publicity.web.vo.GoodsResVO;
 import com.hbhb.cw.publicity.web.vo.PurchaseGoods;
-import com.hbhb.cw.publicity.web.vo.SummaryGoodsVO;
+import com.hbhb.cw.publicity.web.vo.SummaryGoodsResVO;
+import com.hbhb.cw.publicity.web.vo.SummaryUnitGoodsResVO;
 import com.hbhb.cw.publicity.web.vo.SummaryUnitGoodsVO;
 import com.hbhb.cw.publicity.web.vo.UnitGoodsStateVO;
 
@@ -42,7 +43,7 @@ public interface GoodsService {
      * @return 营业厅产品申请信息
      *
      */
-    List<SummaryGoodsVO> getSimplexList(GoodsReqVO goodsReqVO);
+    SummaryGoodsResVO getSimplexList(GoodsReqVO goodsReqVO);
 
     /**
      *
@@ -50,14 +51,14 @@ public interface GoodsService {
      * @return 营业厅产品申请信息
      *
      */
-    List<SummaryGoodsVO> getSingleList(GoodsReqVO goodsReqVO);
+    SummaryGoodsResVO getSingleList(GoodsReqVO goodsReqVO);
     /**
      *
      * 获取用户产品（审核）
      * @return 营业厅产品申请信息
      *
      */
-    List<SummaryGoodsVO> getAuditSimplexList(GoodsReqVO goodsReqVO, Integer state);
+    SummaryGoodsResVO getAuditSimplexList(GoodsReqVO goodsReqVO, Integer state);
 
     /**
      *
@@ -65,12 +66,12 @@ public interface GoodsService {
      * @return 营业厅产品申请信息
      *
      */
-    List<SummaryGoodsVO> getAuditSingleList(GoodsReqVO goodsReqVO, Integer state);
+    SummaryGoodsResVO getAuditSingleList(GoodsReqVO goodsReqVO, Integer state);
 
     /**
      * 分公司保存物料
      */
-    void saveGoods(List<Long> list);
+    void saveGoods(List<Long> list, Integer userId);
 
     /**
      * 分公司提交物料
@@ -86,7 +87,7 @@ public interface GoodsService {
      * 分公司提交汇总
      * @return 分公司提交状态
      */
-    List<SummaryUnitGoodsVO> getUnitGoodsList(GoodsReqVO goodsReqVO);
+    SummaryUnitGoodsResVO getUnitGoodsList(GoodsReqVO goodsReqVO);
 
     /**
      *

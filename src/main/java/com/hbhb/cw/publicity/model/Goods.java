@@ -59,7 +59,7 @@ public class Goods implements Serializable {
     /**
      * 是否使用
      */
-    private Integer state;
+    private Boolean state;
     /**
      * 备注
      */

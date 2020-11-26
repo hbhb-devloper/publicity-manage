@@ -2,6 +2,7 @@ package com.hbhb.cw.publicity.web.controller;
 
 import com.hbhb.cw.publicity.model.Goods;
 import com.hbhb.cw.publicity.service.LibraryService;
+import com.hbhb.cw.publicity.web.vo.LibraryReqVO;
 import com.hbhb.cw.publicity.web.vo.LibraryVO;
 import com.hbhb.web.annotation.UserId;
 
@@ -41,20 +42,20 @@ public class LibraryController {
 
     @PostMapping("/add")
     @Operation(summary = "新增物料活动产品列表")
-    public void addLibrary(@UserId Integer userId, @RequestBody Boolean flag, @RequestBody Long parentId ) {
-        libraryService.addLibrary(userId, flag, parentId);
+    public void addLibrary(@UserId Integer userId, @RequestBody LibraryReqVO libraryReqVO ) {
+        libraryService.addLibrary(userId, libraryReqVO);
     }
 
     @PostMapping("/goods/add")
     @Operation(summary = "新增物料活动产品列表")
-    public void addGoods(@UserId Integer userId, @RequestBody Goods goods ) {
-        libraryService.addGoods(userId, goods);
+    public void addGoods( @RequestBody Goods goods ) {
+        libraryService.addGoods(goods);
     }
 
     @PutMapping("/")
     @Operation(summary = "修改活动或产品")
-    public void library(@UserId Integer userId, @RequestBody Boolean flag, @RequestBody String name) {
-        libraryService.updateLibrary(userId,flag,name);
+    public void library(@UserId Integer userId, @RequestBody LibraryReqVO libraryReqVO) {
+        libraryService.updateLibrary(userId,libraryReqVO);
     }
 
     @PutMapping("/goods")
