@@ -29,6 +29,10 @@ public class Application implements java.io.Serializable {
      */
     private Date createTime;
     /**
+     * 次序
+     */
+    private Integer goodsIndex;
+    /**
      * 申请次序
      */
     private Integer applyIndex;

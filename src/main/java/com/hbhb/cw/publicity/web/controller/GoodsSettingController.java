@@ -4,7 +4,6 @@ import com.hbhb.cw.publicity.model.GoodsSetting;
 import com.hbhb.cw.publicity.service.GoodsSettingService;
 
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,10 +30,10 @@ public class GoodsSettingController {
     @Resource
     private GoodsSettingService goodsSettingService;
 
-    @GetMapping("/{goodsId}")
+    @GetMapping("")
     @Operation(summary = "物料活动产品列表")
-    public List<GoodsSetting> getGoodsSetting(@PathVariable Long goodsId) {
-        return goodsSettingService.getList(goodsId);
+    public List<GoodsSetting> getGoodsSetting() {
+        return goodsSettingService.getList();
     }
 
     @PostMapping("/add")

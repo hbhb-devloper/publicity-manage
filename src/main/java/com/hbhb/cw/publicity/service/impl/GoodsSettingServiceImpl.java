@@ -20,16 +20,21 @@ public class GoodsSettingServiceImpl implements GoodsSettingService {
     private GoodsSettingMapper goodsSettingMapper;
 
     @Override
-    public List<GoodsSetting> getList(Long goodsId) {
+    public List<GoodsSetting> getList() {
         // 得到当前月份
         String time = DateUtil.formatDate(new Date(), "yyyy-MM");
-        // 通过月份和产品id得到该产品当月的设置
-        return goodsSettingMapper.selectByCond(time, goodsId);
+        // 通过月份得到该产品当月的设置
+        return goodsSettingMapper.selectByDate(time);
     }
 
     @Override
     public void addGoodsSetting(List<GoodsSetting> list) {
         // 批量新增物料库相关设定
         goodsSettingMapper.insertBatch(list);
+    }
+
+    @Override
+    public GoodsSetting getSetByDate(String time) {
+        return goodsSettingMapper.selectSetByDate(time);
     }
 }

@@ -11,6 +11,7 @@ import com.hbhb.cw.publicity.model.Application;
 import com.hbhb.cw.publicity.model.ApplicationDetail;
 import com.hbhb.cw.publicity.model.GoodsSetting;
 import com.hbhb.cw.publicity.service.GoodsService;
+import com.hbhb.cw.publicity.service.GoodsSettingService;
 import com.hbhb.cw.publicity.web.vo.ApplicationVO;
 import com.hbhb.cw.publicity.web.vo.GoodsChangerVO;
 import com.hbhb.cw.publicity.web.vo.GoodsReqVO;
@@ -45,6 +46,8 @@ public class GoodsServiceImpl implements GoodsService {
     @Resource
     private ApplicationDetailMapper applicationDetailMapper;
     @Resource
+    private GoodsSettingService goodsSettingService;
+    @Resource
     private DictApi dictApi;
 
 
@@ -54,7 +57,7 @@ public class GoodsServiceImpl implements GoodsService {
             // 报异常
             throw new GoodsException(GoodsErrorCode.NOT_SERVICE_HALL);
         }
-        // 通过营业厅得到该营业厅下改时间的申请详情
+        // 通过营业厅得到该营业厅下该时间的申请详情
         List<GoodsVO> goods = goodsMapper.selectByCond(goodsReqVO);
         // 得到所有产品
         List<GoodsVO> list = goodsMapper.selectByCond(new GoodsReqVO());
@@ -70,9 +73,9 @@ public class GoodsServiceImpl implements GoodsService {
         }
         // 申请数量所需条件（置灰或者能使用）
         // 0.通过时间对比截止时间得到为几月的第几次
-        GoodsSetting goodsSetting = goodsMapper.selectSetByDate(goodsReqVO.getTime());
+        GoodsSetting goodsSetting = goodsSettingService.getSetByDate(goodsReqVO.getTime());
         // 1.得到此刻时间，通过截止时间，判断为几月的第几次。如何0的结果与1的结果不符则直接置灰。
-        GoodsSetting setting = goodsMapper.selectSetByDate(DateUtil.dateToString(new Date()));
+        GoodsSetting setting = goodsSettingService.getSetByDate(DateUtil.dateToString(new Date()));
         if (!goodsSetting.getId().equals(setting.getId())) {
             return new GoodsResVO(list, false);
         }
@@ -81,7 +84,8 @@ public class GoodsServiceImpl implements GoodsService {
             return new GoodsResVO(list, false);
         }
         // 3.判断本月此次下该分公司是否已保存
-        List<Application> applications = goodsMapper.selectApplicationByUnitId(goodsReqVO.getUnitId(), setting.getDeadline());
+        List<Application> applications = applicationMapper.selectApplicationByUnitId(goodsReqVO.getUnitId(),
+                DateUtil.formatDate(setting.getDeadline(),"yyyy-MM"), setting.getGoodsIndex());
         if (applications != null && applications.get(0).getEditable()) {
             return new GoodsResVO(list, false);
         }
@@ -91,14 +95,14 @@ public class GoodsServiceImpl implements GoodsService {
     @Override
     public Integer getGoodsSetting(String time) {
         // 通过时间与截止时间，判断为几月第几次。
-        GoodsSetting goodsSetting = goodsMapper.selectSetByDate(time);
+        GoodsSetting goodsSetting = goodsSettingService.getSetByDate(time);
         return goodsSetting.getGoodsIndex();
     }
 
     @Override
     public void applyGoods(List<ApplicationVO> list, GoodsReqVO goodsReqVO) {
         // 新增产品（如果该营业厅该产品已有则覆盖）
-        GoodsSetting goodsSetting = goodsMapper.selectSetByDate(goodsReqVO.getTime());
+        GoodsSetting goodsSetting = goodsSettingService.getSetByDate(goodsReqVO.getTime());
         Date date = new Date();
         List<Application> applications = new ArrayList<>();
         // 生成申请表
@@ -107,10 +111,12 @@ public class GoodsServiceImpl implements GoodsService {
             application.setApplyIndex(goodsSetting.getGoodsIndex());
             application.setCreateTime(date);
             application.setHallId(goodsReqVO.getHallId());
+            application.setGoodsIndex(goodsSetting.getGoodsIndex());
             applications.add(application);
         }
         applicationMapper.insertBatch(applications);
         List<ApplicationDetail> applicationDetails = new ArrayList<>();
+        goodsReqVO.setGoodsIndex(goodsSetting.getGoodsIndex());
         // 得到id
         List<Application> applicationList = applicationMapper.selectByCond(goodsReqVO);
         for (int i = 0; i < applicationList.size(); i++) {
@@ -150,7 +156,7 @@ public class GoodsServiceImpl implements GoodsService {
     public void saveGoods(List<Long> list, Integer userId) {
         Date date = new Date();
         // 通过此刻时间与截止时间对比，判断为第几月第几次
-        GoodsSetting setting = goodsMapper.selectSetByDate(DateUtil.dateToString(date));
+        GoodsSetting setting = goodsSettingService.getSetByDate(DateUtil.dateToString(date));
         // 得到第几次，判断此次是否结束。
         if (setting.getIsEnd() != null || setting.getDeadline().getTime() < date.getTime()) {
             // 报异常
@@ -164,7 +170,7 @@ public class GoodsServiceImpl implements GoodsService {
     public void submitGoods(List<Long> list) {
         Date date = new Date();
         // 通过此刻时间与截止时间对比，判断为第几月第几次
-        GoodsSetting setting = goodsMapper.selectSetByDate(DateUtil.dateToString(date));
+        GoodsSetting setting = goodsSettingService.getSetByDate(DateUtil.dateToString(date));
         // 得到第几次，判断此次是否结束。
         if (setting.getIsEnd() != null || setting.getDeadline().getTime() < date.getTime()) {
             // 报异常
@@ -186,15 +192,27 @@ public class GoodsServiceImpl implements GoodsService {
     public SummaryUnitGoodsResVO getUnitGoodsList(GoodsReqVO goodsReqVO) {
         String date = goodsReqVO.getTime();
         // 通过此刻时间与截止时间对比，判断为第几月第几次
-        GoodsSetting goodsSetting = goodsMapper.selectSetByDate(goodsReqVO.getTime());
-        List<SummaryUnitGoodsVO> summaryList = goodsMapper.selectSummaryUnitByCond(goodsReqVO);
+        GoodsSetting goodsSetting = goodsSettingService.getSetByDate(goodsReqVO.getTime());
+        List<SummaryUnitGoodsVO> simSummaryList = getUnitSummaryList(goodsReqVO, GoodsType.BUSINESS_SIMPLEX.getValue());
+        List<SummaryUnitGoodsVO> singSummaryList = getUnitSummaryList(goodsReqVO, GoodsType.FLYER_PAGE.getValue());
+        Map<String, SummaryUnitGoodsVO> map = new HashMap<>();
+        for (SummaryUnitGoodsVO summaryUnitGoodsVO : simSummaryList) {
+            map.put(summaryUnitGoodsVO.getGoodsId()+summaryUnitGoodsVO.getUnitName(),summaryUnitGoodsVO);
+        }
+        for (SummaryUnitGoodsVO cond : singSummaryList) {
+            if (map.get(cond.getGoodsId()+cond.getUnitName())==null){
+                simSummaryList.add(cond);
+            }else {
+                map.get(cond.getGoodsId()+cond.getUnitName()).setSingleAmount(cond.getSingleAmount());
+            }
+        }
         // 得到第几次，判断此次是否结束。
         if (goodsSetting.getIsEnd() != null || goodsSetting.getDeadline().getTime() < DateUtil.stringToDate(date).getTime()) {
             // 如果结束提交置灰
-            return new SummaryUnitGoodsResVO(summaryList, false);
+            return new SummaryUnitGoodsResVO(simSummaryList, false);
         }
         // 展示该次该管理部门下的申请汇总。
-        return new SummaryUnitGoodsResVO(summaryList, true);
+        return new SummaryUnitGoodsResVO(simSummaryList, true);
     }
 
     @Override
@@ -227,7 +245,7 @@ public class GoodsServiceImpl implements GoodsService {
     private SummaryGoodsResVO getSummaryList(GoodsReqVO goodsReqVO, Integer type) {
         String date = goodsReqVO.getTime();
         // 通过此刻时间与截止时间对比，判断为第几月第几次
-        GoodsSetting goodsSetting = goodsMapper.selectSetByDate(goodsReqVO.getTime());
+        GoodsSetting goodsSetting = goodsSettingService.getSetByDate(goodsReqVO.getTime());
         // 展示该次该单位下的申请汇总。
         List<SummaryGoodsVO> summaries = goodsMapper.selectSummaryByType(goodsReqVO, type);
         // 得到第几次，判断此次是否结束。如果结束提交置灰
@@ -252,7 +270,7 @@ public class GoodsServiceImpl implements GoodsService {
     private SummaryGoodsResVO getSummaryList(GoodsReqVO goodsReqVO, Integer type, Integer state) {
         String date = goodsReqVO.getTime();
         // 通过此刻时间与截止时间对比，判断为第几月第几次
-        GoodsSetting goodsSetting = goodsMapper.selectSetByDate(goodsReqVO.getTime());
+        GoodsSetting goodsSetting = goodsSettingService.getSetByDate(goodsReqVO.getTime());
         // 展示该次该单位下的申请汇总。
         List<SummaryGoodsVO> summaries = goodsMapper.selectSummaryByState(goodsReqVO, type, state);
         // 得到第几次，判断此次是否结束。如果结束提交置灰

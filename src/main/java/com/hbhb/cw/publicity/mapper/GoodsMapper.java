@@ -1,17 +1,14 @@
 package com.hbhb.cw.publicity.mapper;
 
-import com.hbhb.cw.publicity.model.Application;
 import com.hbhb.cw.publicity.model.Goods;
-import com.hbhb.cw.publicity.model.GoodsSetting;
 import com.hbhb.cw.publicity.web.vo.GoodsReqVO;
 import com.hbhb.cw.publicity.web.vo.GoodsVO;
-import com.hbhb.cw.publicity.web.vo.LibraryReqVO;
+import com.hbhb.cw.publicity.web.vo.LibraryVO;
 import com.hbhb.cw.publicity.web.vo.PurchaseGoods;
 import com.hbhb.cw.publicity.web.vo.SummaryGoodsVO;
 import com.hbhb.cw.publicity.web.vo.SummaryUnitGoodsVO;
 import com.hbhb.web.beetlsql.BaseMapper;
 
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -21,13 +18,9 @@ public interface GoodsMapper extends BaseMapper<Goods> {
 
     List<GoodsVO> selectByCond(GoodsReqVO cond);
 
-    GoodsSetting selectSetByDate(String time);
+    List<LibraryVO> selectByUnitId(Integer unitId);
 
-    List<Application> selectApplicationByUnitId(Integer unitId, Date time);
-
-    List<Goods> selectGoodsByActIds(List<Long> list);
-
-    List<SummaryUnitGoodsVO> selectSummaryUnitByCond(GoodsReqVO goodsReqVO);
+    List<LibraryVO> selectGoodsByActIds(List<Long> list);
 
     List<SummaryUnitGoodsVO> selectSummaryUnitByType(GoodsReqVO goodsReqVO, Integer type, Integer state);
 
@@ -37,7 +30,5 @@ public interface GoodsMapper extends BaseMapper<Goods> {
 
     List<PurchaseGoods> selectPurchaseGoods(GoodsReqVO goodsReqVO);
 
-    void insertName(LibraryReqVO libraryReqVO);
-
-    void updateByCond(LibraryReqVO libraryReqVO);
+    Goods selectById(Long id);
 }

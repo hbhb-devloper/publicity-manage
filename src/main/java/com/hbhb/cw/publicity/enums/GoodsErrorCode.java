@@ -12,6 +12,7 @@ public enum GoodsErrorCode {
     NOT_SERVICE_HALL("800","无营业厅!"),
     ALREADY_CLOSE("801","本次已截止"),
     PARENT_NOT_ACTIVITY("802","货物只能在活动之下！"),
+    NOT_FILLED_IN("803","必填项未填"),
     ;
 
     private String code;

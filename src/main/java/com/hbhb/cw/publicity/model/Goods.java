@@ -14,12 +14,16 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Goods implements Serializable {
-    private static final long serialVersionUID = 476064199771710497L;
+    private static final long serialVersionUID = -8654911652867204277L;
     private Long id;
+    /**
+     * 分公司
+     */
+    private Integer unitId;
     /**
      * 宣传活动id
      */
-    private Long activityId;
+    private Long parentId;
     /**
      * 宣传产品
      */

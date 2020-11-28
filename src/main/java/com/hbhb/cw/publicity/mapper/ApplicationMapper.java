@@ -19,4 +19,6 @@ public interface ApplicationMapper extends BaseMapper<Application> {
     void updateSubmit(List<Long> list);
 
     void updateBatch(List<GoodsChangerVO> list);
+
+    List<Application> selectApplicationByUnitId(Integer unitId, String time, Integer goodsIndex);
 }

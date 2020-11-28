@@ -2,11 +2,11 @@ package com.hbhb.cw.publicity.web.controller;
 
 import com.hbhb.cw.publicity.model.Goods;
 import com.hbhb.cw.publicity.service.LibraryService;
-import com.hbhb.cw.publicity.web.vo.LibraryReqVO;
 import com.hbhb.cw.publicity.web.vo.LibraryVO;
 import com.hbhb.web.annotation.UserId;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -37,32 +37,24 @@ public class LibraryController {
     @GetMapping("/tree")
     @Operation(summary = "物料活动产品列表")
     public List<LibraryVO> getTreeList(@UserId Integer userId) {
-       return libraryService.getTreeList(userId);
+        return libraryService.getTreeList(userId);
     }
 
     @PostMapping("/add")
     @Operation(summary = "新增物料活动产品列表")
-    public void addLibrary(@UserId Integer userId, @RequestBody LibraryReqVO libraryReqVO ) {
-        libraryService.addLibrary(userId, libraryReqVO);
-    }
-
-    @PostMapping("/goods/add")
-    @Operation(summary = "新增物料活动产品列表")
-    public void addGoods( @RequestBody Goods goods ) {
-        libraryService.addGoods(goods);
+    public void addLibrary(@UserId Integer userId, Boolean flag, @RequestBody Goods goods) {
+        libraryService.addLibrary(userId, flag, goods);
     }
 
     @PutMapping("/")
     @Operation(summary = "修改活动或产品")
-    public void library(@UserId Integer userId, @RequestBody LibraryReqVO libraryReqVO) {
-        libraryService.updateLibrary(userId,libraryReqVO);
+    public void library(@UserId Integer userId, Boolean flag, @RequestBody Goods goods) {
+        libraryService.updateLibrary(userId, flag, goods);
     }
 
-    @PutMapping("/goods")
-    @Operation(summary = "修改产品详情")
-    public void goodsInfo(@UserId Integer userId,  @RequestBody Goods goods) {
-        libraryService.updateGoodsInfo(userId, goods);
+    @GetMapping("/{id}")
+    @Operation(summary = "得到详情")
+    public Goods getInfo(@PathVariable Long id){
+       return libraryService.getInfo(id);
     }
-
-
 }
