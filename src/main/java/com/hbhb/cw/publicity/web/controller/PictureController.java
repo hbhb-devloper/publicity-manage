@@ -1,8 +1,9 @@
-/*
+
 package com.hbhb.cw.publicity.web.controller;
 
 import com.hbhb.cw.publicity.web.vo.PictureInfoVO;
 import com.hbhb.cw.publicity.web.vo.PictureResVO;
+import com.hbhb.cw.systemcenter.vo.FileVO;
 import com.hbhb.web.annotation.UserId;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -16,10 +17,10 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-*/
+
 /**
  * @author wangxiaogang
- *//*
+ */
 
 @Tag(name = "宣传管理-宣传画面设计")
 @RestController
@@ -51,16 +52,27 @@ public class PictureController {
 
     @Operation(summary = "宣传画面模板下载")
     @PostMapping("/export")
-    public void exportPublicity(HttpServletRequest request, HttpServletResponse response) {
+    public void exportPicture(HttpServletRequest request, HttpServletResponse response) {
 
     }
 
     @Operation(summary = "宣传画面模板导入")
     @PostMapping(value = "/import", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public void printImport(@RequestPart(required = false, value = "file") MultipartFile file, Long printId) {
+    public void pictureImport(@RequestPart(required = false, value = "file") MultipartFile file, Long printId) {
 
     }
 
+    @Operation(summary = "上传附件")
+    @PostMapping(value = "/upload", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public FileVO uploadPictureFile(@RequestPart(required = false, value = "file") MultipartFile file) {
+        return null;
+    }
+
+    @Operation(summary = "删除宣传画面")
+    @DeleteMapping("/{id}")
+    public void deletePicture(@PathVariable("id") Long id) {
+
+    }
 
 }
-*/
+

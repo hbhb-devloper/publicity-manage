@@ -28,6 +28,9 @@ public class MaterialsReqVO implements Serializable {
     @Schema(description = "审批状态")
     private Integer state;
 
-    @Schema(description = "物料类型")
-    private Integer type;
+    @Schema(description = "申请单名称")
+    private String materialsName;
+
+    @Schema(description = "申请单号")
+    private String materialsNum;
 }
