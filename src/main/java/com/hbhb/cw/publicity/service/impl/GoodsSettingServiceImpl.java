@@ -4,16 +4,19 @@ import com.hbhb.core.utils.DateUtil;
 import com.hbhb.cw.publicity.mapper.GoodsSettingMapper;
 import com.hbhb.cw.publicity.model.GoodsSetting;
 import com.hbhb.cw.publicity.service.GoodsSettingService;
-
-import java.util.Date;
-import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.Date;
+import java.util.List;
 
 /**
  * @author yzc
  * @since 2020-11-24
  */
+@Service
+@Slf4j
 public class GoodsSettingServiceImpl implements GoodsSettingService {
 
     @Resource

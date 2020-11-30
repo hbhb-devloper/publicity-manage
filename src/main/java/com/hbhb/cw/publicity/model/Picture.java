@@ -70,4 +70,8 @@ public class Picture implements Serializable {
      * 更新者
      */
     private String updateBy;
+    /**
+     * 流程状态
+     */
+    private Integer flowState;
 }

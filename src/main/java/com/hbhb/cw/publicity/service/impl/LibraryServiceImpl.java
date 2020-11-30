@@ -4,21 +4,18 @@ import com.hbhb.cw.publicity.enums.GoodsErrorCode;
 import com.hbhb.cw.publicity.exception.GoodsException;
 import com.hbhb.cw.publicity.mapper.GoodsMapper;
 import com.hbhb.cw.publicity.model.Goods;
+import com.hbhb.cw.publicity.rpc.SysUserApiExp;
 import com.hbhb.cw.publicity.service.LibraryService;
 import com.hbhb.cw.publicity.web.vo.LibraryVO;
-import com.hbhb.cw.systemcenter.api.UserApi;
 import com.hbhb.cw.systemcenter.vo.UserInfo;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.annotation.Resource;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author yzc
@@ -29,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 public class LibraryServiceImpl implements LibraryService {
 
     @Resource
-    private UserApi userApi;
+    private SysUserApiExp userApi;
     @Resource
     private GoodsMapper goodsMapper;
 

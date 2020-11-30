@@ -3,7 +3,7 @@ package com.hbhb.cw.publicity.web.controller;
 import com.hbhb.cw.publicity.web.vo.PrintInfoVO;
 import com.hbhb.cw.publicity.web.vo.PrintReqVO;
 import com.hbhb.cw.publicity.web.vo.PrintResVO;
-import com.hbhb.cw.systemcenter.vo.FileDetailVO;
+import com.hbhb.cw.systemcenter.vo.FileVO;
 import com.hbhb.web.annotation.UserId;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -69,7 +69,7 @@ public class PrintController {
 
     @Operation(summary = "上传附件")
     @PostMapping(value = "/upload", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public FileDetailVO uploadPrintFile(@RequestPart(required = false, value = "file") MultipartFile file) {
+    public FileVO uploadPrintFile(@RequestPart(required = false, value = "file") MultipartFile file) {
         return null;
     }
 

@@ -6,18 +6,16 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.util.Date;
 
 /**
  * @author wangxiaogang
  */
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-public class PictureResVO implements Serializable {
-    private static final long serialVersionUID = -8524450381292183364L;
-
+@AllArgsConstructor
+public class PictureInfoVO implements Serializable {
+    private static final long serialVersionUID = -9113779419276377978L;
     private Long id;
 
     @Schema(description = "申请单名称")
@@ -34,12 +32,4 @@ public class PictureResVO implements Serializable {
 
     @Schema(description = "用户id")
     private Integer userId;
-
-    @Schema(description = "预算费用（元）")
-    private BigDecimal predictAmount;
-
-    @Schema(description = "流程状态")
-    private Integer flowState;
-
-
 }
