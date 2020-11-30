@@ -4,12 +4,15 @@ import com.hbhb.core.utils.DateUtil;
 import com.hbhb.cw.publicity.mapper.GoodsSettingMapper;
 import com.hbhb.cw.publicity.model.GoodsSetting;
 import com.hbhb.cw.publicity.service.GoodsSettingService;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
 import java.util.Date;
 import java.util.List;
+
+import javax.annotation.Resource;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author yzc
@@ -38,6 +41,7 @@ public class GoodsSettingServiceImpl implements GoodsSettingService {
 
     @Override
     public GoodsSetting getSetByDate(String time) {
+        // 该次
         return goodsSettingMapper.selectSetByDate(time);
     }
 }

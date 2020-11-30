@@ -27,7 +27,7 @@ public class PurchaseGoods implements Serializable {
     private String unit;
 
     @Schema(description = "申请数量")
-    private Long applyAmount;
+    private Long modifyAmount;
 
     @Schema(description = "尺寸")
     private String size;

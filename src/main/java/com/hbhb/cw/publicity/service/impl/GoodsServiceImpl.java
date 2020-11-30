@@ -12,13 +12,30 @@ import com.hbhb.cw.publicity.model.ApplicationDetail;
 import com.hbhb.cw.publicity.model.GoodsSetting;
 import com.hbhb.cw.publicity.service.GoodsService;
 import com.hbhb.cw.publicity.service.GoodsSettingService;
-import com.hbhb.cw.publicity.web.vo.*;
+import com.hbhb.cw.publicity.web.vo.ApplicationVO;
+import com.hbhb.cw.publicity.web.vo.GoodsChangerVO;
+import com.hbhb.cw.publicity.web.vo.GoodsReqVO;
+import com.hbhb.cw.publicity.web.vo.GoodsResVO;
+import com.hbhb.cw.publicity.web.vo.GoodsVO;
+import com.hbhb.cw.publicity.web.vo.PurchaseGoods;
+import com.hbhb.cw.publicity.web.vo.SummaryGoodsResVO;
+import com.hbhb.cw.publicity.web.vo.SummaryGoodsVO;
+import com.hbhb.cw.publicity.web.vo.SummaryUnitGoodsResVO;
+import com.hbhb.cw.publicity.web.vo.SummaryUnitGoodsVO;
+import com.hbhb.cw.publicity.web.vo.UnitGoodsStateVO;
 import com.hbhb.cw.systemcenter.api.DictApi;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import javax.annotation.Resource;
-import java.util.*;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author yzc
@@ -74,7 +91,7 @@ public class GoodsServiceImpl implements GoodsService {
         }
         // 3.判断本月此次下该分公司是否已保存
         List<Application> applications = applicationMapper.selectApplicationByUnitId(goodsReqVO.getUnitId(),
-                DateUtil.formatDate(setting.getDeadline(), "yyyy-MM"), setting.getGoodsIndex());
+                DateUtil.formatDate(setting.getDeadline(),"yyyy-MM"), setting.getGoodsIndex());
         if (applications != null && applications.get(0).getEditable()) {
             return new GoodsResVO(list, false);
         }
@@ -184,15 +201,18 @@ public class GoodsServiceImpl implements GoodsService {
         GoodsSetting goodsSetting = goodsSettingService.getSetByDate(goodsReqVO.getTime());
         List<SummaryUnitGoodsVO> simSummaryList = getUnitSummaryList(goodsReqVO, GoodsType.BUSINESS_SIMPLEX.getValue());
         List<SummaryUnitGoodsVO> singSummaryList = getUnitSummaryList(goodsReqVO, GoodsType.FLYER_PAGE.getValue());
+        // 通过goodsId得到unitName
+
+
         Map<String, SummaryUnitGoodsVO> map = new HashMap<>();
         for (SummaryUnitGoodsVO summaryUnitGoodsVO : simSummaryList) {
-            map.put(summaryUnitGoodsVO.getGoodsId() + summaryUnitGoodsVO.getUnitName(), summaryUnitGoodsVO);
+            map.put(summaryUnitGoodsVO.getGoodsId()+summaryUnitGoodsVO.getUnitName(),summaryUnitGoodsVO);
         }
         for (SummaryUnitGoodsVO cond : singSummaryList) {
-            if (map.get(cond.getGoodsId() + cond.getUnitName()) == null) {
+            if (map.get(cond.getGoodsId()+cond.getUnitName())==null){
                 simSummaryList.add(cond);
-            } else {
-                map.get(cond.getGoodsId() + cond.getUnitName()).setSingleAmount(cond.getSingleAmount());
+            }else {
+                map.get(cond.getGoodsId()+cond.getUnitName()).setSingleAmount(cond.getSingleAmount());
             }
         }
         // 得到第几次，判断此次是否结束。

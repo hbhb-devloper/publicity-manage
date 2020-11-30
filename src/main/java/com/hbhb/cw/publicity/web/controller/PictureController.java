@@ -1,3 +1,4 @@
+/*
 package com.hbhb.cw.publicity.web.controller;
 
 import com.hbhb.cw.publicity.web.vo.PictureInfoVO;
@@ -15,9 +16,11 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+*/
 /**
  * @author wangxiaogang
- */
+ *//*
+
 @Tag(name = "宣传管理-宣传画面设计")
 @RestController
 @RequestMapping("/picture")
@@ -60,3 +63,4 @@ public class PictureController {
 
 
 }
+*/

@@ -8,14 +8,17 @@ import com.hbhb.cw.publicity.rpc.SysUserApiExp;
 import com.hbhb.cw.publicity.service.LibraryService;
 import com.hbhb.cw.publicity.web.vo.LibraryVO;
 import com.hbhb.cw.systemcenter.vo.UserInfo;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.annotation.Resource;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author yzc
@@ -78,7 +81,6 @@ public class LibraryServiceImpl implements LibraryService {
             if (goods.getUnit()==null||goods.getGoodsName()==null){
                 throw new GoodsException(GoodsErrorCode.NOT_FILLED_IN);
             }
-            // 添加活动
         }
         // 如果为产品
         else {
@@ -101,7 +103,6 @@ public class LibraryServiceImpl implements LibraryService {
             if (goods.getUnit()==null||goods.getGoodsName()==null){
                 throw new GoodsException(GoodsErrorCode.NOT_FILLED_IN);
             }
-            // 添加活动
         }
         // 如果为产品
         else {

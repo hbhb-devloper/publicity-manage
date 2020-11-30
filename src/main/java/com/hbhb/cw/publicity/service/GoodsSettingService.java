@@ -10,7 +10,7 @@ import java.util.List;
  */
 public interface GoodsSettingService {
     /**
-     * 获取物料库的相关设定
+     * 获取物料库的相关设定  （该月）
      * @return 相关设置
      */
     List<GoodsSetting> getList();
@@ -22,7 +22,7 @@ public interface GoodsSettingService {
     void addGoodsSetting(List<GoodsSetting> list);
 
     /**
-     * 活动该次相关设置
+     * 活动该次相关设置 （该次）
      */
     GoodsSetting getSetByDate(String time);
 }
