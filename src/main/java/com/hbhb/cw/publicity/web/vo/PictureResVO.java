@@ -1,17 +1,17 @@
-/*package com.hbhb.cw.publicity.web.vo;
+package com.hbhb.cw.publicity.web.vo;
+
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.Date;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.io.Serializable;
-import java.math.BigDecimal;
-import java.util.Date;
-
-*//**
- * @author wangxiaogang
- *//*
+/**
+ *  @author wangxiaogang
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -42,4 +42,4 @@ public class PictureResVO implements Serializable {
     private Integer flowState;
 
 
-}*/
+}
