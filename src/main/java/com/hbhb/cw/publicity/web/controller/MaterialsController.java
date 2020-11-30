@@ -1,6 +1,7 @@
 package com.hbhb.cw.publicity.web.controller;
 
 import com.hbhb.cw.publicity.web.vo.MaterialsInfoVO;
+import com.hbhb.cw.publicity.web.vo.MaterialsInitVO;
 import com.hbhb.cw.publicity.web.vo.MaterialsReqVO;
 import com.hbhb.cw.publicity.web.vo.MaterialsResVO;
 import com.hbhb.cw.systemcenter.vo.FileVO;
@@ -69,6 +70,12 @@ public class MaterialsController {
     @Operation(summary = "删除宣传画面")
     @DeleteMapping("/{id}")
     public void deleteMaterials(@PathVariable("id") Long id) {
+
+    }
+
+    @Operation(summary = "发起审批")
+    @PostMapping("/to-approve")
+    public void toApprove(@RequestBody MaterialsInitVO initVO, @UserId Integer userId) {
 
     }
 

@@ -2,6 +2,7 @@
 package com.hbhb.cw.publicity.web.controller;
 
 import com.hbhb.cw.publicity.web.vo.PictureInfoVO;
+import com.hbhb.cw.publicity.web.vo.PictureInitVO;
 import com.hbhb.cw.publicity.web.vo.PictureResVO;
 import com.hbhb.cw.systemcenter.vo.FileVO;
 import com.hbhb.web.annotation.UserId;
@@ -71,6 +72,12 @@ public class PictureController {
     @Operation(summary = "删除宣传画面")
     @DeleteMapping("/{id}")
     public void deletePicture(@PathVariable("id") Long id) {
+
+    }
+
+    @Operation(summary = "发起审批")
+    @PostMapping("/to-approve")
+    public void toApprove(@RequestBody PictureInitVO initVO, @UserId Integer userId) {
 
     }
 

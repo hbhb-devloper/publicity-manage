@@ -2,6 +2,7 @@
 package com.hbhb.cw.publicity.web.controller;
 
 import com.hbhb.cw.publicity.web.vo.PrintInfoVO;
+import com.hbhb.cw.publicity.web.vo.PrintInitVO;
 import com.hbhb.cw.publicity.web.vo.PrintReqVO;
 import com.hbhb.cw.publicity.web.vo.PrintResVO;
 import com.hbhb.cw.systemcenter.vo.FileVO;
@@ -76,6 +77,10 @@ public class PrintController {
         return null;
     }
 
+    @Operation(summary = "发起审批")
+    @PostMapping("/to-approve")
+    public void toApprove(@RequestBody PrintInitVO initVO, @UserId Integer userId) {
 
+    }
 }
 
