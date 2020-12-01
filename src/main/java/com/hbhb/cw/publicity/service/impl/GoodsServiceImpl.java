@@ -25,6 +25,8 @@ import com.hbhb.cw.publicity.web.vo.SummaryUnitGoodsResVO;
 import com.hbhb.cw.publicity.web.vo.SummaryUnitGoodsVO;
 import com.hbhb.cw.publicity.web.vo.UnitGoodsStateVO;
 import com.hbhb.cw.publicity.web.vo.VerifyGoodsVO;
+import com.hbhb.cw.publicity.web.vo.VerifyHallGoodsReqVO;
+import com.hbhb.cw.publicity.web.vo.VerifyHallGoodsVO;
 import com.hbhb.cw.systemcenter.api.DictApi;
 import com.hbhb.cw.systemcenter.vo.UserInfo;
 
@@ -96,7 +98,7 @@ public class GoodsServiceImpl implements GoodsService {
         }
         // 3.判断本月此次下该分公司是否已保存
         List<Application> applications = applicationMapper.selectApplicationByUnitId(goodsReqVO.getUnitId(),
-                DateUtil.formatDate(setting.getDeadline(),"yyyy-MM"), setting.getGoodsIndex());
+                DateUtil.formatDate(setting.getDeadline(), "yyyy-MM"), setting.getGoodsIndex());
         if (applications != null && applications.get(0).getEditable()) {
             return new GoodsResVO(list, false);
         }
@@ -211,13 +213,13 @@ public class GoodsServiceImpl implements GoodsService {
 
         Map<String, SummaryUnitGoodsVO> map = new HashMap<>();
         for (SummaryUnitGoodsVO summaryUnitGoodsVO : simSummaryList) {
-            map.put(summaryUnitGoodsVO.getGoodsId()+summaryUnitGoodsVO.getUnitName(),summaryUnitGoodsVO);
+            map.put(summaryUnitGoodsVO.getGoodsId() + summaryUnitGoodsVO.getUnitName(), summaryUnitGoodsVO);
         }
         for (SummaryUnitGoodsVO cond : singSummaryList) {
-            if (map.get(cond.getGoodsId()+cond.getUnitName())==null){
+            if (map.get(cond.getGoodsId() + cond.getUnitName()) == null) {
                 simSummaryList.add(cond);
-            }else {
-                map.get(cond.getGoodsId()+cond.getUnitName()).setSingleAmount(cond.getSingleAmount());
+            } else {
+                map.get(cond.getGoodsId() + cond.getUnitName()).setSingleAmount(cond.getSingleAmount());
             }
         }
         // 得到第几次，判断此次是否结束。
@@ -260,7 +262,31 @@ public class GoodsServiceImpl implements GoodsService {
         // 通过此刻时间与截止时间对比，判断为第几月第几次
         GoodsSetting setting = goodsSettingService.getSetByDate(DateUtil.dateToString(date));
         // 通过时间 ，每次获取其列表
-        return goodsMapper.selectVerifyList(user.getNickName(),setting.getDeadline());
+        return goodsMapper.selectVerifyList(user.getNickName(), setting.getDeadline());
+    }
+
+    @Override
+    public List<VerifyHallGoodsVO> getInfoList(Integer unitId, Long goodsId) {
+        Date date = new Date();
+        // 通过此刻时间与截止时间对比，判断为第几月第几次
+        GoodsSetting setting = goodsSettingService.getSetByDate(DateUtil.dateToString(date));
+        return goodsMapper.selectVerifyHallList(VerifyHallGoodsReqVO.builder()
+                .goodsId(goodsId)
+                .unitId(unitId)
+                .goodsIndex(setting.getGoodsIndex())
+                .time(DateUtil.dateToString(date, "yyyy-MM"))
+                .build()
+        );
+    }
+
+    @Override
+    public void approveUnitGoods(Integer unitId, Long goodsId) {
+        List<VerifyHallGoodsVO> infoList = getInfoList(unitId, goodsId);
+        List<Long> ids = new ArrayList<>();
+        for (VerifyHallGoodsVO cond : infoList) {
+            ids.add(cond.getApplicationDetailId());
+        }
+        goodsMapper.updateVerifyHallBatch(ids);
     }
 
     /**

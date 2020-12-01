@@ -44,4 +44,9 @@ public class GoodsSettingServiceImpl implements GoodsSettingService {
         // 该次
         return goodsSettingMapper.selectSetByDate(time);
     }
+
+    @Override
+    public void deleteGoodsSetting(Long id) {
+        goodsSettingMapper.deleteById(id);
+    }
 }

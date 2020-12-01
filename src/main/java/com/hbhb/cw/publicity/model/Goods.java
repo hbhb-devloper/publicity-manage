@@ -117,4 +117,8 @@ public class Goods implements Serializable {
      */
     @Schema(description = "创建者")
     private String createBy;
+
+
+    @Schema(description = "true为列别/false为物料")
+    private Boolean mold;
 }

@@ -3,7 +3,9 @@ package com.hbhb.cw.publicity.web.controller;
 import com.hbhb.cw.publicity.model.GoodsSetting;
 import com.hbhb.cw.publicity.service.GoodsSettingService;
 
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,8 +39,14 @@ public class GoodsSettingController {
     }
 
     @PostMapping("/add")
-    @Operation(summary = "物料活动产品列表")
+    @Operation(summary = "新增物料活动")
     public void addGoodsSetting(@RequestBody List<GoodsSetting> list) {
         goodsSettingService.addGoodsSetting(list);
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "删除")
+    public void deleteGoodsSetting(@PathVariable Long id){
+        goodsSettingService.deleteGoodsSetting(id);
     }
 }

@@ -10,6 +10,7 @@ import com.hbhb.cw.publicity.web.vo.SummaryUnitGoodsResVO;
 import com.hbhb.cw.publicity.web.vo.SummaryUnitGoodsVO;
 import com.hbhb.cw.publicity.web.vo.UnitGoodsStateVO;
 import com.hbhb.cw.publicity.web.vo.VerifyGoodsVO;
+import com.hbhb.cw.publicity.web.vo.VerifyHallGoodsVO;
 
 import java.util.List;
 
@@ -120,7 +121,18 @@ public interface GoodsService {
 
 
     /**
-     * 物料员审核列表
+     * 物料员审核列表（单位）
      */
     List<VerifyGoodsVO> getVerifyList(Integer userId);
+
+    /**
+     * 物料员审核列表（营业厅）
+     */
+    List<VerifyHallGoodsVO> getInfoList(Integer unitId, Long goodsId);
+
+
+    /**
+     * 物料审核员审核
+     */
+    void approveUnitGoods(Integer unitId, Long goodsId);
 }

@@ -8,6 +8,8 @@ import com.hbhb.cw.publicity.web.vo.PurchaseGoods;
 import com.hbhb.cw.publicity.web.vo.SummaryGoodsVO;
 import com.hbhb.cw.publicity.web.vo.SummaryUnitGoodsVO;
 import com.hbhb.cw.publicity.web.vo.VerifyGoodsVO;
+import com.hbhb.cw.publicity.web.vo.VerifyHallGoodsReqVO;
+import com.hbhb.cw.publicity.web.vo.VerifyHallGoodsVO;
 import com.hbhb.web.beetlsql.BaseMapper;
 
 import java.util.Date;
@@ -35,4 +37,8 @@ public interface GoodsMapper extends BaseMapper<Goods> {
     List<PurchaseGoods> selectPurchaseGoods(GoodsReqVO goodsReqVO);
 
     List<VerifyGoodsVO> selectVerifyList(String nickName, Date time);
+
+    List<VerifyHallGoodsVO> selectVerifyHallList(VerifyHallGoodsReqVO verifyHallGoodsReqVO);
+
+    void updateVerifyHallBatch(List<Long> list);
 }

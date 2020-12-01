@@ -6,11 +6,9 @@ import com.hbhb.cw.publicity.mapper.GoodsMapper;
 import com.hbhb.cw.publicity.model.Goods;
 import com.hbhb.cw.publicity.rpc.SysUserApiExp;
 import com.hbhb.cw.publicity.service.LibraryService;
-import com.hbhb.cw.publicity.web.vo.LibraryAddVO;
 import com.hbhb.cw.publicity.web.vo.LibraryVO;
 import com.hbhb.cw.systemcenter.vo.UserInfo;
 
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -41,46 +39,77 @@ public class LibraryServiceImpl implements LibraryService {
         UserInfo user = userApi.getUserById(userId);
         Integer unitId = user.getUnitId();
         // 得到该单位下的所有活动
+        // todo 需要优化
         List<LibraryVO> list = goodsMapper.selectByUnitId(unitId);
-        // 得到该单位下的所有产品
-        List<Long> activities = new ArrayList<>();
-        List<LibraryVO> libraries = new ArrayList<>();
+        List<Long> parents = new ArrayList<>();
         for (LibraryVO libraryVO : list) {
-           libraries.addAll(libraryVO.getChildren());
+            parents.add(libraryVO.getId());
         }
-        for (LibraryVO libraryVO : libraries) {
-            activities.add(libraryVO.getId());
+        if (parents.size()==0){
+            return list;
         }
-        // 与活动结合转为树形结构
-        List<LibraryVO> goodsList = goodsMapper.selectGoodsByActIds(activities);
-        // activityId => Goods
-        Map<Long, List<LibraryVO>> map = new HashMap<>();
-        for (LibraryVO cond : goodsList) {
+        List<LibraryVO> actList = goodsMapper.selectGoodsByActIds(parents);
+        Map<Long, List<LibraryVO>> actMap = new HashMap<>();
+        for (LibraryVO cond : actList) {
             // 判断该活动下是否有货物
-            List<LibraryVO> condList = map.get(cond.getId());
+            List<LibraryVO> condList = actMap.get(cond.getId());
             // 如果没有则新建
             if (condList == null) {
                 List<LibraryVO> goods = new ArrayList<>();
                 goods.add(cond);
-                map.put(cond.getId(), goods);
+                actMap.put(cond.getParentId(), goods);
+            }
+            // 如果有则添加
+            else {
+                condList.add(cond);
+            }
+
+        }
+        for (LibraryVO libraryVO : list) {
+            libraryVO.setChildren(actMap.get(libraryVO.getId()));
+        }
+        // 得到该单位下的所有产品
+        List<Long> activities = new ArrayList<>();
+//        List<LibraryVO> libraries = new ArrayList<>();
+//        for (LibraryVO libraryVO : list) {
+//           libraries.addAll(libraryVO.getChildren());
+//        }
+        for (LibraryVO libraryVO : actList) {
+            activities.add(libraryVO.getId());
+        }
+        if(activities.size()==0){
+            return list;
+        }
+        // 与活动结合转为树形结构
+        List<LibraryVO> goodsList = goodsMapper.selectGoodsByActIds(activities);
+        // activityId => Goods
+        Map<Long, List<LibraryVO>> goodsMap = new HashMap<>();
+        for (LibraryVO cond : goodsList) {
+            // 判断该活动下是否有货物
+            List<LibraryVO> condList = goodsMap.get(cond.getId());
+            // 如果没有则新建
+            if (condList == null) {
+                List<LibraryVO> goods = new ArrayList<>();
+                goods.add(cond);
+                goodsMap.put(cond.getParentId(), goods);
             }
             // 如果有则添加
             else {
                 condList.add(cond);
             }
         }
-        for (LibraryVO libraryVO : libraries) {
-            libraryVO.setChildren(map.get(libraryVO.getId()));
+        for (LibraryVO libraryVO : actList) {
+            libraryVO.setChildren(goodsMap.get(libraryVO.getId()));
         }
         return list;
     }
 
     @Override
-    public void addLibrary(Integer userId, LibraryAddVO libraryAddVO) {
+    public void addLibrary(Integer userId, Goods libraryAddVO) {
         // 通过flag判断增加的是产品还是活动， 添加
         // 如果为活动
-        if (libraryAddVO.getFlag()){
-            if (libraryAddVO.getUnit()==null||libraryAddVO.getGoodsName()==null){
+        if (libraryAddVO.getMold()){
+            if (libraryAddVO.getUnitId()==null||libraryAddVO.getGoodsName()==null){
                 throw new GoodsException(GoodsErrorCode.NOT_FILLED_IN);
             }
         }
@@ -94,16 +123,14 @@ public class LibraryServiceImpl implements LibraryService {
             }
             // 添加产品
         }
-        Goods goods = new Goods();
-        BeanUtils.copyProperties(libraryAddVO,goods);
-        goodsMapper.insert(goods);
+        goodsMapper.insert(libraryAddVO);
     }
 
     @Override
-    public void updateLibrary(Integer userId, LibraryAddVO libraryAddVO) {
+    public void updateLibrary(Integer userId, Goods libraryAddVO) {
         // 通过flag判断修改的是活动还是产品，启用
         // 如果为活动
-        if (libraryAddVO.getFlag()){
+        if (libraryAddVO.getMold()){
             if (libraryAddVO.getUnit()==null||libraryAddVO.getGoodsName()==null){
                 throw new GoodsException(GoodsErrorCode.NOT_FILLED_IN);
             }
@@ -118,9 +145,7 @@ public class LibraryServiceImpl implements LibraryService {
             }
             // 添加产品
         }
-        Goods goods = new Goods();
-        BeanUtils.copyProperties(libraryAddVO,goods);
-        goodsMapper.updateById(goods);
+        goodsMapper.updateById(libraryAddVO);
     }
 
     @Override

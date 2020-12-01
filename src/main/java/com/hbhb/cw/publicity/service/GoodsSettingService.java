@@ -25,4 +25,9 @@ public interface GoodsSettingService {
      * 活动该次相关设置 （该次）
      */
     GoodsSetting getSetByDate(String time);
+
+    /**
+     * 通过id删除设置
+     */
+    void deleteGoodsSetting(Long id);
 }
