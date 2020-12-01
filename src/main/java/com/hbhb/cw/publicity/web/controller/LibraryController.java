@@ -2,6 +2,7 @@ package com.hbhb.cw.publicity.web.controller;
 
 import com.hbhb.cw.publicity.model.Goods;
 import com.hbhb.cw.publicity.service.LibraryService;
+import com.hbhb.cw.publicity.web.vo.LibraryAddVO;
 import com.hbhb.cw.publicity.web.vo.LibraryVO;
 import com.hbhb.web.annotation.UserId;
 
@@ -42,14 +43,14 @@ public class LibraryController {
 
     @PostMapping("/add")
     @Operation(summary = "新增物料活动产品列表")
-    public void addLibrary(@UserId Integer userId, Boolean flag, @RequestBody Goods goods) {
-        libraryService.addLibrary(userId, flag, goods);
+    public void addLibrary(@UserId Integer userId, @RequestBody LibraryAddVO libraryAddVO) {
+        libraryService.addLibrary(userId, libraryAddVO);
     }
 
     @PutMapping("/")
     @Operation(summary = "修改活动或产品")
-    public void library(@UserId Integer userId, Boolean flag, @RequestBody Goods goods) {
-        libraryService.updateLibrary(userId, flag, goods);
+    public void library(@UserId Integer userId, @RequestBody LibraryAddVO  libraryAddVO) {
+        libraryService.updateLibrary(userId, libraryAddVO);
     }
 
     @GetMapping("/{id}")

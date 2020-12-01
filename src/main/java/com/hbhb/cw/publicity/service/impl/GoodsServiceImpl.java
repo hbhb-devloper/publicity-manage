@@ -10,6 +10,7 @@ import com.hbhb.cw.publicity.mapper.GoodsMapper;
 import com.hbhb.cw.publicity.model.Application;
 import com.hbhb.cw.publicity.model.ApplicationDetail;
 import com.hbhb.cw.publicity.model.GoodsSetting;
+import com.hbhb.cw.publicity.rpc.SysUserApiExp;
 import com.hbhb.cw.publicity.service.GoodsService;
 import com.hbhb.cw.publicity.service.GoodsSettingService;
 import com.hbhb.cw.publicity.web.vo.ApplicationVO;
@@ -23,7 +24,9 @@ import com.hbhb.cw.publicity.web.vo.SummaryGoodsVO;
 import com.hbhb.cw.publicity.web.vo.SummaryUnitGoodsResVO;
 import com.hbhb.cw.publicity.web.vo.SummaryUnitGoodsVO;
 import com.hbhb.cw.publicity.web.vo.UnitGoodsStateVO;
+import com.hbhb.cw.publicity.web.vo.VerifyGoodsVO;
 import com.hbhb.cw.systemcenter.api.DictApi;
+import com.hbhb.cw.systemcenter.vo.UserInfo;
 
 import org.springframework.stereotype.Service;
 
@@ -55,6 +58,8 @@ public class GoodsServiceImpl implements GoodsService {
     private GoodsSettingService goodsSettingService;
     @Resource
     private DictApi dictApi;
+    @Resource
+    private SysUserApiExp sysUserApiExp;
 
 
     @Override
@@ -197,7 +202,7 @@ public class GoodsServiceImpl implements GoodsService {
     @Override
     public SummaryUnitGoodsResVO getUnitGoodsList(GoodsReqVO goodsReqVO) {
         String date = goodsReqVO.getTime();
-        // 通过此刻时间与截止时间对比，判断为第几月第几次
+        // 与截止时间对比，判断为第几月第几次
         GoodsSetting goodsSetting = goodsSettingService.getSetByDate(goodsReqVO.getTime());
         List<SummaryUnitGoodsVO> simSummaryList = getUnitSummaryList(goodsReqVO, GoodsType.BUSINESS_SIMPLEX.getValue());
         List<SummaryUnitGoodsVO> singSummaryList = getUnitSummaryList(goodsReqVO, GoodsType.FLYER_PAGE.getValue());
@@ -246,6 +251,16 @@ public class GoodsServiceImpl implements GoodsService {
     @Override
     public List<PurchaseGoods> getPurchaseGoodsList(GoodsReqVO goodsReqVO) {
         return goodsMapper.selectPurchaseGoods(goodsReqVO);
+    }
+
+    @Override
+    public List<VerifyGoodsVO> getVerifyList(Integer userId) {
+        UserInfo user = sysUserApiExp.getUserById(userId);
+        Date date = new Date();
+        // 通过此刻时间与截止时间对比，判断为第几月第几次
+        GoodsSetting setting = goodsSettingService.getSetByDate(DateUtil.dateToString(date));
+        // 通过时间 ，每次获取其列表
+        return goodsMapper.selectVerifyList(user.getNickName(),setting.getDeadline());
     }
 
     /**

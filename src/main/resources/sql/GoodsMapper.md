@@ -184,7 +184,7 @@ selectPurchaseGoods
              left join goods_setting gs on g.id = gs.goods_id
              left join application_detail ad on g.id = ad.goods_id
              left join application a on a.id = ad.application_id
-    -- @where(){
+     where ap.state = 2
                 -- @if(isNotEmpty(time)){
                     and gs.deadline like concat(#{time},'%')
                 -- @}
@@ -197,6 +197,30 @@ selectPurchaseGoods
                 -- @if(isNotEmpty(state)){
                     and ap.state = 2
                 -- @}
-             -- @}
+    group by g.id;
+```
+
+selectVerifyList
+===
+```sql
+    select  g.id  as goodsId,
+            g.goods_name as goodsName,
+            g.unit as unit,
+            ad.modify_amount as modifyAmount,
+            g.size  as  size,
+            g.attribute as attribute,
+            h.paper as paper,
+            g.checker as checker
+    from goods g
+             left join goods_setting gs on g.id = gs.goods_id
+             left join application_detail ad on g.id = ad.goods_id
+             left join application a on a.id = ad.application_id
+    where a.submit = 1
+                -- @if(isNotEmpty(time)){
+                    and gs.deadline = #{time}
+                -- @}
+                -- @if(isNotEmpty(nickName)){
+                    and g.checker = #{nickName}
+                -- @}
     group by g.id;
 ```

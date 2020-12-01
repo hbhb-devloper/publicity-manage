@@ -1,6 +1,7 @@
 package com.hbhb.cw.publicity.service;
 
 import com.hbhb.cw.publicity.model.Goods;
+import com.hbhb.cw.publicity.web.vo.LibraryAddVO;
 import com.hbhb.cw.publicity.web.vo.LibraryVO;
 
 import java.util.List;
@@ -19,12 +20,12 @@ public interface LibraryService {
     /**
      * 新增物料产品
      */
-    void addLibrary(Integer userId, Boolean flag, Goods goods);
+    void addLibrary(Integer userId, LibraryAddVO libraryAddVO);
 
     /**
      * 修改名称
      */
-    void updateLibrary(Integer userId, Boolean flag, Goods goods);
+    void updateLibrary(Integer userId, LibraryAddVO libraryAddVO);
 
     /**
      * 通过id得到物料id

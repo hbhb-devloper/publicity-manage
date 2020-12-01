@@ -6,9 +6,11 @@ import com.hbhb.cw.publicity.mapper.GoodsMapper;
 import com.hbhb.cw.publicity.model.Goods;
 import com.hbhb.cw.publicity.rpc.SysUserApiExp;
 import com.hbhb.cw.publicity.service.LibraryService;
+import com.hbhb.cw.publicity.web.vo.LibraryAddVO;
 import com.hbhb.cw.publicity.web.vo.LibraryVO;
 import com.hbhb.cw.systemcenter.vo.UserInfo;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -74,46 +76,50 @@ public class LibraryServiceImpl implements LibraryService {
     }
 
     @Override
-    public void addLibrary(Integer userId, Boolean flag, Goods goods) {
+    public void addLibrary(Integer userId, LibraryAddVO libraryAddVO) {
         // 通过flag判断增加的是产品还是活动， 添加
         // 如果为活动
-        if (flag){
-            if (goods.getUnit()==null||goods.getGoodsName()==null){
+        if (libraryAddVO.getFlag()){
+            if (libraryAddVO.getUnit()==null||libraryAddVO.getGoodsName()==null){
                 throw new GoodsException(GoodsErrorCode.NOT_FILLED_IN);
             }
         }
         // 如果为产品
         else {
             // 判断必填项是否添加
-            if (goods.getGoodsName()==null||goods.getGoodsNum()==null||goods.getType()==null
-            ||goods.getChecker()==null||goods.getUnit()==null||goods.getSize()==null||goods.getPaper()==null
-            ||goods.getUpdateBy()==null||goods.getState()){
+            if (libraryAddVO.getGoodsName()==null||libraryAddVO.getGoodsNum()==null||libraryAddVO.getType()==null
+            ||libraryAddVO.getChecker()==null||libraryAddVO.getUnit()==null||libraryAddVO.getSize()==null||libraryAddVO.getPaper()==null
+            ||libraryAddVO.getUpdateBy()==null|libraryAddVO.getState()){
                 throw new GoodsException(GoodsErrorCode.NOT_FILLED_IN);
             }
             // 添加产品
         }
+        Goods goods = new Goods();
+        BeanUtils.copyProperties(libraryAddVO,goods);
         goodsMapper.insert(goods);
     }
 
     @Override
-    public void updateLibrary(Integer userId, Boolean flag, Goods goods) {
+    public void updateLibrary(Integer userId, LibraryAddVO libraryAddVO) {
         // 通过flag判断修改的是活动还是产品，启用
         // 如果为活动
-        if (flag){
-            if (goods.getUnit()==null||goods.getGoodsName()==null){
+        if (libraryAddVO.getFlag()){
+            if (libraryAddVO.getUnit()==null||libraryAddVO.getGoodsName()==null){
                 throw new GoodsException(GoodsErrorCode.NOT_FILLED_IN);
             }
         }
         // 如果为产品
         else {
             // 判断必填项是否添加
-            if (goods.getGoodsName()==null||goods.getGoodsNum()==null||goods.getType()==null
-                    ||goods.getChecker()==null||goods.getUnit()==null||goods.getSize()==null||goods.getPaper()==null
-                    ||goods.getUpdateBy()==null||goods.getState()){
+            if (libraryAddVO.getGoodsName()==null||libraryAddVO.getGoodsNum()==null||libraryAddVO.getType()==null
+                    ||libraryAddVO.getChecker()==null||libraryAddVO.getUnit()==null||libraryAddVO.getSize()==null||libraryAddVO.getPaper()==null
+                    ||libraryAddVO.getUpdateBy()==null|libraryAddVO.getState()){
                 throw new GoodsException(GoodsErrorCode.NOT_FILLED_IN);
             }
             // 添加产品
         }
+        Goods goods = new Goods();
+        BeanUtils.copyProperties(libraryAddVO,goods);
         goodsMapper.updateById(goods);
     }
 
