@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author wangxiaogang
@@ -32,4 +33,8 @@ public class PictureInfoVO implements Serializable {
 
     @Schema(description = "用户id")
     private Integer userId;
+
+    @Schema(description = "附件")
+    private List<PictureFileVO> files;
+
 }

@@ -1,10 +1,10 @@
 package com.hbhb.cw.publicity.mapper;
 
-import com.hbhb.cw.publicity.model.Picture;
+import com.hbhb.cw.publicity.model.PrintFile;
 import com.hbhb.web.beetlsql.BaseMapper;
 
 /**
  * @author wangxiaogang
  */
-public interface PictureSetMapper extends BaseMapper<Picture> {
+public interface PrintFileMapper extends BaseMapper<PrintFile> {
 }

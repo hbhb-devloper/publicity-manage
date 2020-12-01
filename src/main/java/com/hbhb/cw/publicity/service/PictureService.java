@@ -25,7 +25,7 @@ public interface PictureService {
      * @param id id
      * @return 宣传画面详情
      */
-    PictureResVO getPicture(Long id);
+    PictureInfoVO getPicture(Long id);
 
     /**
      * 新增宣传画面设计

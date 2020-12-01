@@ -4,13 +4,17 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
 
+/**
+ * @author wangxiaogang
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Print implements java.io.Serializable {
+public class Print implements Serializable {
     private static final long serialVersionUID = -922348690978064283L;
     private Long id;
     /**

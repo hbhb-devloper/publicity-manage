@@ -32,6 +32,9 @@ public class PrintResVO implements Serializable {
     @Schema(description = "申请部门单位名称")
     private Integer unitName;
 
+    @Schema(description = "物料类型")
+    private Integer materialType;
+
     @Schema(description = "申请时间")
     private String applyTime;
 
@@ -49,4 +52,5 @@ public class PrintResVO implements Serializable {
 
     @Schema(description = "流程状态")
     private Integer stateLabel;
+
 }

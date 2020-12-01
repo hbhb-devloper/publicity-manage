@@ -1,6 +1,7 @@
 
 package com.hbhb.cw.publicity.web.controller;
 
+import com.hbhb.cw.publicity.service.PrintService;
 import com.hbhb.cw.publicity.web.vo.PrintInfoVO;
 import com.hbhb.cw.publicity.web.vo.PrintInitVO;
 import com.hbhb.cw.publicity.web.vo.PrintReqVO;
@@ -16,6 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -30,6 +32,9 @@ import javax.servlet.http.HttpServletResponse;
 @Slf4j
 public class PrintController {
 
+    @Resource
+    private PrintService printService;
+
     @Operation(summary = "印刷用品管理列表")
     @GetMapping("/list")
     public PageResult<PrintResVO> getPrintList(
@@ -38,7 +43,8 @@ public class PrintController {
             @Parameter(description = "查询参数") PrintReqVO reqVO, @UserId Integer userId) {
         pageNum = pageNum == null ? 1 : pageNum;
         pageSize = pageSize == null ? 10 : pageSize;
-        return null;
+
+        return printService.getPrintList(reqVO, pageNum, pageSize);
     }
 
     @Operation(summary = "添加印刷品")

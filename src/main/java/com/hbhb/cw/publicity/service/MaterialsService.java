@@ -25,7 +25,7 @@ public interface MaterialsService {
      * @param id id
      * @return 详情
      */
-    MaterialsResVO getMaterials(Long id);
+    MaterialsInfoVO getMaterials(Long id);
 
     /**
      * 添加物料设计

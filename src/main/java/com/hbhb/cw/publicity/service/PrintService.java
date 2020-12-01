@@ -25,7 +25,7 @@ public interface PrintService {
      * @param id id
      * @return 印刷用品详情
      */
-    PrintResVO getPrint(Long id);
+    PrintInfoVO getPrint(Long id);
 
     /**
      * 新增印刷用品

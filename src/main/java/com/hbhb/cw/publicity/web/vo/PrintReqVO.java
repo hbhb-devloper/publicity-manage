@@ -21,11 +21,8 @@ public class PrintReqVO implements Serializable {
     @Schema(description = "单位id")
     private Integer unitId;
 
-    @Schema(description = "年份")
-    private String year;
-
-    @Schema(description = "月份")
-    private String month;
+    @Schema(description = "年份-月份")
+    private String applyTime;
 
     @Schema(description = "审批状态")
     private Integer state;
