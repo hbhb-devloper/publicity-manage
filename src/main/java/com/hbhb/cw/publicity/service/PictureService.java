@@ -34,4 +34,19 @@ public interface PictureService {
      * @param userId 用户id
      */
     void addPicture(PictureInfoVO infoVO, Integer userId);
+
+    /**
+     * 修改宣传画面设计
+     *
+     * @param infoVO 修改实体
+     * @param userId 用户id
+     */
+    void updatePicture(PictureInfoVO infoVO, Integer userId);
+
+    /**
+     * 跟据id删除宣传画面内容
+     *
+     * @param id id
+     */
+    void deletePicture(Long id);
 }

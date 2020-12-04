@@ -1,6 +1,7 @@
 
 package com.hbhb.cw.publicity.web.controller;
 
+import com.hbhb.cw.publicity.rpc.FileApiExp;
 import com.hbhb.cw.publicity.web.vo.PictureInfoVO;
 import com.hbhb.cw.publicity.web.vo.PictureInitVO;
 import com.hbhb.cw.publicity.web.vo.PictureResVO;
@@ -15,6 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -28,6 +30,9 @@ import javax.servlet.http.HttpServletResponse;
 @RequestMapping("/picture")
 @Slf4j
 public class PictureController {
+    @Resource
+    private FileApiExp fileApi;
+
     @Operation(summary = "印刷用品管理列表")
     @GetMapping("/list")
     public PageResult<PictureResVO> getPictureList(
@@ -81,5 +86,10 @@ public class PictureController {
 
     }
 
+    @Operation(summary = "删除附件")
+    @DeleteMapping("/file/{id}")
+    public void deleteFile(@PathVariable Long id) {
+
+    }
 }
 

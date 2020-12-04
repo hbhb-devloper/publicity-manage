@@ -1,5 +1,7 @@
 package com.hbhb.cw.publicity.web.controller;
 
+import com.hbhb.core.utils.ExcelUtil;
+import com.hbhb.cw.publicity.rpc.FileApiExp;
 import com.hbhb.cw.publicity.web.vo.MaterialsInfoVO;
 import com.hbhb.cw.publicity.web.vo.MaterialsInitVO;
 import com.hbhb.cw.publicity.web.vo.MaterialsReqVO;
@@ -15,8 +17,12 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author wangxiaogang
@@ -26,6 +32,9 @@ import javax.servlet.http.HttpServletResponse;
 @RequestMapping("/materials")
 @Slf4j
 public class MaterialsController {
+    @Resource
+    private FileApiExp fileApi;
+
     @Operation(summary = "物料设计列表")
     @GetMapping("/list")
     public PageResult<MaterialsResVO> getMaterialsList(
@@ -52,7 +61,10 @@ public class MaterialsController {
     @Operation(summary = "宣传物料导入模板下载")
     @PostMapping("/export")
     public void exportMaterials(HttpServletRequest request, HttpServletResponse response) {
-
+        List<Object> list = new ArrayList<>();
+        String fileName = ExcelUtil.encodingFileName(request, "宣传单页模板");
+        ExcelUtil.export2WebWithTemplate(response, fileName, "宣传单页模板",
+                fileApi.getTemplatePath() + File.separator + "宣传单页模板.xlsx", list);
     }
 
     @Operation(summary = "宣传画面模板导入")
@@ -79,4 +91,9 @@ public class MaterialsController {
 
     }
 
+    @Operation(summary = "删除附件")
+    @DeleteMapping("/file/{id}")
+    public void deleteFile(@PathVariable Long id) {
+
+    }
 }

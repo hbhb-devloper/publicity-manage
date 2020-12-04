@@ -35,4 +35,19 @@ public interface MaterialsService {
      */
     void addMaterials(MaterialsInfoVO infoVO, Integer userId);
 
+    /**
+     * 跟据id删除物料设计
+     *
+     * @param id id
+     */
+    void deleteMaterials(Long id);
+
+    /**
+     * 修改物料设计
+     *
+     * @param infoVO 物料设计实体
+     * @param userId 用户id
+     */
+    void updateMaterials(MaterialsInfoVO infoVO, Integer userId);
+
 }

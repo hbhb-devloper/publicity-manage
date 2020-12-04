@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author wangxiaogang
@@ -38,4 +39,7 @@ public class MaterialsInfoVO implements Serializable {
 
     @Schema(description = "备注")
     private String remark;
+
+    @Schema(description = "文件")
+    private List<MaterialsFileVO> files;
 }

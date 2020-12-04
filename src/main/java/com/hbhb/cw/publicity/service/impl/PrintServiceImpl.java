@@ -45,6 +45,7 @@ public class PrintServiceImpl implements PrintService {
     public PageResult<PrintResVO> getPrintList(PrintReqVO reqVO, Integer pageNum, Integer pageSize) {
         PageRequest<PrintResVO> request = DefaultPageRequest.of(pageNum, pageSize);
         PageResult<PrintResVO> list = printMapper.selectPrintByCond(reqVO, request);
+        // todo 含字典，单位信息，人员姓名需填充
         return list;
     }
 
@@ -58,7 +59,7 @@ public class PrintServiceImpl implements PrintService {
             fileIds.add(Math.toIntExact(fileVO.getFileId()));
         }
         // 获取文件详情
-        List<File> fileInfo = fileApi.getFileInfo(fileIds);
+        List<File> fileInfo = fileApi.getFileInfoBatch(fileIds);
         for (File file : fileInfo) {
             for (PrintFileVO fileVO : files) {
                 if (fileVO.getFileId().equals(file.getId())) {
@@ -76,7 +77,7 @@ public class PrintServiceImpl implements PrintService {
     @Override
     public void addPrint(PrintInfoVO infoVO, Integer userId) {
         //获取用户姓名
-        UserInfo user = userApi.getUserById(userId);
+        UserInfo user = userApi.getUserInfoById(userId);
         Print print = new Print();
         BeanUtils.copyProperties(print, infoVO);
         // 新增印刷用品
@@ -93,4 +94,16 @@ public class PrintServiceImpl implements PrintService {
         }
         fileMapper.insertBatch(fileList);
     }
+
+    @Override
+    public void deletePrint(Long id) {
+        printMapper.deleteById(id);
+    }
+
+    @Override
+    public void updatePrint(PrintInfoVO infoVO, Integer userId) {
+
+    }
+
+
 }

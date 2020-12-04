@@ -34,4 +34,20 @@ public interface PrintService {
      * @param userId 用户id
      */
     void addPrint(PrintInfoVO infoVO, Integer userId);
+
+    /**
+     * 跟据id删除印刷用品
+     *
+     * @param id id
+     */
+    void deletePrint(Long id);
+
+    /**
+     * 修改印刷用品
+     *
+     * @param infoVO 修改实体
+     * @param userId 用户id
+     */
+    void updatePrint(PrintInfoVO infoVO, Integer userId);
+
 }

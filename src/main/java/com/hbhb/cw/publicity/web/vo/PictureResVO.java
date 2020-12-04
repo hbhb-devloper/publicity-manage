@@ -1,16 +1,16 @@
 package com.hbhb.cw.publicity.web.vo;
 
-import java.io.Serializable;
-import java.math.BigDecimal;
-import java.util.Date;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.Date;
+
 /**
- *  @author wangxiaogang
+ * @author wangxiaogang
  */
 @Data
 @AllArgsConstructor
@@ -24,7 +24,7 @@ public class PictureResVO implements Serializable {
     private String pictureName;
 
     @Schema(description = "申请单号")
-    private String applyNum;
+    private String pictureNum;
 
     @Schema(description = "单位id")
     private Integer unitId;

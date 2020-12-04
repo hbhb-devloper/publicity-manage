@@ -1,6 +1,8 @@
 
 package com.hbhb.cw.publicity.web.controller;
 
+import com.hbhb.core.utils.ExcelUtil;
+import com.hbhb.cw.publicity.rpc.FileApiExp;
 import com.hbhb.cw.publicity.service.PrintService;
 import com.hbhb.cw.publicity.web.vo.PrintInfoVO;
 import com.hbhb.cw.publicity.web.vo.PrintInitVO;
@@ -20,6 +22,9 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -35,6 +40,9 @@ public class PrintController {
     @Resource
     private PrintService printService;
 
+    @Resource
+    private FileApiExp fileApi;
+
     @Operation(summary = "印刷用品管理列表")
     @GetMapping("/list")
     public PageResult<PrintResVO> getPrintList(
@@ -49,7 +57,8 @@ public class PrintController {
 
     @Operation(summary = "添加印刷品")
     @PostMapping("/add")
-    public void addPrint(@Parameter(description = "新增参数实体") PrintInfoVO infoVO) {
+    public void addPrint(@Parameter(description = "新增参数实体") PrintInfoVO infoVO, @UserId Integer userId) {
+        printService.addPrint(infoVO, userId);
     }
 
     @Operation(summary = "删除印刷品")
@@ -58,17 +67,30 @@ public class PrintController {
 
     }
 
+    @Operation(summary = "修改印刷品")
+    @PostMapping("/update")
+    public void updatePrint(@Parameter(description = "新增参数实体") PrintInfoVO infoVO, @UserId Integer userId) {
+        printService.updatePrint(infoVO, userId);
+    }
+
+
     @Operation(summary = "下载业务单式模板")
     @PostMapping("/export/business")
     public void exportBusiness(HttpServletRequest request, HttpServletResponse response) {
-
+        List<Object> list = new ArrayList<>();
+        String fileName = ExcelUtil.encodingFileName(request, "业务单式模板");
+        ExcelUtil.export2WebWithTemplate(response, fileName, "业务单式模板",
+                fileApi.getTemplatePath() + File.separator + "业务单式模板.xlsx", list);
     }
 
 
     @Operation(summary = "下载宣传单页模板")
     @PostMapping("/export/publicity")
     public void exportPublicity(HttpServletRequest request, HttpServletResponse response) {
-
+        List<Object> list = new ArrayList<>();
+        String fileName = ExcelUtil.encodingFileName(request, "宣传单页模板");
+        ExcelUtil.export2WebWithTemplate(response, fileName, "宣传单页模板",
+                fileApi.getTemplatePath() + File.separator + "宣传单页模板.xlsx", list);
     }
 
     @Operation(summary = "导入")
@@ -86,6 +108,12 @@ public class PrintController {
     @Operation(summary = "发起审批")
     @PostMapping("/to-approve")
     public void toApprove(@RequestBody PrintInitVO initVO, @UserId Integer userId) {
+
+    }
+
+    @Operation(summary = "删除附件")
+    @DeleteMapping("/file/{id}")
+    public void deleteFile(@PathVariable Long id) {
 
     }
 }
