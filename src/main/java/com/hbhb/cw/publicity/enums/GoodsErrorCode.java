@@ -13,6 +13,7 @@ public enum GoodsErrorCode {
     ALREADY_CLOSE("801","本次已截止"),
     PARENT_NOT_ACTIVITY("802","货物只能在活动之下！"),
     NOT_FILLED_IN("803","必填项未填"),
+    NOT_RELEVANT_FLOW("804","相关流程异常"),
     ;
 
     private String code;

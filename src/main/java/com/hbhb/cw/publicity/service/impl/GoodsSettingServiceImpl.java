@@ -49,4 +49,11 @@ public class GoodsSettingServiceImpl implements GoodsSettingService {
     public void deleteGoodsSetting(Long id) {
         goodsSettingMapper.deleteById(id);
     }
+
+    @Override
+    public void updateByBatchNum(String batchNum) {
+        String time = batchNum.substring(0, 4);
+        String goodsIndex = batchNum.substring(4);
+        goodsSettingMapper.updateByBatchNum(time, Integer.valueOf(goodsIndex), new Date());
+    }
 }

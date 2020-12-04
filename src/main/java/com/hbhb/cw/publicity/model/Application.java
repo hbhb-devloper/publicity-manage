@@ -29,13 +29,9 @@ public class Application implements java.io.Serializable {
      */
     private Date createTime;
     /**
-     * 次序
+     * 批次号（年份+月份+序号）
      */
-    private Integer goodsIndex;
-    /**
-     * 申请次序
-     */
-    private Integer applyIndex;
+    private String batchNum;
     /**
      * 表单内容是否可更改
      */

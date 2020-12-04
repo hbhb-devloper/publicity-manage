@@ -26,6 +26,24 @@ selectByCond
                -- @if(isNotEmpty(time)){
                     and create_time = #{time}
                -- @}
+               -- @if(isNotEmpty(goodsIndex)){
+                    and goods_index = #{goodsIndex}
+               -- @}
+           -- @}
+        group by hall_id;
+```
+
+selectByHall
+===
+```sql
+        select * from application
+           -- @where(){
+               -- @if(isNotEmpty(unitId)){
+                    and unit_id = #{unitId}
+               -- @}
+               -- @if(isNotEmpty(time)){
+                    and create_time = #{time}
+               -- @}
                -- @if(isNotEmpty(hallId)){
                     and hall_id = #{hallId}
                -- @} 
@@ -40,7 +58,7 @@ updateEditable
 ```sql
       update application
       set editable = 0 
-      where id in ()  
+      where id = 
 ```
 updateSubmit
 ===
@@ -48,4 +66,12 @@ updateSubmit
       update application
       set submit = 0 
       where id in ()  
+```
+
+updateByBatchNum
+===
+```sql
+    update application
+    set approved_state = 10
+    where batch_num = #{batchNum}
 ```

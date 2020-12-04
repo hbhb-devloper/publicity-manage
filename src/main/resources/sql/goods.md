@@ -68,7 +68,8 @@ selectSummaryUnitByType
              left join goods_setting gs on g.id = gs.goods_id
              left join application_detail ad on g.id = ad.goods_id
              left join application a on a.id = ad.application_id
-    -- @where(){
+            where a.submit = 1
+            and ad.state in (1,2)
                 -- @if(isNotEmpty(unitId)){
                     and g.unit_id = #{unitId}
                 -- @}
@@ -84,7 +85,7 @@ selectSummaryUnitByType
                 -- @if(isNotEmpty(type)){
                     and g.type = #{type}
                 -- @}
-             -- @}
+             
     group by g.unit_id,g.id;
 ```
 

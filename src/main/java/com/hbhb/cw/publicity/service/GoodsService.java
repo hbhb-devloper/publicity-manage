@@ -2,13 +2,12 @@ package com.hbhb.cw.publicity.service;
 
 import com.hbhb.cw.publicity.web.vo.ApplicationVO;
 import com.hbhb.cw.publicity.web.vo.GoodsChangerVO;
+import com.hbhb.cw.publicity.web.vo.GoodsCondVO;
 import com.hbhb.cw.publicity.web.vo.GoodsReqVO;
 import com.hbhb.cw.publicity.web.vo.GoodsResVO;
 import com.hbhb.cw.publicity.web.vo.PurchaseGoods;
 import com.hbhb.cw.publicity.web.vo.SummaryGoodsResVO;
-import com.hbhb.cw.publicity.web.vo.SummaryUnitGoodsResVO;
 import com.hbhb.cw.publicity.web.vo.SummaryUnitGoodsVO;
-import com.hbhb.cw.publicity.web.vo.UnitGoodsStateVO;
 import com.hbhb.cw.publicity.web.vo.VerifyGoodsVO;
 import com.hbhb.cw.publicity.web.vo.VerifyHallGoodsVO;
 
@@ -26,13 +25,13 @@ public interface GoodsService {
      * @return 营业厅产品申请信息
      *
      */
-    GoodsResVO getList(GoodsReqVO goodsReqVO);
+    GoodsResVO getList(GoodsCondVO goodsCondVO);
 
     /**
      * 申请产品数量
      * @param list 申请产品
      */
-    void applyGoods(List<ApplicationVO> list, GoodsReqVO goodsReqVO);
+    void applyGoods(List<ApplicationVO> list,  GoodsCondVO goodsCondVO);
 
     /**
      * 通过时间获得次序
@@ -86,34 +85,6 @@ public interface GoodsService {
     void changerModifyAmount(List<GoodsChangerVO> list);
 
     /**
-     * 分公司提交汇总
-     * @return 分公司提交状态
-     */
-    SummaryUnitGoodsResVO getUnitGoodsList(GoodsReqVO goodsReqVO);
-
-    /**
-     *
-     * 政企或市场部汇总（详情）
-     * @return 营业厅产品申请信息
-     *
-     */
-    List<SummaryUnitGoodsVO> getUnitSimplexList(GoodsReqVO goodsReqVO);
-
-    /**
-     *
-     * 政企或市场部汇总（详情）
-     * @return 营业厅产品申请信息
-     *
-     */
-    List<SummaryUnitGoodsVO> getUnitSingleList(GoodsReqVO goodsReqVO);
-
-    /**
-     * 分公司提交状态
-     * @return 分公司提交状态
-     */
-    List<UnitGoodsStateVO> getUnitGoodsStateList(GoodsReqVO goodsReqVO);
-
-    /**
      * 物料采购汇总
      * @return 物料采购汇总
      */
@@ -135,4 +106,9 @@ public interface GoodsService {
      * 物料审核员审核
      */
     void approveUnitGoods(Integer unitId, Long goodsId);
+
+    /**
+     * 获取市场部或政企的汇总
+     */
+    public List<SummaryUnitGoodsVO> selectUnitSummaryList(GoodsReqVO goodsReqVO, Integer type);
 }

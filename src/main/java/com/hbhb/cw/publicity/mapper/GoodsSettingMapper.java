@@ -3,6 +3,7 @@ package com.hbhb.cw.publicity.mapper;
 import com.hbhb.cw.publicity.model.GoodsSetting;
 import com.hbhb.web.beetlsql.BaseMapper;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -12,4 +13,6 @@ public interface GoodsSettingMapper extends BaseMapper<com.hbhb.cw.publicity.mod
     List<GoodsSetting> selectByDate(String time);
 
     GoodsSetting selectSetByDate(String time);
+
+    void updateByBatchNum(String time, Integer goodsIndex, Date dateTime);
 }

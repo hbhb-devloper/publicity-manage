@@ -10,20 +10,22 @@ import lombok.NoArgsConstructor;
 
 /**
  * @author yzc
- * @since 2020-11-24
+ * @since 2020-12-02
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class GoodsReqVO implements Serializable {
+public class GoodsCondVO implements Serializable {
     private static final long serialVersionUID = -6469305293332933203L;
-
     @Schema(description = "单位id")
     private Integer unitId;
 
     @Schema(description = "时间")
     private String time;
+
+    @Schema(description = "营业厅id")
+    private Long hallId;
 
     @Schema(description = "次序")
     private Integer goodsIndex;

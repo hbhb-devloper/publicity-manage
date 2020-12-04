@@ -36,7 +36,7 @@ public class LibraryServiceImpl implements LibraryService {
     @Override
     public List<LibraryVO> getTreeList(Integer userId) {
         // 通过id得到起所属单位
-        UserInfo user = userApi.getUserById(userId);
+        UserInfo user = userApi.getUserInfoById(userId);
         Integer unitId = user.getUnitId();
         // 得到该单位下的所有活动
         // todo 需要优化

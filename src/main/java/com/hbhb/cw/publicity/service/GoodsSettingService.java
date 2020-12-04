@@ -30,4 +30,9 @@ public interface GoodsSettingService {
      * 通过id删除设置
      */
     void deleteGoodsSetting(Long id);
+
+    /**
+     * 通过批次改变提前截止
+     */
+    void updateByBatchNum(String batchNum);
 }

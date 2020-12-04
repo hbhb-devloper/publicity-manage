@@ -15,21 +15,20 @@ import com.hbhb.cw.publicity.service.GoodsService;
 import com.hbhb.cw.publicity.service.GoodsSettingService;
 import com.hbhb.cw.publicity.web.vo.ApplicationVO;
 import com.hbhb.cw.publicity.web.vo.GoodsChangerVO;
+import com.hbhb.cw.publicity.web.vo.GoodsCondVO;
 import com.hbhb.cw.publicity.web.vo.GoodsReqVO;
 import com.hbhb.cw.publicity.web.vo.GoodsResVO;
 import com.hbhb.cw.publicity.web.vo.GoodsVO;
 import com.hbhb.cw.publicity.web.vo.PurchaseGoods;
 import com.hbhb.cw.publicity.web.vo.SummaryGoodsResVO;
 import com.hbhb.cw.publicity.web.vo.SummaryGoodsVO;
-import com.hbhb.cw.publicity.web.vo.SummaryUnitGoodsResVO;
 import com.hbhb.cw.publicity.web.vo.SummaryUnitGoodsVO;
-import com.hbhb.cw.publicity.web.vo.UnitGoodsStateVO;
 import com.hbhb.cw.publicity.web.vo.VerifyGoodsVO;
 import com.hbhb.cw.publicity.web.vo.VerifyHallGoodsReqVO;
 import com.hbhb.cw.publicity.web.vo.VerifyHallGoodsVO;
-import com.hbhb.cw.systemcenter.api.DictApi;
 import com.hbhb.cw.systemcenter.vo.UserInfo;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -59,17 +58,17 @@ public class GoodsServiceImpl implements GoodsService {
     @Resource
     private GoodsSettingService goodsSettingService;
     @Resource
-    private DictApi dictApi;
-    @Resource
     private SysUserApiExp sysUserApiExp;
 
 
     @Override
-    public GoodsResVO getList(GoodsReqVO goodsReqVO) {
-        if (goodsReqVO.getHallId() == null) {
+    public GoodsResVO getList( GoodsCondVO goodsCondVO) {
+        if (goodsCondVO.getHallId() == null) {
             // 报异常
             throw new GoodsException(GoodsErrorCode.NOT_SERVICE_HALL);
         }
+        GoodsReqVO goodsReqVO = new GoodsReqVO();
+        BeanUtils.copyProperties(goodsCondVO,goodsReqVO);
         // 通过营业厅得到该营业厅下该时间的申请详情
         List<GoodsVO> goods = goodsMapper.selectByCond(goodsReqVO);
         // 得到所有产品
@@ -86,7 +85,7 @@ public class GoodsServiceImpl implements GoodsService {
         }
         // 申请数量所需条件（置灰或者能使用）
         // 0.通过时间对比截止时间得到为几月的第几次
-        GoodsSetting goodsSetting = goodsSettingService.getSetByDate(goodsReqVO.getTime());
+        GoodsSetting goodsSetting = goodsSettingService.getSetByDate(goodsCondVO.getTime());
         // 1.得到此刻时间，通过截止时间，判断为几月的第几次。如何0的结果与1的结果不符则直接置灰。
         GoodsSetting setting = goodsSettingService.getSetByDate(DateUtil.dateToString(new Date()));
         if (!goodsSetting.getId().equals(setting.getId())) {
@@ -97,7 +96,7 @@ public class GoodsServiceImpl implements GoodsService {
             return new GoodsResVO(list, false);
         }
         // 3.判断本月此次下该分公司是否已保存
-        List<Application> applications = applicationMapper.selectApplicationByUnitId(goodsReqVO.getUnitId(),
+        List<Application> applications = applicationMapper.selectApplicationByUnitId(goodsCondVO.getUnitId(),
                 DateUtil.formatDate(setting.getDeadline(), "yyyy-MM"), setting.getGoodsIndex());
         if (applications != null && applications.get(0).getEditable()) {
             return new GoodsResVO(list, false);
@@ -113,28 +112,22 @@ public class GoodsServiceImpl implements GoodsService {
     }
 
     @Override
-    public void applyGoods(List<ApplicationVO> list, GoodsReqVO goodsReqVO) {
+    public void applyGoods(List<ApplicationVO> list, GoodsCondVO goodsCondVO) {
         // 新增产品（如果该营业厅该产品已有则覆盖）
-        GoodsSetting goodsSetting = goodsSettingService.getSetByDate(goodsReqVO.getTime());
+        GoodsSetting goodsSetting = goodsSettingService.getSetByDate(goodsCondVO.getTime());
         Date date = new Date();
-        List<Application> applications = new ArrayList<>();
-        // 生成申请表
-        for (ApplicationVO applicationVO : list) {
-            Application application = new Application();
-            application.setApplyIndex(goodsSetting.getGoodsIndex());
-            application.setCreateTime(date);
-            application.setHallId(goodsReqVO.getHallId());
-            application.setGoodsIndex(goodsSetting.getGoodsIndex());
-            applications.add(application);
-        }
-        applicationMapper.insertBatch(applications);
+        Application application = new Application();
+        application.setBatchNum(DateUtil.dateToString(date,"yyyyMM") + goodsSetting.getGoodsIndex());
+        application.setCreateTime(date);
+        application.setHallId(goodsCondVO.getHallId());
+        applicationMapper.insert(application);
         List<ApplicationDetail> applicationDetails = new ArrayList<>();
-        goodsReqVO.setGoodsIndex(goodsSetting.getGoodsIndex());
+        goodsCondVO.setGoodsIndex(goodsSetting.getGoodsIndex());
         // 得到id
-        List<Application> applicationList = applicationMapper.selectByCond(goodsReqVO);
-        for (int i = 0; i < applicationList.size(); i++) {
+        Application applicationRes = applicationMapper.selectByHall(goodsCondVO);
+        for (int i = 0; i < list.size(); i++) {
             ApplicationDetail applicationDetail = new ApplicationDetail();
-            applicationDetail.setApplicationId(applicationList.get(i).getId());
+            applicationDetail.setApplicationId(applicationRes.getId());
             applicationDetail.setApplyAmount(list.get(i).getApplyAmount());
             applicationDetail.setGoodsId(list.get(i).getGoodsId());
             applicationDetails.add(applicationDetail);
@@ -201,54 +194,6 @@ public class GoodsServiceImpl implements GoodsService {
         applicationMapper.updateBatch(list);
     }
 
-    @Override
-    public SummaryUnitGoodsResVO getUnitGoodsList(GoodsReqVO goodsReqVO) {
-        String date = goodsReqVO.getTime();
-        // 与截止时间对比，判断为第几月第几次
-        GoodsSetting goodsSetting = goodsSettingService.getSetByDate(goodsReqVO.getTime());
-        List<SummaryUnitGoodsVO> simSummaryList = getUnitSummaryList(goodsReqVO, GoodsType.BUSINESS_SIMPLEX.getValue());
-        List<SummaryUnitGoodsVO> singSummaryList = getUnitSummaryList(goodsReqVO, GoodsType.FLYER_PAGE.getValue());
-        // 通过goodsId得到unitName
-
-
-        Map<String, SummaryUnitGoodsVO> map = new HashMap<>();
-        for (SummaryUnitGoodsVO summaryUnitGoodsVO : simSummaryList) {
-            map.put(summaryUnitGoodsVO.getGoodsId() + summaryUnitGoodsVO.getUnitName(), summaryUnitGoodsVO);
-        }
-        for (SummaryUnitGoodsVO cond : singSummaryList) {
-            if (map.get(cond.getGoodsId() + cond.getUnitName()) == null) {
-                simSummaryList.add(cond);
-            } else {
-                map.get(cond.getGoodsId() + cond.getUnitName()).setSingleAmount(cond.getSingleAmount());
-            }
-        }
-        // 得到第几次，判断此次是否结束。
-        if (goodsSetting.getIsEnd() != null || goodsSetting.getDeadline().getTime() < DateUtil.stringToDate(date).getTime()) {
-            // 如果结束提交置灰
-            return new SummaryUnitGoodsResVO(simSummaryList, false);
-        }
-        // 展示该次该管理部门下的申请汇总。
-        return new SummaryUnitGoodsResVO(simSummaryList, true);
-    }
-
-    @Override
-    public List<SummaryUnitGoodsVO> getUnitSimplexList(GoodsReqVO goodsReqVO) {
-        return getUnitSummaryList(goodsReqVO, GoodsType.BUSINESS_SIMPLEX.getValue());
-    }
-
-    @Override
-    public List<SummaryUnitGoodsVO> getUnitSingleList(GoodsReqVO goodsReqVO) {
-        return getUnitSummaryList(goodsReqVO, GoodsType.FLYER_PAGE.getValue());
-    }
-
-    @Override
-    public List<UnitGoodsStateVO> getUnitGoodsStateList(GoodsReqVO goodsReqVO) {
-        // 用sql语句完成
-        // 得到所有公司下所有货物（goodsId）
-        // 得到该货物的物料审核员（updateBy）和审核状态
-        // 通过单位id得到该分公司下的所有单位和状态
-        return null;
-    }
 
     @Override
     public List<PurchaseGoods> getPurchaseGoodsList(GoodsReqVO goodsReqVO) {
@@ -257,7 +202,7 @@ public class GoodsServiceImpl implements GoodsService {
 
     @Override
     public List<VerifyGoodsVO> getVerifyList(Integer userId) {
-        UserInfo user = sysUserApiExp.getUserById(userId);
+        UserInfo user = sysUserApiExp.getUserInfoById(userId);
         Date date = new Date();
         // 通过此刻时间与截止时间对比，判断为第几月第几次
         GoodsSetting setting = goodsSettingService.getSetByDate(DateUtil.dateToString(date));
@@ -287,6 +232,12 @@ public class GoodsServiceImpl implements GoodsService {
             ids.add(cond.getApplicationDetailId());
         }
         goodsMapper.updateVerifyHallBatch(ids);
+    }
+
+    @Override
+    public List<SummaryUnitGoodsVO> selectUnitSummaryList(GoodsReqVO goodsReqVO, Integer type) {
+        // 展示该次该单位下的申请汇总。
+        return goodsMapper.selectSummaryUnitByType(goodsReqVO, type, 2);
     }
 
     /**
@@ -337,13 +288,5 @@ public class GoodsServiceImpl implements GoodsService {
             }
         }
         return new SummaryGoodsResVO(summaries, true);
-    }
-
-    /**
-     * 获取市场部或政企的汇总
-     */
-    private List<SummaryUnitGoodsVO> getUnitSummaryList(GoodsReqVO goodsReqVO, Integer type) {
-        // 展示该次该单位下的申请汇总。
-        return goodsMapper.selectSummaryUnitByType(goodsReqVO, type, 2);
     }
 }

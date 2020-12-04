@@ -3,7 +3,11 @@ package com.hbhb.cw.publicity.mapper;//package com.hbhb.cw.systemcenter.mapper;
 import org.beetl.core.GroupTemplate;
 import org.beetl.core.ReThrowConsoleErrorHandler;
 import org.beetl.core.resource.ClasspathResourceLoader;
-import org.beetl.sql.core.*;
+import org.beetl.sql.core.ConnectionSource;
+import org.beetl.sql.core.ConnectionSourceHelper;
+import org.beetl.sql.core.SQLManager;
+import org.beetl.sql.core.SQLManagerBuilder;
+import org.beetl.sql.core.UnderlinedNameConversion;
 import org.beetl.sql.core.db.MySqlStyle;
 import org.beetl.sql.gen.SourceBuilder;
 import org.beetl.sql.gen.SourceConfig;
@@ -26,7 +30,7 @@ public class Generator {
     /**
      * 数据库表名
      */
-    private static final String TABLE_NAME = "materials_file";
+    private static final String TABLE_NAME = "application_notice";
 
     public static void main(String[] args) {
         // 设置自定义模版路径

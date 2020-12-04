@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -13,21 +14,15 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class GoodsFlow implements Serializable {
+@Builder
+public class ApplicationFlow implements Serializable {
     private static final long serialVersionUID = -329707914448505012L;
     private Long id;
+
     /**
-     * 宣传产品id
+     * 批次号（年份+月份+序号）
      */
-    private Long goodsId;
-    /**
-     * 截至时间
-     */
-    private Date deadline;
-    /**
-     * 次级
-     */
-    private Integer goodsIndex;
+    private String batchNum;
     /**
      * 流程节点id
      */
@@ -51,11 +46,11 @@ public class GoodsFlow implements Serializable {
     /**
      * 是否能够自定义流程（0-否、1-是）
      */
-    private Integer controlAccess;
+    private Boolean controlAccess;
     /**
      * 是否允许被设置不参与流程（0-不参与、1-参与）
      */
-    private Integer isJoin;
+    private Boolean isJoin;
     /**
      * 操作（0-拒绝、1-同意）
      */
