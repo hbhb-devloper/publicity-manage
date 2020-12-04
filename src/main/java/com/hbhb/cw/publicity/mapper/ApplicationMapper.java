@@ -25,5 +25,7 @@ public interface ApplicationMapper extends BaseMapper<Application> {
 
     List<Application> selectApplicationByUnitId(Integer unitId, String time, Integer goodsIndex);
 
-    void updateByBatchNum(String batch);
+    void updateByBatchNum(String batch, Integer state);
+
+    List<Application> selectByBatchNum(String batchNum);
 }

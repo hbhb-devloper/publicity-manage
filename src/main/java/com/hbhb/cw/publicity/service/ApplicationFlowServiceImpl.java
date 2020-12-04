@@ -37,4 +37,9 @@ public class ApplicationFlowServiceImpl implements ApplicationFlowService {
         // 更新各节点审批人
         applicationFlowMapper.updateBatchByNodeId(approvers, batchNum);
     }
+
+    @Override
+    public void updateById(ApplicationFlow applicationFlow) {
+        applicationFlowMapper.updateById(applicationFlow);
+    }
 }

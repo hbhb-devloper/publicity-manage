@@ -4,6 +4,7 @@ import com.hbhb.core.utils.DateUtil;
 import com.hbhb.cw.flowcenter.model.Flow;
 import com.hbhb.cw.flowcenter.vo.FlowNodeNoticeResVO;
 import com.hbhb.cw.flowcenter.vo.FlowNodePropVO;
+import com.hbhb.cw.messagehub.vo.MailVO;
 import com.hbhb.cw.publicity.enums.ApplicationState;
 import com.hbhb.cw.publicity.enums.FlowNodeNoticeState;
 import com.hbhb.cw.publicity.enums.GoodsErrorCode;
@@ -12,12 +13,14 @@ import com.hbhb.cw.publicity.enums.NodeState;
 import com.hbhb.cw.publicity.enums.OperationState;
 import com.hbhb.cw.publicity.exception.GoodsException;
 import com.hbhb.cw.publicity.mapper.ApplicationMapper;
+import com.hbhb.cw.publicity.model.Application;
 import com.hbhb.cw.publicity.model.ApplicationFlow;
 import com.hbhb.cw.publicity.model.GoodsSetting;
 import com.hbhb.cw.publicity.rpc.FlowNodeApiExp;
 import com.hbhb.cw.publicity.rpc.FlowNoticeApiExp;
 import com.hbhb.cw.publicity.rpc.FlowRoleUserApiExp;
 import com.hbhb.cw.publicity.rpc.FlowTypeApiExp;
+import com.hbhb.cw.publicity.rpc.MailApiExp;
 import com.hbhb.cw.publicity.rpc.SysUserApiExp;
 import com.hbhb.cw.publicity.rpc.UnitApiExp;
 import com.hbhb.cw.publicity.service.ApplicationFlowService;
@@ -36,11 +39,13 @@ import com.hbhb.cw.publicity.web.vo.UnitGoodsStateVO;
 import com.hbhb.cw.systemcenter.vo.UnitTopVO;
 import com.hbhb.cw.systemcenter.vo.UserInfo;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -72,11 +77,15 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Resource
     private SysUserApiExp sysUserApiExp;
     @Resource
+    private MailApiExp mailApiExp;
+    @Resource
     private ApplicationFlowService applicationFlowService;
     @Resource
     private ApplicationNoticeService applicationNoticeService;
     @Resource
     private ApplicationMapper applicationMapper;
+    @Value("${mail.enable}")
+    private Boolean mailEnable;
 
     @Override
     public SummaryUnitGoodsResVO getUnitGoodsList(GoodsReqVO goodsReqVO) {
@@ -159,7 +168,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         inform = inform.replace("title"
                 , "宣传影片" + batchNum + "批次");
         // 推送消息给发起人
-        applicationNoticeService.saveBudgetProjectNotice (
+        applicationNoticeService.saveApplicationNotice (
                 ApplicationNoticeVO.builder()
                         .batchNum(batchNum)
                         .receiver(userId)
@@ -167,8 +176,8 @@ public class ApplicationServiceImpl implements ApplicationService {
                         .content(inform)
                         .flowTypeId(goodsApproveVO.getFlowTypeId())
                         .build());
-        // 修改申领状态
-        applicationMapper.updateByBatchNum(batchNum);
+        // 修改申领审批状态
+        applicationMapper.updateByBatchNum(batchNum, 10);
         // 修改批次状态
         goodsSettingService.updateByBatchNum(batchNum);
     }
@@ -235,44 +244,22 @@ public class ApplicationServiceImpl implements ApplicationService {
         applicationNoticeService.updateByBatchNum(batchNum);
 
         // 推送提醒
-//        assert operation != null;
-//        toInform(operation, approvers, userId, projectId, currentFlowNodeId, flowNodes,
-//                approverMap, approveVO.getSuggestion());
-//
-//        // 更新项目节点信息
-//        budgetProjectFlowMapper.updateByPrimaryKeySelective(BudgetProjectFlow.builder()
-//                .operation(operation)
-//                .suggestion(approveVO.getSuggestion())
-//                .updateTime(new Date())
-//                .id(approveVO.getId())
-//                .build());
-//
-//        // 更新项目的流程状态
-//        if (projectState != null) {
-//            budgetProjectService.updateState(Math.toIntExact(projectId), projectState);
-//        }
-//
-//        // 判断是否为最后一个节点且同意
-//        if (isLastNode(currentFlowNodeId, flowNodes) && operation.equals(OperationType.AGREE.value())) {
-//            List<BudgetProjectFlow> BudgetProjectFlows = budgetProjectFlowMapper
-//                    .selectAllByProjectId(Math.toIntExact(projectId));
-//            List<BudgetProjectFlowApproved> budgetProjectFlowApproveds = BeanConverter
-//                    .copyBeanList(BudgetProjectFlows, BudgetProjectFlowApproved.class);
-//            for (int i = 0; i < budgetProjectFlowApproveds.size(); i++) {
-//                budgetProjectFlowApproveds.get(i).setId(null);
-//                budgetProjectFlowApproveds.get(i).setProjectId(projectId);
-//                budgetProjectFlowApproveds.get(i).setBudgetProjectFlowId(BudgetProjectFlows.get(i).getId());
-//            }
-//            // 判断签报状态
-//            if (approveds==null||approveds.size()==0){
-//                // 添加流程信息快照
-//                budgetProjectFlowApprovedMapper.insertBatch(budgetProjectFlowApproveds);
-//            }
-//            List<BudgetProjectFlow> projectFlows = budgetProjectFlowMapper
-//                    .selectAllByProjectId(Math.toIntExact(currentFlow.getProjectId()));
-//            assert projectIds != null;
-//            insertProjectFlow(projectFlows, projectIds);
-//        }
+        assert operation != null;
+        toInform(operation, approvers, userId, batchNum, currentFlowNodeId, flowNodes,
+                approverMap, approveVO.getSuggestion());
+
+        // 更新项目节点信息
+        applicationFlowService.updateById(ApplicationFlow.builder()
+                .operation(operation)
+                .suggestion(approveVO.getSuggestion())
+                .updateTime(new Date())
+                .id(approveVO.getId())
+                .build());
+
+        // 更新项目的流程状态
+        if (projectState != null) {
+           applicationMapper.updateByBatchNum(batchNum, projectState);
+        }
     }
 
     /**
@@ -402,96 +389,90 @@ public class ApplicationServiceImpl implements ApplicationService {
         return flowNodeIds.get(flowNodeIds.indexOf(currentFlowNodeId) + 1);
     }
 
-//    /**
-//     * 推送提醒人
-//     *
-//     * @param operation         是否同意（1同意0拒绝）
-//     * @param approvers         所有审批人
-//     * @param userId            用户id
-//     * @param batchNum          批次号
-//     * @param currentFlowNodeId 当前的节点id
-//     * @param flowNodes         所有的节点id
-//     * @param approverMap       flowNodeId => userId
-//     * @param suggestion        意见
-//     */
-//    private void toInform(Integer operation, List<ApplicationFlowNodeVO> approvers,
-//                          Integer userId, String batchNum , String currentFlowNodeId, List<String> flowNodes,
-//                          Map<String, Integer> approverMap, String suggestion) {
-//        // 通过flowNodeId得到流程类型id
-//        Long flowTypeId =flowTypeApiExp.getIdByNodeId(flowNodes.get(0));
-//        FundInvoiceAdvance invoice = invoiceService.getInvoice(invoiceId);
-//        // 单位编号
-//        String unitNum = invoice.getUnitNumber();
-//        // 单位名称
-//        String unitName = invoice.getUnitName();
-//        // 流程名称
-//        String flowName = flowService.getNameByNodeId(flowNodes.get(0));
-//        // 获取用户姓名
-//        SysUser user = sysUserService.getUserInfo(userId);
-//        // 提醒信息(同意)
-//        if (operation.equals(OperationType.AGREE.value())) {
-//            // 判断是否为最后一位
-//            String inform;
-//            // 不是最后一位（提醒发起人和下一位节点）
-//            if (!approvers.get(approvers.size() - 1).getUserId().equals(userId)) {
-//                inform = getInform(currentFlowNodeId, FlowNodeNoticeState.DEFAULT_REMINDER.value());
-//                if (inform == null) {
-//                    return;
-//                }
-//                inform = inform.replace("title", unitNum + "_" + unitName + "_" + flowName);
-//                // 推送下一位审批者
-//                Integer nextApprover = approverMap.get(getNextNode(currentFlowNodeId, flowNodes));
-//                noticeService.andSaveFundInvoiceNotice(
-//                        FundInvoiceNoticeReqVO.builder().invoiceId(invoiceId)
-//                                .receiver(nextApprover)
-//                                .promoter(userId)
-//                                .content(inform)
-//                                .flowTypeId(flowTypeId)
-//                                .build());
-//                // 推送邮件
-//                if (mailEnable) {
-//                    // 下一节点审批人信息
-//                    SysUser nextApproverInfo = sysUserService.getUserInfo(nextApprover);
-//                    // 推送内容
-//                    String info = invoice.getUnitNumber() + "_" + invoice.getUnitName() + "_" + flowName;
-//                    mailService.postMail(nextApproverInfo.getEmail(), nextApproverInfo.getNickName(), info);
-//                }
-//            }
-//
-//
-//            inform = getInform(currentFlowNodeId,
-//                    FlowNodeNoticeState.COMPLETE_REMINDER.value());
-//            if (inform == null) {
-//                return;
-//            }
-//            inform = inform.replace("title", unitNum + "_" + unitName + "_" + flowName);
-//            inform = inform.replace(AllName.APPROVE.getValue(), user.getNickName());
-//            // 推送发起人
-//            noticeService.andSaveFundInvoiceNotice(
-//                    FundInvoiceNoticeReqVO.builder().invoiceId(invoiceId)
-//                            .receiver(approvers.get(0).getUserId())
-//                            .promoter(userId)
-//                            .content(inform)
-//                            .flowTypeId(flowTypeId)
-//                            .build());
-//        }
-//        // 拒绝
-//        else {
-//            String inform = getInform(currentFlowNodeId,
-//                    FlowNodeNoticeState.REJECT_REMINDER.value());
-//            if (inform == null) {
-//                return;
-//            }
-//            String replace = inform.replace("title", unitNum + "_" + unitName + "_" + flowName);
-//            inform = replace.replace(AllName.APPROVE.getValue(), user.getNickName());
-//            inform = inform.replace(AllName.CAUSE.getValue(), suggestion);
-//            noticeService.andSaveFundInvoiceNotice(
-//                    FundInvoiceNoticeReqVO.builder().invoiceId(invoiceId)
-//                            .receiver(approvers.get(0).getUserId())
-//                            .promoter(userId)
-//                            .content(inform)
-//                            .flowTypeId(flowTypeId)
-//                            .build());
-//        }
-//    }
+    /**
+     * 推送提醒人
+     *
+     * @param operation         是否同意（1同意0拒绝）
+     * @param approvers         所有审批人
+     * @param userId            用户id
+     * @param batchNum          批次号
+     * @param currentFlowNodeId 当前的节点id
+     * @param flowNodes         所有的节点id
+     * @param approverMap       flowNodeId => userId
+     * @param suggestion        意见
+     */
+    private void toInform(Integer operation, List<ApplicationFlowNodeVO> approvers,
+                          Integer userId, String batchNum , String currentFlowNodeId, List<String> flowNodes,
+                          Map<String, Integer> approverMap, String suggestion) {
+        // 通过flowNodeId得到流程类型id
+        Long flowTypeId =flowTypeApiExp.getIdByNodeId(flowNodes.get(0));
+        List<Application> applicationList = applicationMapper.selectByBatchNum(batchNum);
+        // 获取用户姓名
+        UserInfo user = sysUserApiExp.getUserInfoById(userId);
+        // 提醒信息(同意)
+        if (operation.equals(OperationState.AGREE.value())) {
+            // 判断是否为最后一位
+            String inform;
+            // 不是最后一位（提醒发起人和下一位节点）
+            if (!approvers.get(approvers.size() - 1).getUserId().equals(userId)) {
+                inform = getInform(currentFlowNodeId, FlowNodeNoticeState.DEFAULT_REMINDER.value());
+                if (inform == null) {
+                    return;
+                }
+                inform = inform.replace("title", "宣传用品"+batchNum+"费用签报");
+                // 推送下一位审批者
+                Integer nextApprover = approverMap.get(getNextNode(currentFlowNodeId, flowNodes));
+                applicationNoticeService.saveApplicationNotice(
+                        ApplicationNoticeVO.builder().batchNum(batchNum)
+                                .receiver(nextApprover)
+                                .promoter(userId)
+                                .content(inform)
+                                .flowTypeId(flowTypeId)
+                                .build());
+                // 推送邮件
+                if (mailEnable) {
+                    // 下一节点审批人信息
+                    UserInfo nextApproverInfo = sysUserApiExp.getUserInfoById(nextApprover);
+                    // 推送内容
+                    String info = "宣传用品"+batchNum+"费用签报";
+                    mailApiExp.postMail(new MailVO(nextApproverInfo.getEmail(), nextApproverInfo.getNickName(), info));
+                }
+            }
+
+
+            inform = getInform(currentFlowNodeId,
+                    FlowNodeNoticeState.COMPLETE_REMINDER.value());
+            if (inform == null) {
+                return;
+            }
+            inform = inform.replace("title", "宣传用品"+batchNum+"费用签报");
+            inform = inform.replace("approve", user.getNickName());
+            // 推送发起人
+            applicationNoticeService.saveApplicationNotice(
+                    ApplicationNoticeVO.builder().batchNum(batchNum)
+                            .receiver(approvers.get(0).getUserId())
+                            .promoter(userId)
+                            .content(inform)
+                            .flowTypeId(flowTypeId)
+                            .build());
+        }
+        // 拒绝
+        else {
+            String inform = getInform(currentFlowNodeId,
+                    FlowNodeNoticeState.REJECT_REMINDER.value());
+            if (inform == null) {
+                return;
+            }
+            String replace = inform.replace("title", "宣传用品"+batchNum+"费用签报");
+            inform = replace.replace("approve", user.getNickName());
+            inform = inform.replace("cause", suggestion);
+            applicationNoticeService.saveApplicationNotice(
+                    ApplicationNoticeVO.builder().batchNum(batchNum)
+                            .receiver(approvers.get(0).getUserId())
+                            .promoter(userId)
+                            .content(inform)
+                            .flowTypeId(flowTypeId)
+                            .build());
+        }
+    }
 }

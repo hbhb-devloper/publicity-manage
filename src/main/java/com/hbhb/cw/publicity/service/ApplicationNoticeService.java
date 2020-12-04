@@ -8,7 +8,7 @@ import com.hbhb.cw.publicity.web.vo.ApplicationNoticeVO;
  */
 public interface ApplicationNoticeService {
 
-   void saveBudgetProjectNotice(ApplicationNoticeVO applicationNoticeVO);
+   void saveApplicationNotice(ApplicationNoticeVO applicationNoticeVO);
 
    void updateByBatchNum(String batchNum);
 }

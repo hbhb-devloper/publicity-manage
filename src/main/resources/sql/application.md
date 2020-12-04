@@ -72,6 +72,6 @@ updateByBatchNum
 ===
 ```sql
     update application
-    set approved_state = 10
+    set approved_state = #{state}
     where batch_num = #{batchNum}
 ```

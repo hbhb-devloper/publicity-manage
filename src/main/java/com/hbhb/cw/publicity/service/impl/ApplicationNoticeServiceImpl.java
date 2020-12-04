@@ -22,7 +22,7 @@ public class ApplicationNoticeServiceImpl implements ApplicationNoticeService {
     private ApplicationNoticeMapper applicationNoticeMapper;
 
     @Override
-    public void saveBudgetProjectNotice(ApplicationNoticeVO applicationNoticeVO) {
+    public void saveApplicationNotice(ApplicationNoticeVO applicationNoticeVO) {
         ApplicationNotice notice = new ApplicationNotice();
         BeanUtils.copyProperties(applicationNoticeVO, notice);
         notice.setCreateTime(new Date());

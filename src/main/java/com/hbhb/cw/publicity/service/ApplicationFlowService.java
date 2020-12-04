@@ -31,4 +31,9 @@ public interface ApplicationFlowService {
      * 更新各节点审批人
      */
     void updateBatchByNodeId( List<ApplicationFlowNodeVO> approvers, String batchNum);
+
+    /**
+     * 通过id修改流程节点
+     */
+    void updateById(ApplicationFlow applicationFlow);
 }
