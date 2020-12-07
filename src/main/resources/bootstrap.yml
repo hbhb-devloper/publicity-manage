@@ -1,5 +1,5 @@
 server:
-  port: 8887
+  port: 8889
 
 spring:
   profiles:
@@ -51,9 +51,9 @@ port:
   test: 10031
   prd: 10032
 
-
 # 指定服务提供方实例地址（为空则不指定）
-feign-url: 192.168.200.1:8889
+feign-url:
+#feign-url: 192.168.200.1:8889
 
 # 服务提供方实例名称
 provider:
@@ -81,13 +81,13 @@ spring:
   profiles: dev
   cloud:
     consul:
-      host: consul.yeexun.com.cn
+      host: ${host.docker0}
       discovery:
         instance-id: ${spring.application.name}-${port.dev}-${spring.cloud.client.ip-address}
         service-name: ${spring.application.name}
-        health-check-url: http://${host.proxy}:${port.dev}/actuator/health
+        health-check-url: http://${host.docker0}:${port.dev}/actuator/health
         # 开发环境使用代理ip
-        hostname: ${host.proxy}
+        hostname: ${host.docker0}
         port: ${port.dev}
 
 ################### 测试环境配置 ###################
@@ -96,13 +96,13 @@ spring:
   profiles: test
   cloud:
     consul:
-      host: consul.yeexun.com.cn
+      host: ${host.docker0}
       discovery:
         instance-id: ${spring.application.name}-${port.test}-${spring.cloud.client.ip-address}
         service-name: ${spring.application.name}
-        health-check-url: http://${host.proxy}:${port.test}/actuator/health
+        health-check-url: http://${host.docker0}:${port.test}/actuator/health
         # 测试环境使用代理ip
-        hostname: ${host.proxy}
+        hostname: ${host.docker0}
         port: ${port.test}
 
 ################### 正式环境配置 ###################
@@ -115,7 +115,7 @@ spring:
       discovery:
         instance-id: ${spring.application.name}-${port.prd}-${spring.cloud.client.ip-address}
         service-name: ${spring.application.name}
-        health-check-url: http://${host.proxy}:${port.prd}/actuator/health
+        health-check-url: http://${host.docker0}:${port.prd}/actuator/health
         # 正式环境使用docker0
-        hostname: ${host.proxy}
+        hostname: ${host.docker0}
         port: ${port.prd}
