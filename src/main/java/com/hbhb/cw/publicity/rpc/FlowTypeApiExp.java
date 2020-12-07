@@ -8,6 +8,6 @@ import org.springframework.cloud.openfeign.FeignClient;
 /**
  * @author wangxiaogang
  */
-@FeignClient(value = "${provider.flow-center}", url = "", path = "/flow/type")
+@FeignClient(value = "${provider.flow-center}", url = "", contextId = "FlowTypeApi", path = "/flow/type")
 public interface FlowTypeApiExp extends FlowTypeApi {
 }

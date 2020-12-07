@@ -8,6 +8,8 @@ import com.hbhb.cw.publicity.service.ApplicationFlowService;
 import com.hbhb.cw.publicity.web.vo.ApplicationFlowInfoVO;
 import com.hbhb.cw.publicity.web.vo.ApplicationFlowNodeVO;
 
+import org.springframework.stereotype.Service;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,6 +19,7 @@ import javax.annotation.Resource;
  * @author yzc
  * @since 2020-12-03
  */
+@Service
 public class ApplicationFlowServiceImpl implements ApplicationFlowService {
 
     @Resource
@@ -82,7 +85,7 @@ public class ApplicationFlowServiceImpl implements ApplicationFlowService {
 //        Map<String, ApplicationFlowVO> flowNodeMap = flowNodes.stream().collect(
 //                Collectors.toMap(ApplicationFlowVO::getFlowNodeId, Function.identity()));
 //        // 通过userId得到该用户的所有流程角色
-//        List<Long> flowRoleIds = flowRoleUserService.getFlowRoleIdByUserId(userId);
+//        List<Long> flowRoleIds = sysUserApiExp
 //        // 1.先获取流程流转的当前节点<currentNode>
 //        // 2.再判断<loginUser>是否为<currentNode>的审批人
 //        //   2-1.如果不是，则所有节点信息全部为只读

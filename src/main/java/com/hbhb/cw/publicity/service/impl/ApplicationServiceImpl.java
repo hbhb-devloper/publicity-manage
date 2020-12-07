@@ -4,7 +4,6 @@ import com.hbhb.core.utils.DateUtil;
 import com.hbhb.cw.flowcenter.model.Flow;
 import com.hbhb.cw.flowcenter.vo.FlowNodeNoticeResVO;
 import com.hbhb.cw.flowcenter.vo.FlowNodePropVO;
-import com.hbhb.cw.messagehub.vo.MailVO;
 import com.hbhb.cw.publicity.enums.ApplicationState;
 import com.hbhb.cw.publicity.enums.FlowNodeNoticeState;
 import com.hbhb.cw.publicity.enums.GoodsErrorCode;
@@ -39,7 +38,6 @@ import com.hbhb.cw.publicity.web.vo.UnitGoodsStateVO;
 import com.hbhb.cw.systemcenter.vo.UnitTopVO;
 import com.hbhb.cw.systemcenter.vo.UserInfo;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -84,8 +82,8 @@ public class ApplicationServiceImpl implements ApplicationService {
     private ApplicationNoticeService applicationNoticeService;
     @Resource
     private ApplicationMapper applicationMapper;
-    @Value("${mail.enable}")
-    private Boolean mailEnable;
+//    @Value("${mail.enable}")
+//    private Boolean mailEnable;
 
     @Override
     public SummaryUnitGoodsResVO getUnitGoodsList(GoodsReqVO goodsReqVO) {
@@ -430,13 +428,13 @@ public class ApplicationServiceImpl implements ApplicationService {
                                 .flowTypeId(flowTypeId)
                                 .build());
                 // 推送邮件
-                if (mailEnable) {
-                    // 下一节点审批人信息
-                    UserInfo nextApproverInfo = sysUserApiExp.getUserInfoById(nextApprover);
-                    // 推送内容
-                    String info = "宣传用品"+batchNum+"费用签报";
-                    mailApiExp.postMail(new MailVO(nextApproverInfo.getEmail(), nextApproverInfo.getNickName(), info));
-                }
+//                if (mailEnable) {
+//                    // 下一节点审批人信息
+//                    UserInfo nextApproverInfo = sysUserApiExp.getUserInfoById(nextApprover);
+//                    // 推送内容
+//                    String info = "宣传用品"+batchNum+"费用签报";
+//                    mailApiExp.postMail(new MailVO(nextApproverInfo.getEmail(), nextApproverInfo.getNickName(), info));
+//                }
             }
 
 
