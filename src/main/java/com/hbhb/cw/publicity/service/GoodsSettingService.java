@@ -35,4 +35,5 @@ public interface GoodsSettingService {
      * 通过批次改变提前截止
      */
     void updateByBatchNum(String batchNum);
+
 }
