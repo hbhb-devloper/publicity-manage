@@ -33,9 +33,6 @@ public class ApplicationFlowInfoVO implements Serializable {
     @Schema(description = "节点id")
     private String flowNodeId;
 
-    @Schema(description = "流程名称")
-    private String projectFlowName;
-
     @Schema(description = "审批人角色名称")
     private String approverRole;
 

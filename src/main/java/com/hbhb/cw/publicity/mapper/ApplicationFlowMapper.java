@@ -1,7 +1,9 @@
 package com.hbhb.cw.publicity.mapper;
 
+import com.hbhb.cw.flowcenter.vo.FlowRoleResVO;
 import com.hbhb.cw.publicity.model.ApplicationFlow;
 import com.hbhb.cw.publicity.web.vo.ApplicationFlowNodeVO;
+import com.hbhb.cw.publicity.web.vo.ApplicationFlowVO;
 import com.hbhb.web.beetlsql.BaseMapper;
 
 import java.util.List;
@@ -15,4 +17,8 @@ public interface ApplicationFlowMapper extends BaseMapper<ApplicationFlow> {
     ApplicationFlow selectById(Long id);
 
     void updateBatchByNodeId(List<ApplicationFlowNodeVO> approvers, String batchNum);
+
+    List<ApplicationFlowVO> selectByBatch(String batchNum);
+
+    List<FlowRoleResVO> selectNodeByNodeId(String flowNodeId, String batchNum);
 }

@@ -1,6 +1,7 @@
 package com.hbhb.cw.publicity.service;
 
 import com.hbhb.cw.publicity.model.ApplicationFlow;
+import com.hbhb.cw.publicity.web.vo.ApplicationFlowInfoVO;
 import com.hbhb.cw.publicity.web.vo.ApplicationFlowNodeVO;
 
 import java.util.List;
@@ -36,4 +37,9 @@ public interface ApplicationFlowService {
      * 通过id修改流程节点
      */
     void updateById(ApplicationFlow applicationFlow);
+
+    /**
+     * 通过批次号得到流程详情
+     */
+    List<ApplicationFlowInfoVO> getInfoByBatchNum(String batchNum, Integer userId);
 }
