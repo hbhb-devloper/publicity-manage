@@ -473,6 +473,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                             .content(inform)
                             .flowTypeId(flowTypeId)
                             .build());
+
         }
     }
 }
