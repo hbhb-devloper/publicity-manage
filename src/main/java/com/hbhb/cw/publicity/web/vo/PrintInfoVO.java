@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.beetl.sql.annotation.entity.ResultProvider;
+import org.beetl.sql.core.mapping.join.AutoJsonMapper;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -18,6 +20,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ResultProvider(AutoJsonMapper.class)
 public class PrintInfoVO implements Serializable {
     private static final long serialVersionUID = 1254866564949328907L;
 

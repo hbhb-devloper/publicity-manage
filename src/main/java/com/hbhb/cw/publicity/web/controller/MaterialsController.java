@@ -2,6 +2,7 @@ package com.hbhb.cw.publicity.web.controller;
 
 import com.hbhb.core.utils.ExcelUtil;
 import com.hbhb.cw.publicity.rpc.FileApiExp;
+import com.hbhb.cw.publicity.service.MaterialsService;
 import com.hbhb.cw.publicity.web.vo.MaterialsInfoVO;
 import com.hbhb.cw.publicity.web.vo.MaterialsInitVO;
 import com.hbhb.cw.publicity.web.vo.MaterialsReqVO;
@@ -34,6 +35,8 @@ import java.util.List;
 public class MaterialsController {
     @Resource
     private FileApiExp fileApi;
+    @Resource
+    private MaterialsService materialsService;
 
     @Operation(summary = "物料设计列表")
     @GetMapping("/list")
@@ -43,19 +46,26 @@ public class MaterialsController {
             @Parameter(description = "查询参数") MaterialsReqVO reqVO, @UserId Integer userId) {
         pageNum = pageNum == null ? 1 : pageNum;
         pageSize = pageSize == null ? 10 : pageSize;
-        return null;
+
+        return materialsService.getMaterialsList(reqVO, pageNum, pageSize);
     }
 
     @Operation(summary = "跟据id查看详情")
     @GetMapping("/{id}")
-    public MaterialsResVO getMaterials(@PathVariable Long id) {
-        return null;
+    public MaterialsInfoVO getMaterials(@PathVariable Long id) {
+        return materialsService.getMaterials(id);
     }
 
     @Operation(summary = "添加宣传物料设计制作")
     @PostMapping("/add")
-    private void addMaterials(@RequestBody MaterialsInfoVO materialsInfoVO) {
+    private void addMaterials(@RequestBody MaterialsInfoVO materialsInfoVO, @UserId Integer userId) {
+        materialsService.addMaterials(materialsInfoVO, userId);
+    }
 
+    @Operation(summary = "修改宣传物料设计制作")
+    @PutMapping("/update")
+    private void updateMaterials(@RequestBody MaterialsInfoVO materialsInfoVO, @UserId Integer userId) {
+        materialsService.updateMaterials(materialsInfoVO, userId);
     }
 
     @Operation(summary = "宣传物料导入模板下载")
@@ -82,7 +92,7 @@ public class MaterialsController {
     @Operation(summary = "删除宣传画面")
     @DeleteMapping("/{id}")
     public void deleteMaterials(@PathVariable("id") Long id) {
-
+        materialsService.deleteMaterials(id);
     }
 
     @Operation(summary = "发起审批")

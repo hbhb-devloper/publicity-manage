@@ -17,7 +17,7 @@ public interface MaterialsService {
      * @param pageSize 条数
      * @return 物料设计分页列表
      */
-    PageResult<MaterialsResVO> getMaterialsLis(MaterialsReqVO reqVO, Integer pageNum, Integer pageSize);
+    PageResult<MaterialsResVO> getMaterialsList(MaterialsReqVO reqVO, Integer pageNum, Integer pageSize);
 
     /**
      * 跟据id获取物料设计详情

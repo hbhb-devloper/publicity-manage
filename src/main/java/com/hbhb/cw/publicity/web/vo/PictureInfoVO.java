@@ -4,6 +4,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.beetl.sql.annotation.entity.ResultProvider;
+import org.beetl.sql.core.mapping.join.AutoJsonMapper;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -15,6 +17,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@ResultProvider(AutoJsonMapper.class)
 public class PictureInfoVO implements Serializable {
     private static final long serialVersionUID = -9113779419276377978L;
     private Long id;
