@@ -31,5 +31,9 @@ public interface LibraryService {
      */
     Goods getInfo(Long id);
 
+    /**
+     * 通过id删除物料
+     */
+    void deleteGoods(Long id);
 
 }

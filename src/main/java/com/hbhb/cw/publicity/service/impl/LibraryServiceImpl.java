@@ -152,4 +152,9 @@ public class LibraryServiceImpl implements LibraryService {
     public Goods getInfo(Long id) {
        return goodsMapper.selectById(id);
     }
+
+    @Override
+    public void deleteGoods(Long id) {
+        goodsMapper.deleteById(id);
+    }
 }

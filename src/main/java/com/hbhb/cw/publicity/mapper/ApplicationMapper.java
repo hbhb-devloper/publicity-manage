@@ -1,6 +1,7 @@
 package com.hbhb.cw.publicity.mapper;
 
 import com.hbhb.cw.publicity.model.Application;
+import com.hbhb.cw.publicity.web.vo.ApplicationByUnitVO;
 import com.hbhb.cw.publicity.web.vo.GoodsChangerVO;
 import com.hbhb.cw.publicity.web.vo.GoodsCondVO;
 import com.hbhb.cw.publicity.web.vo.GoodsReqVO;
@@ -28,4 +29,6 @@ public interface ApplicationMapper extends BaseMapper<Application> {
     void updateByBatchNum(String batch, Integer state);
 
     List<Application> selectByBatchNum(String batchNum);
+
+    List<ApplicationByUnitVO> selectByUnit(GoodsReqVO goodsReqVO);
 }

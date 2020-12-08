@@ -5,6 +5,7 @@ import com.hbhb.cw.publicity.service.LibraryService;
 import com.hbhb.cw.publicity.web.vo.LibraryVO;
 import com.hbhb.web.annotation.UserId;
 
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -56,5 +57,11 @@ public class LibraryController {
     @Operation(summary = "得到详情")
     public Goods getInfo(@PathVariable Long id){
        return libraryService.getInfo(id);
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "删除")
+    public void deleteGoods(@PathVariable Long id){
+        libraryService.deleteGoods(id);
     }
 }

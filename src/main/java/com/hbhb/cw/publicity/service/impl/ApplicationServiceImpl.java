@@ -28,6 +28,7 @@ import com.hbhb.cw.publicity.service.ApplicationService;
 import com.hbhb.cw.publicity.service.GoodsService;
 import com.hbhb.cw.publicity.service.GoodsSettingService;
 import com.hbhb.cw.publicity.web.vo.ApplicationApproveVO;
+import com.hbhb.cw.publicity.web.vo.ApplicationByUnitVO;
 import com.hbhb.cw.publicity.web.vo.ApplicationFlowNodeVO;
 import com.hbhb.cw.publicity.web.vo.ApplicationNoticeVO;
 import com.hbhb.cw.publicity.web.vo.GoodsApproveVO;
@@ -128,9 +129,15 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Override
     public List<UnitGoodsStateVO> getUnitGoodsStateList(GoodsReqVO goodsReqVO) {
         // 用sql语句完成
+        List<ApplicationByUnitVO> list = applicationMapper.selectByUnit(goodsReqVO);
         // 得到所有公司下所有货物（goodsId）
+        HashMap<String, List<ApplicationByUnitVO>> map = new HashMap<>();
+        Map<Integer, List<ApplicationByUnitVO>> collect = list.stream()
+                .collect(Collectors.groupingBy(ApplicationByUnitVO::getUnitId));
         // 得到该货物的物料审核员（updateBy）和审核状态
+
         // 通过单位id得到该分公司下的所有单位和状态
+
         return null;
     }
 
@@ -427,7 +434,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                                 .content(inform)
                                 .flowTypeId(flowTypeId)
                                 .build());
-                // 推送邮件
+//                // 推送邮件
 //                if (mailEnable) {
 //                    // 下一节点审批人信息
 //                    UserInfo nextApproverInfo = sysUserApiExp.getUserInfoById(nextApprover);
