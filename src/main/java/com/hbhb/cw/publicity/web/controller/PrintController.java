@@ -48,7 +48,7 @@ public class PrintController {
     public PageResult<PrintResVO> getPrintList(
             @Parameter(description = "页码，默认为1") @RequestParam(required = false) Integer pageNum,
             @Parameter(description = "每页数量，默认为10") @RequestParam(required = false) Integer pageSize,
-            @Parameter(description = "查询参数") PrintReqVO reqVO, @UserId Integer userId) {
+            @Parameter(description = "查询参数") PrintReqVO reqVO, @Parameter(hidden = true) @UserId Integer userId) {
         pageNum = pageNum == null ? 1 : pageNum;
         pageSize = pageSize == null ? 10 : pageSize;
 
@@ -64,7 +64,7 @@ public class PrintController {
     @Operation(summary = "删除印刷品")
     @DeleteMapping("/{id}")
     public void deletePrint(@PathVariable Long id) {
-
+        printService.deletePrint(id);
     }
 
     @Operation(summary = "修改印刷品")
@@ -78,9 +78,10 @@ public class PrintController {
     @PostMapping("/export/business")
     public void exportBusiness(HttpServletRequest request, HttpServletResponse response) {
         List<Object> list = new ArrayList<>();
-        String fileName = ExcelUtil.encodingFileName(request, "业务单式模板");
-        ExcelUtil.export2WebWithTemplate(response, fileName, "业务单式模板",
-                fileApi.getTemplatePath() + File.separator + "业务单式模板.xlsx", list);
+        String fileName = ExcelUtil.encodingFileName(request, "中国移动杭州分公司业务单式导入模板");
+        String template = fileApi.getTemplatePath();
+        ExcelUtil.export2WebWithTemplate(response, fileName, "中国移动杭州分公司业务单式导入模板",
+                fileApi.getTemplatePath() + File.separator + "中国移动杭州分公司业务单式导入模板.xls", list);
     }
 
 
@@ -88,9 +89,9 @@ public class PrintController {
     @PostMapping("/export/publicity")
     public void exportPublicity(HttpServletRequest request, HttpServletResponse response) {
         List<Object> list = new ArrayList<>();
-        String fileName = ExcelUtil.encodingFileName(request, "宣传单页模板");
-        ExcelUtil.export2WebWithTemplate(response, fileName, "宣传单页模板",
-                fileApi.getTemplatePath() + File.separator + "宣传单页模板.xlsx", list);
+        String fileName = ExcelUtil.encodingFileName(request, "中国移动杭州分公司宣传单页导入模板");
+        ExcelUtil.export2WebWithTemplate(response, fileName, "中国移动杭州分公司宣传单页导入模板",
+                fileApi.getTemplatePath() + File.separator + "中国移动杭州分公司宣传单页导入模板.xls", list);
     }
 
     @Operation(summary = "导入")
@@ -115,6 +116,12 @@ public class PrintController {
     @DeleteMapping("/file/{id}")
     public void deleteFile(@PathVariable Long id) {
 
+    }
+
+    @Operation(summary = "跟据id查询详情")
+    @GetMapping("/{id}")
+    public PrintInfoVO getPrint(@PathVariable Long id) {
+        return printService.getPrint(id);
     }
 }
 

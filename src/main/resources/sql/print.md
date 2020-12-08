@@ -14,10 +14,10 @@ select
     -- @}
     from print
     -- @where(){
-    -- @if(!isEmpty(cond.unitId))
+    -- @if(!isEmpty(cond.unitId)){
       and unit_id = #{cond.unitId}
     -- @}
-    -- @if(!isEmpty(cond.applyTime))
+    -- @if(!isEmpty(cond.applyTime)){
       and apply_time like concat('%', #{cond.applyTime}, '%')
     -- @}
     -- @if(!isEmpty(cond.state)){

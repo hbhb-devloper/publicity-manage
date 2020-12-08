@@ -4,6 +4,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.beetl.sql.annotation.entity.ResultProvider;
+import org.beetl.sql.core.mapping.join.AutoJsonMapper;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -16,6 +18,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@ResultProvider(AutoJsonMapper.class)
 public class MaterialsInfoVO implements Serializable {
     private static final long serialVersionUID = -4925013973478233876L;
 

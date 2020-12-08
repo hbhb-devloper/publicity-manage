@@ -2,9 +2,12 @@
 package com.hbhb.cw.publicity.web.controller;
 
 import com.hbhb.cw.publicity.rpc.FileApiExp;
+import com.hbhb.cw.publicity.service.PictureService;
 import com.hbhb.cw.publicity.web.vo.PictureInfoVO;
 import com.hbhb.cw.publicity.web.vo.PictureInitVO;
+import com.hbhb.cw.publicity.web.vo.PictureReqVO;
 import com.hbhb.cw.publicity.web.vo.PictureResVO;
+import com.hbhb.cw.systemcenter.enums.FileType;
 import com.hbhb.cw.systemcenter.vo.FileVO;
 import com.hbhb.web.annotation.UserId;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,7 +20,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 
@@ -32,34 +34,43 @@ import javax.servlet.http.HttpServletResponse;
 public class PictureController {
     @Resource
     private FileApiExp fileApi;
+    @Resource
+    private PictureService pictureService;
 
     @Operation(summary = "印刷用品管理列表")
     @GetMapping("/list")
     public PageResult<PictureResVO> getPictureList(
             @Parameter(description = "页码，默认为1") @RequestParam(required = false) Integer pageNum,
             @Parameter(description = "每页数量，默认为10") @RequestParam(required = false) Integer pageSize,
-            @Parameter(description = "查询参数") PictureResVO reqVO, @UserId Integer userId) {
+            @Parameter(description = "查询参数") PictureReqVO reqVO, @Parameter(hidden = false) @UserId Integer userId) {
         pageNum = pageNum == null ? 1 : pageNum;
         pageSize = pageSize == null ? 10 : pageSize;
-        return null;
+        return pictureService.getPictureList(reqVO, pageNum, pageSize);
     }
 
     @Operation(summary = "添加宣传画面")
     @PostMapping("/add")
-    public void addPicture(@RequestBody PictureInfoVO pictureInfoVO) {
-
+    public void addPicture(@RequestBody PictureInfoVO pictureInfoVO, @UserId Integer userId) {
+        pictureService.addPicture(pictureInfoVO, userId);
     }
 
     @Operation(summary = "查看详情")
     @GetMapping("/{id}")
-    public PictureResVO getPictureInfo(@PathVariable Long id) {
-        return null;
+    public PictureInfoVO getPictureInfo(@PathVariable Long id) {
+        return pictureService.getPicture(id);
     }
 
     @Operation(summary = "宣传画面模板下载")
     @PostMapping("/export")
-    public void exportPicture(HttpServletRequest request, HttpServletResponse response) {
+    public void exportPicture(HttpServletResponse response) {
+        String path = fileApi.getTemplatePath() + "/宣传画面设计需求单模板v2.doc";
+        fileApi.download(response, path, false);
+    }
 
+    @Operation(summary = "修改宣传画面")
+    @PutMapping("/update")
+    public void updatePicture(@RequestBody PictureInfoVO pictureInfoVO, @UserId Integer userId) {
+        pictureService.updatePicture(pictureInfoVO, userId);
     }
 
     @Operation(summary = "宣传画面模板导入")
@@ -71,18 +82,19 @@ public class PictureController {
     @Operation(summary = "上传附件")
     @PostMapping(value = "/upload", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public FileVO uploadPictureFile(@RequestPart(required = false, value = "file") MultipartFile file) {
-        return null;
+        // todo 更改文件类型
+        return fileApi.upload(file, FileType.SYSTEM_FILE.value());
     }
 
     @Operation(summary = "删除宣传画面")
     @DeleteMapping("/{id}")
     public void deletePicture(@PathVariable("id") Long id) {
-
+        pictureService.deletePicture(id);
     }
 
     @Operation(summary = "发起审批")
     @PostMapping("/to-approve")
-    public void toApprove(@RequestBody PictureInitVO initVO, @UserId Integer userId) {
+    public void toApprove(@RequestBody PictureInitVO initVO, @Parameter(hidden = false) @UserId Integer userId) {
 
     }
 

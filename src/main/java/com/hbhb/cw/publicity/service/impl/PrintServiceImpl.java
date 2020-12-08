@@ -52,22 +52,23 @@ public class PrintServiceImpl implements PrintService {
     @Override
     public PrintInfoVO getPrint(Long id) {
         PrintInfoVO info = printMapper.selectPrintInfoById(id);
-        List<PrintFileVO> files = info.getFile();
-
-        List<Integer> fileIds = new ArrayList<>();
-        for (PrintFileVO fileVO : files) {
-            fileIds.add(Math.toIntExact(fileVO.getFileId()));
-        }
-        // 获取文件详情
-        List<File> fileInfo = fileApi.getFileInfoBatch(fileIds);
-        for (File file : fileInfo) {
+        if (info != null) {
+            List<PrintFileVO> files = info.getFile();
+            List<Integer> fileIds = new ArrayList<>();
             for (PrintFileVO fileVO : files) {
-                if (fileVO.getFileId().equals(file.getId())) {
-                    fileVO.setFileName(file.getFileName());
-                    fileVO.setFilePath(file.getFilePath());
-                    fileVO.setFileSize(file.getFileSize());
-                    fileVO.setFileId(file.getId());
-                    fileVO.setPrintId(info.getId());
+                fileIds.add(Math.toIntExact(fileVO.getFileId()));
+            }
+            // 获取文件详情
+            List<File> fileInfo = fileApi.getFileInfoBatch(fileIds);
+            for (File file : fileInfo) {
+                for (PrintFileVO fileVO : files) {
+                    if (fileVO.getFileId().equals(file.getId())) {
+                        fileVO.setFileName(file.getFileName());
+                        fileVO.setFilePath(file.getFilePath());
+                        fileVO.setFileSize(file.getFileSize());
+                        fileVO.setFileId(file.getId());
+                        fileVO.setPrintId(info.getId());
+                    }
                 }
             }
         }
@@ -102,7 +103,9 @@ public class PrintServiceImpl implements PrintService {
 
     @Override
     public void updatePrint(PrintInfoVO infoVO, Integer userId) {
-
+        Print print = new Print();
+        BeanUtils.copyProperties(infoVO, print);
+        printMapper.updateById(print);
     }
 
 
