@@ -29,5 +29,5 @@ public class ApplicationByUnitVO implements Serializable {
     private Integer state;
 
     @Schema(description = "审批者列表")
-    private String checker;
+    private Integer checker;
 }

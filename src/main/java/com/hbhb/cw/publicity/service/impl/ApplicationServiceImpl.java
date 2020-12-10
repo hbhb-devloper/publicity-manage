@@ -20,6 +20,7 @@ import com.hbhb.cw.publicity.rpc.FlowNoticeApiExp;
 import com.hbhb.cw.publicity.rpc.FlowRoleUserApiExp;
 import com.hbhb.cw.publicity.rpc.FlowTypeApiExp;
 import com.hbhb.cw.publicity.rpc.MailApiExp;
+import com.hbhb.cw.publicity.rpc.SysDictApiExp;
 import com.hbhb.cw.publicity.rpc.SysUserApiExp;
 import com.hbhb.cw.publicity.rpc.UnitApiExp;
 import com.hbhb.cw.publicity.service.ApplicationFlowService;
@@ -36,7 +37,10 @@ import com.hbhb.cw.publicity.web.vo.GoodsReqVO;
 import com.hbhb.cw.publicity.web.vo.SummaryUnitGoodsResVO;
 import com.hbhb.cw.publicity.web.vo.SummaryUnitGoodsVO;
 import com.hbhb.cw.publicity.web.vo.UnitGoodsStateVO;
-import com.hbhb.cw.systemcenter.vo.UnitTopVO;
+import com.hbhb.cw.systemcenter.enums.DictCode;
+import com.hbhb.cw.systemcenter.enums.TypeCode;
+import com.hbhb.cw.systemcenter.enums.UnitEnum;
+import com.hbhb.cw.systemcenter.vo.DictVO;
 import com.hbhb.cw.systemcenter.vo.UserInfo;
 
 import org.springframework.stereotype.Service;
@@ -83,6 +87,8 @@ public class ApplicationServiceImpl implements ApplicationService {
     private ApplicationNoticeService applicationNoticeService;
     @Resource
     private ApplicationMapper applicationMapper;
+    @Resource
+    private SysDictApiExp sysDictApiExp;
 //    @Value("${mail.enable}")
 //    private Boolean mailEnable;
 
@@ -128,17 +134,46 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Override
     public List<UnitGoodsStateVO> getUnitGoodsStateList(GoodsReqVO goodsReqVO) {
+        // 通过流程角色名称得到该角色用户
+        List<Integer> userList = flowRoleUserApiExp.getFlowRoleUserList("");
+        List<UserInfo> userInfoList = sysUserApiExp.getUserInfoBatch(userList);
+        Map<Integer, String> userMap = userInfoList.stream()
+                .collect(Collectors.toMap(UserInfo::getId, UserInfo::getNickName));
+        // 获取审核员审核
+        List<DictVO> dict = sysDictApiExp.getDict(TypeCode.PUBLICITY.value(),
+                DictCode.PUBLICITY_APPLICATION_DETAIL_STATE.value());
+        Map<String, String> dictMap = dict.stream().collect(Collectors.toMap(DictVO::getValue, DictVO::getLabel));
         // 用sql语句完成
-        List<ApplicationByUnitVO> list = applicationMapper.selectByUnit(goodsReqVO);
+        List<ApplicationByUnitVO> applicationByUnitVOList = applicationMapper.selectByUnit(goodsReqVO);
         // 得到所有公司下所有货物（goodsId）
-        HashMap<String, List<ApplicationByUnitVO>> map = new HashMap<>();
-        Map<Integer, List<ApplicationByUnitVO>> collect = list.stream()
+        Map<Integer, List<ApplicationByUnitVO>> map = applicationByUnitVOList.stream()
                 .collect(Collectors.groupingBy(ApplicationByUnitVO::getUnitId));
-        // 得到该货物的物料审核员（updateBy）和审核状态
-
+        // 得到该货物的物料审核员和审核状态
+        List<UnitGoodsStateVO> unitGoodsStateVOS = new ArrayList<>();
+        Map<Integer, String> unitMap = unitApiExp.getUnitMapById();
+        List<Integer> unitIdList = unitApiExp.getAllUnitId();
+        // 得到各单位的审核状态
+        for (Integer unitId : unitIdList) {
+            List<ApplicationByUnitVO> list = map.get(unitId);
+            // 如果改单位能够申领分公司却未提交
+            if (list!=null&&list.get(0).getState()==0){
+                unitGoodsStateVOS.add(UnitGoodsStateVO.builder()
+                        .unitName(unitMap.get(unitId))
+                        .state(dictMap.get(0)).build());
+            }
+            // 获取该单位下的所有审核人的审核状况
+            else if(list!=null){
+                UnitGoodsStateVO vo = new UnitGoodsStateVO();
+                vo.setUnitName(unitMap.get(unitId));
+                StringBuilder state = new StringBuilder();
+                for (ApplicationByUnitVO appVO : list) {
+                    state.append(userMap.get(appVO.getChecker())).append(appVO.getState());
+                }
+                vo.setState(state.toString());
+            }
+        }
         // 通过单位id得到该分公司下的所有单位和状态
-
-        return null;
+        return unitGoodsStateVOS;
     }
 
     @Override
@@ -173,7 +208,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         inform = inform.replace("title"
                 , "宣传影片" + batchNum + "批次");
         // 推送消息给发起人
-        applicationNoticeService.saveApplicationNotice (
+        applicationNoticeService.saveApplicationNotice(
                 ApplicationNoticeVO.builder()
                         .batchNum(batchNum)
                         .receiver(userId)
@@ -182,7 +217,12 @@ public class ApplicationServiceImpl implements ApplicationService {
                         .flowTypeId(goodsApproveVO.getFlowTypeId())
                         .build());
         // 修改申领审批状态
-        applicationMapper.updateByBatchNum(batchNum, 10);
+        applicationMapper.createLambdaQuery()
+                .andEq(Application::getBatchNum, batchNum)
+                .updateSelective(Application.builder()
+                        .batchNum(batchNum)
+                        .approvedState(10)
+                        .build());
         // 修改批次状态
         goodsSettingService.updateByBatchNum(batchNum);
     }
@@ -263,7 +303,12 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         // 更新项目的流程状态
         if (projectState != null) {
-           applicationMapper.updateByBatchNum(batchNum, projectState);
+            applicationMapper.createLambdaQuery()
+                    .andEq(Application::getBatchNum, batchNum)
+                    .updateSelective(Application.builder()
+                            .batchNum(batchNum)
+                            .approvedState(projectState)
+                            .build());
         }
     }
 
@@ -279,9 +324,8 @@ public class ApplicationServiceImpl implements ApplicationService {
      * 判断当前用户是否有权限发起审批权限
      */
     private boolean hasAccess2Approve(List<FlowNodePropVO> flowProps, Integer userId, Integer unitId) {
-        UnitTopVO topUnit = unitApiExp.getTopUnit();
-        Integer benbu = topUnit.getBenbu();
-        Integer hangzhou = topUnit.getHangzhou();
+        Integer benbu = UnitEnum.BENBU.value();
+        Integer hangzhou = UnitEnum.HANGZHOU.value();
         List<Long> flowRoleIds = flowRoleUserApiExp.getFlowRoleIdByUserId(userId);
         // 第一个节点属性
         FlowNodePropVO firstNodeProp = flowProps.get(0);
@@ -374,7 +418,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     /**
      * 判断是否所有节点的审批人已指定
      */
-    private boolean isAllApproverAssigned( List<ApplicationFlowNodeVO> approvers) {
+    private boolean isAllApproverAssigned(List<ApplicationFlowNodeVO> approvers) {
         for (ApplicationFlowNodeVO approver : approvers) {
             if (approver.getUserId() == null) {
                 return false;
@@ -407,10 +451,10 @@ public class ApplicationServiceImpl implements ApplicationService {
      * @param suggestion        意见
      */
     private void toInform(Integer operation, List<ApplicationFlowNodeVO> approvers,
-                          Integer userId, String batchNum , String currentFlowNodeId, List<String> flowNodes,
+                          Integer userId, String batchNum, String currentFlowNodeId, List<String> flowNodes,
                           Map<String, Integer> approverMap, String suggestion) {
         // 通过flowNodeId得到流程类型id
-        Long flowTypeId =flowTypeApiExp.getIdByNodeId(flowNodes.get(0));
+        Long flowTypeId = flowTypeApiExp.getIdByNodeId(flowNodes.get(0));
         List<Application> applicationList = applicationMapper.selectByBatchNum(batchNum);
         // 获取用户姓名
         UserInfo user = sysUserApiExp.getUserInfoById(userId);
@@ -424,7 +468,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                 if (inform == null) {
                     return;
                 }
-                inform = inform.replace("title", "宣传用品"+batchNum+"费用签报");
+                inform = inform.replace("title", "宣传用品" + batchNum + "费用签报");
                 // 推送下一位审批者
                 Integer nextApprover = approverMap.get(getNextNode(currentFlowNodeId, flowNodes));
                 applicationNoticeService.saveApplicationNotice(
@@ -434,12 +478,12 @@ public class ApplicationServiceImpl implements ApplicationService {
                                 .content(inform)
                                 .flowTypeId(flowTypeId)
                                 .build());
-//                // 推送邮件
+                // 推送邮件
 //                if (mailEnable) {
 //                    // 下一节点审批人信息
 //                    UserInfo nextApproverInfo = sysUserApiExp.getUserInfoById(nextApprover);
 //                    // 推送内容
-//                    String info = "宣传用品"+batchNum+"费用签报";
+//                    String info = "宣传用品" + batchNum + "费用签报";
 //                    mailApiExp.postMail(new MailVO(nextApproverInfo.getEmail(), nextApproverInfo.getNickName(), info));
 //                }
             }
@@ -450,7 +494,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             if (inform == null) {
                 return;
             }
-            inform = inform.replace("title", "宣传用品"+batchNum+"费用签报");
+            inform = inform.replace("title", "宣传用品" + batchNum + "费用签报");
             inform = inform.replace("approve", user.getNickName());
             // 推送发起人
             applicationNoticeService.saveApplicationNotice(
@@ -468,7 +512,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             if (inform == null) {
                 return;
             }
-            String replace = inform.replace("title", "宣传用品"+batchNum+"费用签报");
+            String replace = inform.replace("title", "宣传用品" + batchNum + "费用签报");
             inform = replace.replace("approve", user.getNickName());
             inform = inform.replace("cause", suggestion);
             applicationNoticeService.saveApplicationNotice(

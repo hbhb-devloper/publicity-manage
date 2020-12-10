@@ -1,9 +1,10 @@
 package com.hbhb.cw.publicity.mapper;
 
+import com.hbhb.beetlsql.BaseMapper;
 import com.hbhb.cw.publicity.model.Materials;
 import com.hbhb.cw.publicity.web.vo.MaterialsInfoVO;
 import com.hbhb.cw.publicity.web.vo.MaterialsResVO;
-import com.hbhb.web.beetlsql.BaseMapper;
+
 import org.beetl.sql.core.page.PageRequest;
 import org.beetl.sql.core.page.PageResult;
 

@@ -182,8 +182,10 @@ public class GoodsServiceImpl implements GoodsService {
             // 报异常
             throw new GoodsException(GoodsErrorCode.ALREADY_CLOSE);
         }
-        // 提交
-        applicationMapper.updateSubmit(list);
+        // 提交 applicationMapper.updateSubmit(list);
+        applicationMapper.createLambdaQuery()
+                .andIn(Application::getId,list)
+                .updateSelective(Application.builder().submit(true).build());
         // 判断工作台有没有 ，没有则发送工作台
 
     }

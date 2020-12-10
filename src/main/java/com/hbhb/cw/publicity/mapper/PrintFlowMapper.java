@@ -1,7 +1,7 @@
 package com.hbhb.cw.publicity.mapper;
 
+import com.hbhb.beetlsql.BaseMapper;
 import com.hbhb.cw.publicity.model.PrintFlow;
-import com.hbhb.web.beetlsql.BaseMapper;
 
 /**
  * @author wangxiaogang

@@ -52,7 +52,7 @@ public class GoodsController {
         goodsService.applyGoods(list, goodsCondVO);
     }
 
-    @GetMapping("time")
+    @GetMapping("/time")
     @Operation(summary = "通过时间得到第几月的第几次")
     public Integer getUserGoods(String time) {
         return goodsService.getGoodsSetting(time);

@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -12,6 +13,7 @@ import lombok.NoArgsConstructor;
  * @since 2020-11-25
  */
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class UnitGoodsStateVO implements Serializable {

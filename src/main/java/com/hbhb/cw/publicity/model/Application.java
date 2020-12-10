@@ -3,6 +3,7 @@ package com.hbhb.cw.publicity.model;
 import java.util.Date;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -11,6 +12,7 @@ import lombok.NoArgsConstructor;
  * @since 2020-11-23
  */
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Application implements java.io.Serializable {

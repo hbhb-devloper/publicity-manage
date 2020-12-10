@@ -1,5 +1,6 @@
 package com.hbhb.cw.publicity.mapper;
 
+import com.hbhb.beetlsql.BaseMapper;
 import com.hbhb.cw.publicity.model.Goods;
 import com.hbhb.cw.publicity.web.vo.GoodsReqVO;
 import com.hbhb.cw.publicity.web.vo.GoodsVO;
@@ -10,7 +11,6 @@ import com.hbhb.cw.publicity.web.vo.SummaryUnitGoodsVO;
 import com.hbhb.cw.publicity.web.vo.VerifyGoodsVO;
 import com.hbhb.cw.publicity.web.vo.VerifyHallGoodsReqVO;
 import com.hbhb.cw.publicity.web.vo.VerifyHallGoodsVO;
-import com.hbhb.web.beetlsql.BaseMapper;
 
 import java.util.Date;
 import java.util.List;

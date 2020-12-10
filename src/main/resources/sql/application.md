@@ -60,21 +60,8 @@ updateEditable
       set editable = 0 
       where id = 
 ```
-updateSubmit
-===
-```sql
-      update application
-      set submit = 0 
-      where id in ()  
-```
 
-updateByBatchNum
-===
-```sql
-    update application
-    set approved_state = #{state}
-    where batch_num = #{batchNum}
-```
+
 selectByUnit
 ===
 ```sql

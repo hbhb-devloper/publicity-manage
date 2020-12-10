@@ -41,7 +41,7 @@ public class Goods implements Serializable {
      * 物料审核人
      */
     @Schema(description = "物料审核人")
-    private String checker;
+    private Integer checker;
     /**
      * 计量单位
      */
@@ -106,7 +106,7 @@ public class Goods implements Serializable {
      * 版面联系人
      */
     @Schema(description = "版面联系人")
-    private String updateBy;
+    private Integer updateBy;
     /**
      * 创建时间
      */
