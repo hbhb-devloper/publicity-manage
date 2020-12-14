@@ -1,21 +1,24 @@
-package com.hbhb.cw.publicity.model;
+package com.hbhb.cw.publicity.web.vo;
 
 import java.io.Serializable;
-import java.util.Date;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * @author wangxiaogang
+ * @author yzc
+ * @since 2020-12-12
  */
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-public class Goods implements Serializable {
-    private static final long serialVersionUID = -8654911652867204277L;
+@AllArgsConstructor
+@Builder
+public class GoodsInfoVO implements Serializable {
+    private static final long serialVersionUID = -7983687287161087272L;
+
     private Long id;
     /**
      * 分公司
@@ -40,8 +43,13 @@ public class Goods implements Serializable {
     /**
      * 物料审核人
      */
-    @Schema(description = "物料审核人")
+    @Schema(description = "物料审核人Id")
     private Integer checker;
+    /**
+     * 物料审核人名字
+     */
+    @Schema(description = "无聊审核员名字")
+    private String checkerName;
     /**
      * 计量单位
      */
@@ -66,17 +74,17 @@ public class Goods implements Serializable {
      * 是否加盖杭州分公司合同章
      */
     @Schema(description = "是否加盖杭州分公司合同章")
-    private Boolean hasSeal;
+    private String hasSeal;
     /**
      * 是否有编号
      */
     @Schema(description = "是否又编号")
-    private Boolean hasNum;
+    private String hasNum;
     /**
      * 是否使用
      */
     @Schema(description = "是否使用")
-    private Boolean state;
+    private String state;
     /**
      * 备注
      */
@@ -96,22 +104,27 @@ public class Goods implements Serializable {
      * 0业务单式，1宣传单页
      */
     @Schema(description = "0业务单式，1宣传单页")
-    private Integer type;
+    private String type;
     /**
      * 编辑时间
      */
     @Schema(description = "编辑时间")
-    private Date updateTime;
+    private String updateTime;
+    /**
+     * 版面联系人Id
+     */
+    @Schema(description = "版面联系人Id")
+    private Integer updateBy;
     /**
      * 版面联系人
      */
     @Schema(description = "版面联系人")
-    private Integer updateBy;
+    private String updateName;
     /**
      * 创建时间
      */
     @Schema(description = "创建时间")
-    private Date createTime;
+    private String createTime;
     /**
      * 创建者
      */

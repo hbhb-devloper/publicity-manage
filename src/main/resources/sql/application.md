@@ -6,11 +6,8 @@ selectApplicationByUnitId
            -- @if(isNotEmpty(unitId)){
                 and unit_id = #{unitId}
            -- @}
-           -- @if(isNotEmpty(time)){
-                and create_time = #{time}
-           -- @}
            -- @if(isNotEmpty(goodsIndex)){
-                and goods_index = #{goodsIndex}
+                and batch_num = #{batchNum}
            -- @}
        -- @}
 ```
@@ -23,11 +20,8 @@ selectByCond
                -- @if(isNotEmpty(unitId)){
                     and unit_id = #{unitId}
                -- @}
-               -- @if(isNotEmpty(time)){
-                    and create_time = #{time}
-               -- @}
-               -- @if(isNotEmpty(goodsIndex)){
-                    and goods_index = #{goodsIndex}
+               -- @if(isNotEmpty(batchNum)){
+                    and batch_num = #{batchNum}
                -- @}
            -- @}
         group by hall_id;
@@ -41,15 +35,12 @@ selectByHall
                -- @if(isNotEmpty(unitId)){
                     and unit_id = #{unitId}
                -- @}
-               -- @if(isNotEmpty(time)){
-                    and create_time = #{time}
+               -- @if(isNotEmpty(batchNum)){
+                    and batch_num = #{batchNum}
                -- @}
                -- @if(isNotEmpty(hallId)){
                     and hall_id = #{hallId}
                -- @} 
-               -- @if(isNotEmpty(goodsIndex)){
-                    and goods_index = #{goodsIndex}
-               -- @}
            -- @}
 ```
 
@@ -57,8 +48,8 @@ updateEditable
 ===
 ```sql
       update application
-      set editable = 0 
-      where id = 
+      set editable = 1
+      where id in (#{join(list)})
 ```
 
 

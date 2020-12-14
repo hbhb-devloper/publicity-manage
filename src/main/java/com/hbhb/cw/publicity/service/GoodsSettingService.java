@@ -1,6 +1,8 @@
 package com.hbhb.cw.publicity.service;
 
 import com.hbhb.cw.publicity.model.GoodsSetting;
+import com.hbhb.cw.publicity.web.vo.GoodsSettingResVO;
+import com.hbhb.cw.publicity.web.vo.GoodsSettingVO;
 
 import java.util.List;
 
@@ -17,19 +19,19 @@ public interface GoodsSettingService {
 
     /**
      * 批量新增相关设定
-     * @param list 相关设定的list
+     * @param goodsSettingVO 相关设定的list
      */
-    void addGoodsSetting(List<GoodsSetting> list);
+    void addGoodsSetting(GoodsSettingVO goodsSettingVO);
+
+    /**
+     * 通过时间获得次序
+     */
+    GoodsSettingResVO getGoodsSetting(String time);
 
     /**
      * 活动该次相关设置 （该次）
      */
     GoodsSetting getSetByDate(String time);
-
-    /**
-     * 通过id删除设置
-     */
-    void deleteGoodsSetting(Long id);
 
     /**
      * 通过批次改变提前截止

@@ -1,6 +1,7 @@
 package com.hbhb.cw.publicity.service;
 
 import com.hbhb.cw.publicity.model.Goods;
+import com.hbhb.cw.publicity.web.vo.GoodsInfoVO;
 import com.hbhb.cw.publicity.web.vo.LibraryVO;
 
 import java.util.List;
@@ -29,7 +30,7 @@ public interface LibraryService {
     /**
      * 通过id得到物料id
      */
-    Goods getInfo(Long id);
+    GoodsInfoVO getInfo(Long id);
 
     /**
      * 通过id删除物料

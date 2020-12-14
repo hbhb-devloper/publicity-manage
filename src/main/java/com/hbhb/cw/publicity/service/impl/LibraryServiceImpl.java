@@ -1,14 +1,17 @@
 package com.hbhb.cw.publicity.service.impl;
 
+import com.hbhb.core.utils.DateUtil;
 import com.hbhb.cw.publicity.enums.GoodsErrorCode;
 import com.hbhb.cw.publicity.exception.GoodsException;
 import com.hbhb.cw.publicity.mapper.GoodsMapper;
 import com.hbhb.cw.publicity.model.Goods;
 import com.hbhb.cw.publicity.rpc.SysUserApiExp;
 import com.hbhb.cw.publicity.service.LibraryService;
+import com.hbhb.cw.publicity.web.vo.GoodsInfoVO;
 import com.hbhb.cw.publicity.web.vo.LibraryVO;
 import com.hbhb.cw.systemcenter.vo.UserInfo;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -118,7 +121,7 @@ public class LibraryServiceImpl implements LibraryService {
             // 判断必填项是否添加
             if (libraryAddVO.getGoodsName()==null||libraryAddVO.getGoodsNum()==null||libraryAddVO.getType()==null
             ||libraryAddVO.getChecker()==null||libraryAddVO.getUnit()==null||libraryAddVO.getSize()==null||libraryAddVO.getPaper()==null
-            ||libraryAddVO.getUpdateBy()==null|libraryAddVO.getState()){
+            ||!libraryAddVO.getState()){
                 throw new GoodsException(GoodsErrorCode.NOT_FILLED_IN);
             }
             // 添加产品
@@ -131,7 +134,7 @@ public class LibraryServiceImpl implements LibraryService {
         // 通过flag判断修改的是活动还是产品，启用
         // 如果为活动
         if (libraryAddVO.getMold()){
-            if (libraryAddVO.getUnit()==null||libraryAddVO.getGoodsName()==null){
+            if (libraryAddVO.getUnitId()==null||libraryAddVO.getGoodsName()==null){
                 throw new GoodsException(GoodsErrorCode.NOT_FILLED_IN);
             }
         }
@@ -139,18 +142,41 @@ public class LibraryServiceImpl implements LibraryService {
         else {
             // 判断必填项是否添加
             if (libraryAddVO.getGoodsName()==null||libraryAddVO.getGoodsNum()==null||libraryAddVO.getType()==null
-                    ||libraryAddVO.getChecker()==null||libraryAddVO.getUnit()==null||libraryAddVO.getSize()==null||libraryAddVO.getPaper()==null
+                    ||libraryAddVO.getChecker()==null||libraryAddVO.getUnitId()==null||libraryAddVO.getSize()==null||libraryAddVO.getPaper()==null
                     ||libraryAddVO.getUpdateBy()==null|libraryAddVO.getState()){
                 throw new GoodsException(GoodsErrorCode.NOT_FILLED_IN);
             }
-            // 添加产品
+            // 修改产品
         }
-        goodsMapper.updateById(libraryAddVO);
+        goodsMapper.createLambdaQuery().andEq(Goods::getId,libraryAddVO.getId()).updateSelective(libraryAddVO);
     }
 
     @Override
-    public Goods getInfo(Long id) {
-       return goodsMapper.selectById(id);
+    public GoodsInfoVO getInfo(Long id) {
+        Goods goods = goodsMapper.single(id);
+        GoodsInfoVO goodsInfo = new GoodsInfoVO();
+        BeanUtils.copyProperties(goods,goodsInfo);
+        goodsInfo.setUpdateTime(DateUtil.dateToString(goods.getUpdateTime()));
+        String checkerName = userApi.getUserInfoById(goods.getChecker()).getNickName();
+        String updateName = userApi.getUserInfoById(goods.getUpdateBy()).getNickName();
+        goodsInfo.setCheckerName(checkerName);
+        goodsInfo.setUpdateName(updateName);
+        if (goods.getState()){
+            goodsInfo.setState("是");
+        }else {
+            goodsInfo.setState("否");
+        }
+        if (goods.getHasNum()){
+            goodsInfo.setHasNum("有");
+        }else {
+            goodsInfo.setHasNum("无");
+        }
+        if (goods.getHasSeal()){
+            goodsInfo.setHasSeal("有");
+        }else {
+            goodsInfo.setHasSeal("无");
+        }
+        return goodsInfo;
     }
 
     @Override

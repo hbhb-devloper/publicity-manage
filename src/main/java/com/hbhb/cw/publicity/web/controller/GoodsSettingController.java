@@ -2,10 +2,10 @@ package com.hbhb.cw.publicity.web.controller;
 
 import com.hbhb.cw.publicity.model.GoodsSetting;
 import com.hbhb.cw.publicity.service.GoodsSettingService;
+import com.hbhb.cw.publicity.web.vo.GoodsSettingResVO;
+import com.hbhb.cw.publicity.web.vo.GoodsSettingVO;
 
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,14 +39,14 @@ public class GoodsSettingController {
     }
 
     @PostMapping("/add")
-    @Operation(summary = "新增物料活动")
-    public void addGoodsSetting(@RequestBody List<GoodsSetting> list) {
-        goodsSettingService.addGoodsSetting(list);
+    @Operation(summary = "新增物料设定")
+    public void addGoodsSetting(@RequestBody GoodsSettingVO goodsSettingVO) {
+        goodsSettingService.addGoodsSetting(goodsSettingVO);
     }
 
-    @DeleteMapping("/{id}")
-    @Operation(summary = "删除")
-    public void deleteGoodsSetting(@PathVariable Long id){
-        goodsSettingService.deleteGoodsSetting(id);
+    @GetMapping("/time")
+    @Operation(summary = "通过时间得到第几月的有几次")
+    public GoodsSettingResVO getUserGoods(String time) {
+        return goodsSettingService.getGoodsSetting(time);
     }
 }

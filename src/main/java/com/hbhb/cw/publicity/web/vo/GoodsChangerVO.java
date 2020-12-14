@@ -18,7 +18,7 @@ public class GoodsChangerVO implements Serializable {
     private static final long serialVersionUID = 4874055501533876549L;
 
     @Schema(description = "申请货物id")
-    private Long applicationId;
+    private Long id;
 
     @Schema(description = "修改申请数量")
     private Long modifyAmount;

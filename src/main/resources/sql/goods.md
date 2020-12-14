@@ -2,15 +2,16 @@ selectByCond
 ===
 ```sql
      select g.id         as  goodsId,
-            g.goodsName  as goodsName,
+            g.goods_name  as goodsName,
             g.unit       as unit,
             ifnull(sum(ad.apply_amount),0) as applyAmount,
             a.editable   as  editable
      from goods g
-              left join goods_setting gs on g.id = gs.goods_id
               left join application_detail ad on g.id = ad.goods_id
               left join application a on a.id = ad.application_id
-         -- @where(){
+              left join goods_setting gs on CONCAT(date_format(gs.deadline,'%y%m%d'),gs.goods_index) = a.batch_num
+     where g.mold = 0
+     and g.state = 1
             -- @if(isNotEmpty(unitId)){
                 and g.unit_id = #{unitId}
             -- @}
@@ -23,7 +24,6 @@ selectByCond
             -- @if(isNotEmpty(hallId)){
                 and a.hall_id = #{hallId}
             -- @}
-         -- @}
      group by a.hall_id,g.id;
 ```
 
@@ -48,7 +48,7 @@ selectGoodsByActIds
 ===
 ```sql
       select id as id,
-             goods_name as goodsName,
+             goods_name as label,
              parent_id as parentId,
              mold as mold
              from goods
@@ -65,9 +65,9 @@ selectSummaryUnitByType
             g.unit as `unit`,
             ad.modify_amount as `modifyAmount`
     from goods g
-             left join goods_setting gs on g.id = gs.goods_id
              left join application_detail ad on g.id = ad.goods_id
              left join application a on a.id = ad.application_id
+            left join goods_setting gs on CONCAT(date_format(gs.deadline,'%y%m%d'),gs.goods_index) = a.batch_num
             where a.submit = 1
             and ad.state in (1,2)
                 -- @if(isNotEmpty(unitId)){
@@ -101,9 +101,9 @@ selectSummaryByType
            ad.state as `state`,
            a.create_time as `time`  
     from goods g
-             left join goods_setting gs on g.id = gs.goods_id
              left join application_detail ad on g.id = ad.goods_id
              left join application a on a.id = ad.application_id
+             left join goods_setting gs on CONCAT(date_format(gs.deadline,'%y%m%d'),gs.goods_index) = a.batch_num
     -- @where(){
                 -- @if(isNotEmpty(unitId)){
                     and a.unit_id = #{unitId}
@@ -137,9 +137,9 @@ selectSummaryByState
             ad.state as `state`,
             a.create_time as `time` 
     from goods g
-             left join goods_setting gs on g.id = gs.goods_id
              left join application_detail ad on g.id = ad.goods_id
              left join application a on a.id = ad.application_id
+             left join goods_setting gs on CONCAT(date_format(gs.deadline,'%y%m%d'),gs.goods_index) = a.batch_num
     -- @where(){
                 -- @if(isNotEmpty(unitId)){
                     and a.unit_id = #{unitId}
@@ -172,12 +172,12 @@ selectPurchaseGoods
             ad.modify_amount as `modifyAmount`,
             g.size  as  `size`,
             g.attribute as `attribute`,
-            h.paper as `paper`,
+            g.paper as `paper`,
             g.checker as `checker`
     from goods g
-             left join goods_setting gs on g.id = gs.goods_id
              left join application_detail ad on g.id = ad.goods_id
              left join application a on a.id = ad.application_id
+             left join goods_setting gs on CONCAT(date_format(gs.deadline,'%y%m%d'),gs.goods_index) = a.batch_num
      where ad.state = 2
                 -- @if(isNotEmpty(time)){
                     and gs.deadline like concat(#{time},'%')
@@ -185,8 +185,8 @@ selectPurchaseGoods
                 -- @if(isNotEmpty(goodsIndex)){
                     and gs.goods_index = #{goodsIndex}
                 -- @}
-                -- @if(isNotEmpty(approvedState)){
-                    and a.approved_state = #{state}
+                -- @if(isNotEmpty(unitId)){
+                    and g.unit_id = #{unitId}
                 -- @}
     group by g.id;
 ```
@@ -203,9 +203,9 @@ selectVerifyList
             h.paper as `paper`,
             g.checker as `checker`
     from goods g
-             left join goods_setting gs on g.id = gs.goods_id
              left join application_detail ad on g.id = ad.goods_id
              left join application a on a.id = ad.application_id
+             left join goods_setting gs on CONCAT(date_format(gs.deadline,'%y%m%d'),gs.goods_index) = a.batch_num
     where a.submit = 1
                 -- @if(isNotEmpty(time)){
                     and gs.deadline = #{time}
@@ -224,9 +224,9 @@ selectVerifyHallList
           ad.apply_amount as `applyAmount`,
           ad.id           as `applicationDetailId`
     from goods g
-             left join goods_setting gs on g.id = gs.goods_id
              left join application_detail ad on g.id = ad.goods_id
              left join application a on a.id = ad.application_id
+             left join goods_setting gs on CONCAT(date_format(gs.deadline,'%y%m%d'),gs.goods_index) = a.batch_num
     where a.submit = 1
                 -- @if(isNotEmpty(time)){
                    and gs.deadline like concat(#{time},'%')
@@ -250,5 +250,4 @@ updateVerifyHallBatch
             update application_detail set state = 2
             where id = #{item.id}
     -- @}
-
 ```

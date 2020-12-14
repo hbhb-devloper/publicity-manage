@@ -44,7 +44,9 @@ public class ApplicationFlowServiceImpl implements ApplicationFlowService {
 
     @Override
     public void deleteByBatchNum(String batchNum) {
-        applicationFlowMapper.deleteByBatchNum(batchNum);
+        applicationFlowMapper.createLambdaQuery()
+                .andEq(ApplicationFlow::getBatchNum,batchNum)
+                .delete();
     }
 
     @Override
@@ -54,7 +56,7 @@ public class ApplicationFlowServiceImpl implements ApplicationFlowService {
 
     @Override
     public ApplicationFlow getInfoById(Long id) {
-       return applicationFlowMapper.selectById(id);
+       return applicationFlowMapper.single(id);
     }
 
     @Override
@@ -73,7 +75,8 @@ public class ApplicationFlowServiceImpl implements ApplicationFlowService {
         List<ApplicationFlowInfoVO> list = new ArrayList<>();
         String flowName = null;
         // 查询流程的所有节点
-        List<ApplicationFlowVO> flowNodes = applicationFlowMapper.selectByBatch(batchNum);
+        List<ApplicationFlow> applicationFlows= applicationFlowMapper.createLambdaQuery().andEq(ApplicationFlow::getBatchNum, batchNum).select();
+        List<ApplicationFlowVO> flowNodes = BeanConverter.copyBeanList(applicationFlows, ApplicationFlowVO.class);
         // 通过userId得到nickName
         UserInfo userInfo = sysUserApiExp.getUserInfoById(userId);
         // 如果流程已结束，参与流程的角色登入

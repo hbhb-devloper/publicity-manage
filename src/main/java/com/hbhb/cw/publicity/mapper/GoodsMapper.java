@@ -2,6 +2,7 @@ package com.hbhb.cw.publicity.mapper;
 
 import com.hbhb.beetlsql.BaseMapper;
 import com.hbhb.cw.publicity.model.Goods;
+import com.hbhb.cw.publicity.web.vo.GoodsCondVO;
 import com.hbhb.cw.publicity.web.vo.GoodsReqVO;
 import com.hbhb.cw.publicity.web.vo.GoodsVO;
 import com.hbhb.cw.publicity.web.vo.LibraryVO;
@@ -20,9 +21,7 @@ import java.util.List;
  */
 public interface GoodsMapper extends BaseMapper<Goods> {
 
-    List<GoodsVO> selectByCond(GoodsReqVO cond);
-
-    Goods selectById(Long id);
+    List<GoodsVO> selectByCond(GoodsCondVO goodsCondVO);
 
     List<LibraryVO> selectByUnitId(Integer unitId);
 

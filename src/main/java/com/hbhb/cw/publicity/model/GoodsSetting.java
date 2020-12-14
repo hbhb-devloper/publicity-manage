@@ -1,10 +1,10 @@
 package com.hbhb.cw.publicity.model;
 
 import java.io.Serializable;
-import java.util.Date;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
  * @author wangxiaogang
  */
 @Data
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class GoodsSetting implements Serializable {
@@ -21,12 +22,7 @@ public class GoodsSetting implements Serializable {
      * 截至时间
      */
     @Schema(description = "截至时间")
-    private Date deadline;
-    /**
-     * 物料产品id
-     */
-    @Schema(description = "物料产品")
-    private Long goodsId;
+    private String deadline;
     /**
      * 次级
      */
@@ -36,7 +32,7 @@ public class GoodsSetting implements Serializable {
      * 是否发起签报
      */
     @Schema(description = "是否发起签报")
-    private Date isEnd;
+    private String isEnd;
     /**
      * 相关内容
      */
