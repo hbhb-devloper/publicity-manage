@@ -9,11 +9,7 @@ select p.id           as id,
        p.producers    as `producers`,
        predict_amount as `predictAmount`,
        state          as `state`,
-       pf.id          as `pf.id`,
-       pf.file_id     as `pf.file_id`,
-       pf.create_by   as `pf.create_by`
 from picture p
-         left join picture_file pf on p.id = pf.picture_id
 where p.id = #{id}
 ```
 selectPictureListByCond

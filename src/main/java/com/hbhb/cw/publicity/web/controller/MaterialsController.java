@@ -1,12 +1,11 @@
 package com.hbhb.cw.publicity.web.controller;
 
+import com.alibaba.excel.EasyExcel;
 import com.hbhb.core.utils.ExcelUtil;
 import com.hbhb.cw.publicity.rpc.FileApiExp;
 import com.hbhb.cw.publicity.service.MaterialsService;
-import com.hbhb.cw.publicity.web.vo.MaterialsInfoVO;
-import com.hbhb.cw.publicity.web.vo.MaterialsInitVO;
-import com.hbhb.cw.publicity.web.vo.MaterialsReqVO;
-import com.hbhb.cw.publicity.web.vo.MaterialsResVO;
+import com.hbhb.cw.publicity.service.listener.MaterialsListener;
+import com.hbhb.cw.publicity.web.vo.*;
 import com.hbhb.cw.systemcenter.vo.FileVO;
 import com.hbhb.web.annotation.UserId;
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,6 +21,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -77,10 +77,18 @@ public class MaterialsController {
                 fileApi.getTemplatePath() + File.separator + "宣传单页模板.xlsx", list);
     }
 
-    @Operation(summary = "宣传画面模板导入")
+    @Operation(summary = "宣传画面物料导入")
     @PostMapping(value = "/import", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public void materialsImport(@RequestPart(required = false, value = "file") MultipartFile file, Long printId) {
+        long begin = System.currentTimeMillis();
 
+        try {
+            EasyExcel.read(file.getInputStream(), PrintImportVO.class,
+                    new MaterialsListener(materialsService)).sheet().headRowNumber(2).doRead();
+        } catch (IOException | NumberFormatException | NullPointerException e) {
+            log.error(e.getMessage(), e);
+        }
+        log.info("导入成功，总共耗时：" + (System.currentTimeMillis() - begin) / 1000 + "s");
     }
 
     @Operation(summary = "上传附件")
@@ -104,6 +112,6 @@ public class MaterialsController {
     @Operation(summary = "删除附件")
     @DeleteMapping("/file/{id}")
     public void deleteFile(@PathVariable Long id) {
-
+        materialsService.deleteMaterials(id);
     }
 }

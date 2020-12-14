@@ -49,4 +49,12 @@ public interface PictureService {
      * @param id id
      */
     void deletePicture(Long id);
+
+    /**
+     * 删除附件
+     *
+     * @param fileId id
+     */
+    void deleteFile(Long fileId);
+
 }

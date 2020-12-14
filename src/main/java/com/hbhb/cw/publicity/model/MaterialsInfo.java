@@ -1,22 +1,17 @@
 package com.hbhb.cw.publicity.model;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.util.Date;
 
-/**
- * @author wangxiaogang
- */
 @Data
-@Builder
-@AllArgsConstructor
 @NoArgsConstructor
-public class PrintMaterials implements Serializable {
-    private static final long serialVersionUID = 7349886277606375304L;
+@AllArgsConstructor
+public class MaterialsInfo implements Serializable {
+    private static final long serialVersionUID = 655855764419843793L;
     /**
      * id
      */
@@ -44,19 +39,15 @@ public class PrintMaterials implements Serializable {
     /**
      * 分配地方（地址）
      */
-    private String address;
+    private Integer address;
     /**
-     * 是否加盖合同分公司印章
-     */
-    private Integer isSeal;
-    /**
-     * 接收人/电话
+     * 接收人
      */
     private String receivedBy;
     /**
-     * 是否有合同编号
+     * 电话
      */
-    private Integer isNum;
+    private String receivedPhone;
     /**
      * 需送达日期
      */
@@ -70,12 +61,7 @@ public class PrintMaterials implements Serializable {
      */
     private String materialsName;
     /**
-     * 类型（10-业务单式、20-宣传单页）
-     */
-    private Integer type;
-    /**
      * 印刷品id
      */
-    private Long printId;
-
+    private Long materialsId;
 }

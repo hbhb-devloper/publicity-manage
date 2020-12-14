@@ -41,10 +41,6 @@ select p.id             as `p.id`,
        p.predict_amount as `p.predictAmount`,
        p.material_type  as `p.materialsType`,
        p.apply_time     as `p.applyTime`,
-       pf.id            as `pf.id`,
-       pf.file_id       as `pf.file_id`,
-       pf.create_by     as `pf.create_by`
 from print p
-         left join print_file pf on p.id = pf.print_id
 where p.id = #{id}
 ```

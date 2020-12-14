@@ -9,11 +9,7 @@ select m.id           as id,
        predict_amount as predictAmount,
        producers      as producers,
        state          as state,
-       mf.id          as `mf.id`,
-       mf.file_id     as `mf.file_id`,
-       mf.create_by   as `mf.create_by`
 from materials m
-         left join materials_file mf on m.id = mf.materials_id
 where  m.id = #{id}
 ```
 selectMaterialsListByCond

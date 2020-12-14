@@ -29,11 +29,17 @@ public class PictureResVO implements Serializable {
     @Schema(description = "单位id")
     private Integer unitId;
 
+    @Schema(description = "单位id")
+    private String unitName;
+
     @Schema(description = "申请时间")
     private Date applyTime;
 
     @Schema(description = "用户id")
     private Integer userId;
+
+    @Schema(description = "用户id")
+    private String userName;
 
     @Schema(description = "预算费用（元）")
     private BigDecimal predictAmount;

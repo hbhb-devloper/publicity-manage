@@ -25,8 +25,17 @@ public class MaterialsResVO implements Serializable {
     @Schema(description = "用户id")
     private Integer userId;
 
+    @Schema(description = "用户id")
+    private String nickName;
+
     @Schema(description = "申请时间")
     private Date applyTime;
+
+    @Schema(description = "申请单位id")
+    private Integer unitId;
+
+    @Schema(description = "申请单位名称")
+    private String unitName;
 
     @Schema(description = "是否有宽带")
     private Integer wideBand;

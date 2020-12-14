@@ -2,10 +2,8 @@ package com.hbhb.cw.publicity.mapper;
 
 import com.hbhb.beetlsql.BaseMapper;
 import com.hbhb.cw.publicity.model.Print;
-import com.hbhb.cw.publicity.web.vo.PrintInfoVO;
 import com.hbhb.cw.publicity.web.vo.PrintReqVO;
 import com.hbhb.cw.publicity.web.vo.PrintResVO;
-
 import org.beetl.sql.core.page.PageRequest;
 import org.beetl.sql.core.page.PageResult;
 
@@ -22,11 +20,4 @@ public interface PrintMapper extends BaseMapper<Print> {
      */
     PageResult<PrintResVO> selectPrintByCond(PrintReqVO cond, PageRequest<PrintResVO> request);
 
-    /**
-     * 跟据id查询宣传印刷品详情
-     *
-     * @param id id
-     * @return 详情
-     */
-    PrintInfoVO selectPrintInfoById(Long id);
 }

@@ -2,10 +2,8 @@ package com.hbhb.cw.publicity.mapper;
 
 import com.hbhb.beetlsql.BaseMapper;
 import com.hbhb.cw.publicity.model.Picture;
-import com.hbhb.cw.publicity.web.vo.PictureInfoVO;
 import com.hbhb.cw.publicity.web.vo.PictureReqVO;
 import com.hbhb.cw.publicity.web.vo.PictureResVO;
-
 import org.beetl.sql.core.page.PageRequest;
 import org.beetl.sql.core.page.PageResult;
 
@@ -22,12 +20,4 @@ public interface PictureMapper extends BaseMapper<Picture> {
      */
     PageResult<PictureResVO> selectPictureListByCond(PictureReqVO reqVO, PageRequest<PictureResVO> request);
 
-
-    /**
-     * 跟据id获取宣传画面详情
-     *
-     * @param id id
-     * @return 详情
-     */
-    PictureInfoVO selectPictureInfoById(Long id);
 }

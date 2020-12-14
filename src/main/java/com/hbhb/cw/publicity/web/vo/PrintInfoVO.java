@@ -55,5 +55,5 @@ public class PrintInfoVO implements Serializable {
     private String remark;
 
     @Schema(description = "附件列表")
-    private List<PrintFileVO> file;
+    private List<PrintFileVO> files;
 }

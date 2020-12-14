@@ -2,6 +2,7 @@ package com.hbhb.cw.publicity.web.vo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -13,6 +14,7 @@ import java.io.Serializable;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class PictureFileVO implements Serializable {
     private static final long serialVersionUID = 7842665827017430062L;
     private Long id;

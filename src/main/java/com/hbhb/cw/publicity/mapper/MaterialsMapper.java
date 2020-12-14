@@ -2,9 +2,7 @@ package com.hbhb.cw.publicity.mapper;
 
 import com.hbhb.beetlsql.BaseMapper;
 import com.hbhb.cw.publicity.model.Materials;
-import com.hbhb.cw.publicity.web.vo.MaterialsInfoVO;
 import com.hbhb.cw.publicity.web.vo.MaterialsResVO;
-
 import org.beetl.sql.core.page.PageRequest;
 import org.beetl.sql.core.page.PageResult;
 
@@ -21,11 +19,4 @@ public interface MaterialsMapper extends BaseMapper<Materials> {
      */
     PageResult<MaterialsResVO> selectMaterialsListByCond(PageRequest<MaterialsResVO> cond, PageRequest<MaterialsResVO> request);
 
-    /**
-     * 跟据id获取物料制作详情
-     *
-     * @param id id
-     * @return 物料制作详情
-     */
-    MaterialsInfoVO selectMaterialsById(Long id);
 }

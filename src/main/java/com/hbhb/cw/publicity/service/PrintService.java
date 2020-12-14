@@ -1,9 +1,10 @@
 package com.hbhb.cw.publicity.service;
 
-import com.hbhb.cw.publicity.web.vo.PrintInfoVO;
-import com.hbhb.cw.publicity.web.vo.PrintReqVO;
-import com.hbhb.cw.publicity.web.vo.PrintResVO;
+import com.hbhb.cw.publicity.web.vo.*;
 import org.beetl.sql.core.page.PageResult;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author wangxiaogang
@@ -49,5 +50,27 @@ public interface PrintService {
      * @param userId 用户id
      */
     void updatePrint(PrintInfoVO infoVO, Integer userId);
+
+    /**
+     * 批量导入
+     *
+     * @param dataList      导入列表
+     * @param importHeadMap 表头
+     */
+    void savePrint(List<PrintImportVO> dataList, Map<Integer, String> importHeadMap);
+
+    /**
+     * 删除附件
+     *
+     * @param fileId id
+     */
+    void deleteFile(Long fileId);
+
+    /**
+     * 发起审批
+     *
+     * @param initVO 发起条件
+     */
+    void toApprove(PrintInitVO initVO);
 
 }

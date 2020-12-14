@@ -1,13 +1,12 @@
 
 package com.hbhb.cw.publicity.web.controller;
 
+import com.alibaba.excel.EasyExcel;
 import com.hbhb.core.utils.ExcelUtil;
 import com.hbhb.cw.publicity.rpc.FileApiExp;
 import com.hbhb.cw.publicity.service.PrintService;
-import com.hbhb.cw.publicity.web.vo.PrintInfoVO;
-import com.hbhb.cw.publicity.web.vo.PrintInitVO;
-import com.hbhb.cw.publicity.web.vo.PrintReqVO;
-import com.hbhb.cw.publicity.web.vo.PrintResVO;
+import com.hbhb.cw.publicity.service.listener.PrintListener;
+import com.hbhb.cw.publicity.web.vo.*;
 import com.hbhb.cw.systemcenter.vo.FileVO;
 import com.hbhb.web.annotation.UserId;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,6 +22,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -73,17 +73,14 @@ public class PrintController {
         printService.updatePrint(infoVO, userId);
     }
 
-
     @Operation(summary = "下载业务单式模板")
     @PostMapping("/export/business")
     public void exportBusiness(HttpServletRequest request, HttpServletResponse response) {
         List<Object> list = new ArrayList<>();
         String fileName = ExcelUtil.encodingFileName(request, "中国移动杭州分公司业务单式导入模板");
-        String template = fileApi.getTemplatePath();
         ExcelUtil.export2WebWithTemplate(response, fileName, "中国移动杭州分公司业务单式导入模板",
                 fileApi.getTemplatePath() + File.separator + "中国移动杭州分公司业务单式导入模板.xls", list);
     }
-
 
     @Operation(summary = "下载宣传单页模板")
     @PostMapping("/export/publicity")
@@ -96,14 +93,22 @@ public class PrintController {
 
     @Operation(summary = "导入")
     @PostMapping(value = "/import", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public void printImport(@RequestPart(required = false, value = "file") MultipartFile file, Long printId) {
-
+    public void printImport(@RequestPart(required = false, value = "file") MultipartFile file, Long printId, Integer type) {
+        long begin = System.currentTimeMillis();
+        try {
+            EasyExcel.read(file.getInputStream(), PrintImportVO.class,
+                    new PrintListener(printService)).sheet().headRowNumber(2).doRead();
+        } catch (IOException | NumberFormatException | NullPointerException e) {
+            log.error(e.getMessage(), e);
+        }
+        log.info("导入成功，总共耗时：" + (System.currentTimeMillis() - begin) / 1000 + "s");
     }
 
     @Operation(summary = "上传附件")
     @PostMapping(value = "/upload", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public FileVO uploadPrintFile(@RequestPart(required = false, value = "file") MultipartFile file) {
-        return null;
+        //todo  上传文件的类型
+        return fileApi.upload(file, 50);
     }
 
     @Operation(summary = "发起审批")
@@ -115,7 +120,7 @@ public class PrintController {
     @Operation(summary = "删除附件")
     @DeleteMapping("/file/{id}")
     public void deleteFile(@PathVariable Long id) {
-
+        printService.deleteFile(id);
     }
 
     @Operation(summary = "跟据id查询详情")

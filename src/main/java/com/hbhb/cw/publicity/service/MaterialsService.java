@@ -1,9 +1,13 @@
 package com.hbhb.cw.publicity.service;
 
+import com.hbhb.cw.publicity.web.vo.MaterialsImportVO;
 import com.hbhb.cw.publicity.web.vo.MaterialsInfoVO;
 import com.hbhb.cw.publicity.web.vo.MaterialsReqVO;
 import com.hbhb.cw.publicity.web.vo.MaterialsResVO;
 import org.beetl.sql.core.page.PageResult;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author wangxiaogang
@@ -49,5 +53,21 @@ public interface MaterialsService {
      * @param userId 用户id
      */
     void updateMaterials(MaterialsInfoVO infoVO, Integer userId);
+
+    /**
+     * 批量导入
+     *
+     * @param dataList      导入列表
+     * @param importHeadMap 表头
+     */
+    void saveMaterials(List<MaterialsImportVO> dataList, Map<Integer, String> importHeadMap);
+
+    /**
+     * 删除附件
+     *
+     * @param fileId id
+     */
+    void deleteFile(Long fileId);
+
 
 }

@@ -30,7 +30,7 @@ public class PrintResVO implements Serializable {
     private Integer unitId;
 
     @Schema(description = "申请部门单位名称")
-    private Integer unitName;
+    private String unitName;
 
     @Schema(description = "物料类型")
     private Integer materialType;
@@ -42,7 +42,7 @@ public class PrintResVO implements Serializable {
     private Integer userId;
 
     @Schema(description = "申请人姓名")
-    private Integer userName;
+    private String userName;
 
     @Schema(description = "预估金额")
     private BigDecimal predictAmount;

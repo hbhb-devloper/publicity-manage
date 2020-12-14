@@ -101,7 +101,7 @@ public class PictureController {
     @Operation(summary = "删除附件")
     @DeleteMapping("/file/{id}")
     public void deleteFile(@PathVariable Long id) {
-
+    pictureService.deleteFile(id);
     }
 }
 
