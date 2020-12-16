@@ -6,14 +6,15 @@ import com.hbhb.cw.publicity.web.vo.GoodsCondVO;
 import com.hbhb.cw.publicity.web.vo.GoodsReqVO;
 import com.hbhb.cw.publicity.web.vo.GoodsVO;
 import com.hbhb.cw.publicity.web.vo.LibraryVO;
-import com.hbhb.cw.publicity.web.vo.PurchaseGoods;
+import com.hbhb.cw.publicity.web.vo.PurchaseGoodsResVO;
+import com.hbhb.cw.publicity.web.vo.PurchaseGoodsVO;
+import com.hbhb.cw.publicity.web.vo.SummaryCondVO;
 import com.hbhb.cw.publicity.web.vo.SummaryGoodsVO;
 import com.hbhb.cw.publicity.web.vo.SummaryUnitGoodsVO;
 import com.hbhb.cw.publicity.web.vo.VerifyGoodsVO;
 import com.hbhb.cw.publicity.web.vo.VerifyHallGoodsReqVO;
 import com.hbhb.cw.publicity.web.vo.VerifyHallGoodsVO;
 
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -27,17 +28,15 @@ public interface GoodsMapper extends BaseMapper<Goods> {
 
     List<LibraryVO> selectGoodsByActIds(List<Long> list);
 
-    List<SummaryUnitGoodsVO> selectSummaryUnitByType(GoodsReqVO goodsReqVO, Integer type, Integer state);
+    List<SummaryUnitGoodsVO> selectSummaryUnitByType(SummaryCondVO cond);
 
-    List<SummaryGoodsVO> selectSummaryByType(GoodsReqVO goodsReqVO, Integer type);
+    List<SummaryGoodsVO> selectSummaryByState(SummaryCondVO cond);
 
-    List<SummaryGoodsVO> selectSummaryByState(GoodsReqVO goodsReqVO, Integer type, Integer state);
+    List<PurchaseGoodsResVO> selectPurchaseGoods(GoodsReqVO goodsReqVO);
 
-    List<PurchaseGoods> selectPurchaseGoods(GoodsReqVO goodsReqVO);
+    List<PurchaseGoodsVO> selectGoodsByHallId(GoodsReqVO goodsReqVO);
 
-    List<VerifyGoodsVO> selectVerifyList(String nickName, Date time);
+    List<VerifyGoodsVO> selectVerifyList(Integer userId, String batchNum);
 
     List<VerifyHallGoodsVO> selectVerifyHallList(VerifyHallGoodsReqVO verifyHallGoodsReqVO);
-
-    void updateVerifyHallBatch(List<Long> list);
 }

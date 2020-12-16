@@ -25,9 +25,6 @@ public class VerifyHallGoodsReqVO implements Serializable {
     @Schema(description = "物料id")
     private Long goodsId;
 
-    @Schema(description = "次序")
-    private Integer goodsIndex;
-
-    @Schema(description = "时间（yyyy-MM）")
-    private String time;
+    @Schema(description = "批次号")
+    private String batchNum;
 }

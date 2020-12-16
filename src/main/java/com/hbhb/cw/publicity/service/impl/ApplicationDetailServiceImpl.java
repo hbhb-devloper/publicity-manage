@@ -11,16 +11,17 @@ import com.hbhb.cw.publicity.enums.GoodsType;
 import com.hbhb.cw.publicity.enums.NodeState;
 import com.hbhb.cw.publicity.enums.OperationState;
 import com.hbhb.cw.publicity.exception.GoodsException;
+import com.hbhb.cw.publicity.mapper.ApplicationDetailMapper;
 import com.hbhb.cw.publicity.mapper.ApplicationMapper;
 import com.hbhb.cw.publicity.mapper.GoodsMapper;
 import com.hbhb.cw.publicity.model.Application;
+import com.hbhb.cw.publicity.model.ApplicationDetail;
 import com.hbhb.cw.publicity.model.ApplicationFlow;
 import com.hbhb.cw.publicity.model.GoodsSetting;
 import com.hbhb.cw.publicity.rpc.FlowNodeApiExp;
 import com.hbhb.cw.publicity.rpc.FlowNoticeApiExp;
 import com.hbhb.cw.publicity.rpc.FlowRoleUserApiExp;
 import com.hbhb.cw.publicity.rpc.FlowTypeApiExp;
-import com.hbhb.cw.publicity.rpc.MailApiExp;
 import com.hbhb.cw.publicity.rpc.SysDictApiExp;
 import com.hbhb.cw.publicity.rpc.SysUserApiExp;
 import com.hbhb.cw.publicity.rpc.UnitApiExp;
@@ -34,6 +35,7 @@ import com.hbhb.cw.publicity.web.vo.ApplicationFlowNodeVO;
 import com.hbhb.cw.publicity.web.vo.ApplicationNoticeVO;
 import com.hbhb.cw.publicity.web.vo.GoodsApproveVO;
 import com.hbhb.cw.publicity.web.vo.GoodsReqVO;
+import com.hbhb.cw.publicity.web.vo.SummaryCondVO;
 import com.hbhb.cw.publicity.web.vo.SummaryUnitGoodsResVO;
 import com.hbhb.cw.publicity.web.vo.SummaryUnitGoodsVO;
 import com.hbhb.cw.publicity.web.vo.UnitGoodsStateVO;
@@ -85,7 +87,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
     @Resource
     private SysUserApiExp sysUserApiExp;
     @Resource
-    private MailApiExp mailApiExp;
+    private ApplicationDetailMapper applicationDetailMapper;
     @Resource
     private ApplicationFlowService applicationFlowService;
     @Resource
@@ -107,8 +109,9 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         if (goodsSetting == null) {
             return new SummaryUnitGoodsResVO();
         }
-        List<SummaryUnitGoodsVO> simSummaryList = getUnitSummaryList(goodsReqVO, GoodsType.BUSINESS_SIMPLEX.getValue());
-        List<SummaryUnitGoodsVO> singSummaryList = getUnitSummaryList(goodsReqVO, GoodsType.FLYER_PAGE.getValue());
+        List<SummaryUnitGoodsVO> simSummaryList = getUnitSummaryList(goodsReqVO,0);
+
+        List<SummaryUnitGoodsVO> singSummaryList = getUnitSummaryList(goodsReqVO, 1);
         // 通过goodsId得到unitName
 
 
@@ -329,8 +332,9 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         Date date = new Date();
         // 通过此刻时间与截止时间对比，判断为第几月第几次
         GoodsSetting setting = goodsSettingService.getSetByDate(DateUtil.dateToString(date));
+        String batchNum = DateUtil.dateToString(DateUtil.stringToDate(setting.getDeadline()),"yyyyMM")+setting.getGoodsIndex();
         // 通过时间 ，每次获取其列表
-        return goodsMapper.selectVerifyList(user.getNickName(), DateUtil.stringToDate(setting.getDeadline()));
+        return goodsMapper.selectVerifyList(userId, batchNum);
     }
 
     @Override
@@ -338,11 +342,11 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         Date date = new Date();
         // 通过此刻时间与截止时间对比，判断为第几月第几次
         GoodsSetting setting = goodsSettingService.getSetByDate(DateUtil.dateToString(date));
+        String batchNum = DateUtil.dateToString(DateUtil.stringToDate(setting.getDeadline()),"yyyyMM")+setting.getGoodsIndex();
         return goodsMapper.selectVerifyHallList(VerifyHallGoodsReqVO.builder()
                 .goodsId(goodsId)
                 .unitId(unitId)
-                .goodsIndex(setting.getGoodsIndex())
-                .time(DateUtil.dateToString(date, "yyyy-MM"))
+                .batchNum(batchNum)
                 .build()
         );
     }
@@ -354,21 +358,28 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         for (VerifyHallGoodsVO cond : infoList) {
             ids.add(cond.getApplicationDetailId());
         }
-        goodsMapper.updateVerifyHallBatch(ids);
+        applicationDetailMapper.createLambdaQuery()
+                .andIn(ApplicationDetail::getId,ids)
+                .updateSelective(ApplicationDetail.builder().state(2).build());
     }
 
     @Override
-    public List<SummaryUnitGoodsVO> selectUnitSummaryList(GoodsReqVO goodsReqVO, Integer type) {
-        // 展示该次该单位下的申请汇总。
-        return goodsMapper.selectSummaryUnitByType(goodsReqVO, type, 2);
-    }
+    public List<SummaryUnitGoodsVO> getUnitSummaryList(GoodsReqVO goodsReqVO, Integer type) {
+        String date = goodsReqVO.getTime();
+        // 通过此刻时间与截止时间对比，判断为第几月第几次
+        GoodsSetting goodsSetting = goodsSettingService.getSetByDate(goodsReqVO.getTime());
+        if (goodsSetting==null){
+            return new  ArrayList<SummaryUnitGoodsVO>();
+        }
+        goodsReqVO.setTime(goodsSetting.getDeadline());
+        String batchNum = DateUtil.dateToString(DateUtil.stringToDate(goodsReqVO.getTime()),"yyyyMM")+goodsReqVO.getGoodsIndex();
 
-    /**
-     * 获取市场部或政企的汇总
-     */
-    private List<SummaryUnitGoodsVO> getUnitSummaryList(GoodsReqVO goodsReqVO, Integer type) {
         // 展示该次该单位下的申请汇总。
-        return selectUnitSummaryList(goodsReqVO, type);
+        return goodsMapper.selectSummaryUnitByType(SummaryCondVO.builder()
+                .batchNum(batchNum)
+                .unitId(goodsReqVO.getUnitId())
+                .type(type)
+                .build());
     }
 
     /**

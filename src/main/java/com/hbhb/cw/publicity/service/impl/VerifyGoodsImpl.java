@@ -13,6 +13,7 @@ import com.hbhb.cw.publicity.service.GoodsSettingService;
 import com.hbhb.cw.publicity.service.VerifyGoodsService;
 import com.hbhb.cw.publicity.web.vo.GoodsChangerVO;
 import com.hbhb.cw.publicity.web.vo.GoodsReqVO;
+import com.hbhb.cw.publicity.web.vo.SummaryCondVO;
 import com.hbhb.cw.publicity.web.vo.SummaryGoodsResVO;
 import com.hbhb.cw.publicity.web.vo.SummaryGoodsVO;
 
@@ -42,13 +43,13 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
 
     @Override
     public SummaryGoodsResVO getAuditSimplexList(GoodsReqVO goodsReqVO, Integer state) {
-        state = state == null ? 0 : state;
+//        state = state == null ? 0 : state;
         return getSummaryList(goodsReqVO, GoodsType.BUSINESS_SIMPLEX.getValue(), state);
     }
 
     @Override
     public SummaryGoodsResVO getAuditSingleList(GoodsReqVO goodsReqVO, Integer state) {
-        state = state == null ? 0 : state;
+//        state = state == null ? 0 : state;
         return getSummaryList(goodsReqVO, GoodsType.FLYER_PAGE.getValue(), state);
     }
 
@@ -102,8 +103,16 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
         if (goodsSetting==null){
             return new SummaryGoodsResVO();
         }
+        goodsReqVO.setTime(goodsSetting.getDeadline());
+        String batchNum = DateUtil.dateToString(DateUtil.stringToDate(goodsReqVO.getTime()),"yyyyMM")+goodsReqVO.getGoodsIndex();
+
         // 展示该次该单位下的申请汇总。
-        List<SummaryGoodsVO> summaries = goodsMapper.selectSummaryByState(goodsReqVO, type, state);
+        List<SummaryGoodsVO> summaries = goodsMapper.selectSummaryByState(SummaryCondVO.builder()
+                .batchNum(batchNum)
+                .unitId(goodsReqVO.getUnitId())
+                .type(type)
+                .state(state)
+                .build());
         for (int i = summaries.size()-1; i >= 0; i--) {
             if (summaries.get(i).getApplyAmount()==null){
                 summaries.remove(i);
@@ -116,7 +125,6 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
         }
         // 判断此次是否有过提交,如果已提交，提交置灰
         // 通过单位和时间次序得到所有该次该单位下所有申请表
-        String batchNum = DateUtil.dateToString(DateUtil.stringToDate(goodsReqVO.getTime()),"yyyyMM")+goodsReqVO.getGoodsIndex();
         List<Application> applicationList = applicationMapper.selectByCond(goodsReqVO.getUnitId(),batchNum);
         for (Application application : applicationList) {
             if (application.getSubmit()) {

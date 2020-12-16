@@ -75,5 +75,5 @@ public interface ApplicationDetailService {
     /**
      * 获取市场部或政企的汇总
      */
-   List<SummaryUnitGoodsVO> selectUnitSummaryList(GoodsReqVO goodsReqVO, Integer type);
+   List<SummaryUnitGoodsVO> getUnitSummaryList(GoodsReqVO goodsReqVO, Integer type);
 }

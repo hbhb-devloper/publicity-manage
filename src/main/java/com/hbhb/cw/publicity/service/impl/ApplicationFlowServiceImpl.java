@@ -103,7 +103,7 @@ public class ApplicationFlowServiceImpl implements ApplicationFlowService {
         Map<String, ApplicationFlowVO> flowNodeMap = flowNodes.stream().collect(
                 Collectors.toMap(ApplicationFlowVO::getFlowNodeId, Function.identity()));
         // 通过userId得到该用户的所有流程角色
-        List<Long> flowRoleIds = flowRoleUserApiExp.getFlowRoleIdByUserId(userId);
+        List<Long> flowRoleIds = flowRoleUserApiExp.getRoleIdByUserId(userId);
         // 1.先获取流程流转的当前节点<currentNode>
         // 2.再判断<loginUser>是否为<currentNode>的审批人
         //   2-1.如果不是，则所有节点信息全部为只读

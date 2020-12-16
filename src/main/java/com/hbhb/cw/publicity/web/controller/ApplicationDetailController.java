@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author yzc
  * @since 2020-12-14
  */
-@Tag(name = "宣传管理-物料负责分公司")
+@Tag(name = "宣传管理-物料负责分公司审核")
 @RestController
 @RequestMapping("/application/detail")
 @Slf4j
@@ -98,6 +98,6 @@ public class ApplicationDetailController {
     @GetMapping("summary/list")
     @Operation(summary = "获取市场部或政企的汇总")
     public List<SummaryUnitGoodsVO> getSummary(GoodsReqVO goodsReqVO, Integer type){
-        return applicationDetailService.selectUnitSummaryList(goodsReqVO,type);
+        return applicationDetailService.getUnitSummaryList(goodsReqVO,type);
     }
 }

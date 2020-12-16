@@ -9,19 +9,28 @@ import lombok.NoArgsConstructor;
 
 /**
  * @author yzc
- * @since 2020-11-25
+ * @since 2020-12-15
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PurchaseGoods implements Serializable {
-    private static final long serialVersionUID = 1119035345191386751L;
+public class PurchaseGoodsVO implements Serializable {
+    private static final long serialVersionUID = -2415040986876791949L;
+
+    @Schema(description = "营业厅id")
+    private Long hallId;
+
+    @Schema(description = "营业厅名称")
+    private String hallName;
 
     @Schema(description = "物料id")
     private Long goodsId;
 
     @Schema(description = "物料名称")
     private String goodsName;
+
+    @Schema(description = "物料编号")
+    private String goodsNum;
 
     @Schema(description = "计量单位")
     private String unit;

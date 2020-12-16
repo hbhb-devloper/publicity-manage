@@ -23,6 +23,9 @@ public class SummaryGoodsVO implements Serializable {
     @Schema(description = "物料申请id")
     private Long applicationId;
 
+    @Schema(description = "营业厅Id")
+    private Long hallId;
+
     @Schema(description = "营业厅")
     private String hallName;
 

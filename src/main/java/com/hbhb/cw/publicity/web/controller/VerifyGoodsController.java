@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Date;
@@ -28,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author yzc
  * @since 2020-11-25
  */
-@Tag(name = "宣传管理-物料审核")
+@Tag(name = "宣传管理-分公司物料提交")
 @RestController
 @RequestMapping("/verify")
 @Slf4j
@@ -39,8 +40,8 @@ public class VerifyGoodsController {
 
     @GetMapping("/simplex")
     @Operation(summary = "营业厅物料业务单式分公司汇总(审核)")
-    public SummaryGoodsResVO getAuditSimplexGoods(GoodsReqVO goodsReqVO, Integer state) {
-        if (goodsReqVO.getTime()==null){
+    public SummaryGoodsResVO getAuditSimplexGoods(GoodsReqVO goodsReqVO, @RequestParam(required = false) Integer state) {
+        if (goodsReqVO.getTime() == null) {
             goodsReqVO.setTime(DateUtil.dateToString(new Date()));
         }
         return verifyGoodsService.getAuditSimplexList(goodsReqVO, state);
@@ -48,8 +49,8 @@ public class VerifyGoodsController {
 
     @GetMapping("/single")
     @Operation(summary = "营业厅物料宣传单页分公司汇总(审核)")
-    public SummaryGoodsResVO getAuditSingleGoods( GoodsReqVO goodsReqVO, Integer state) {
-        if (goodsReqVO.getTime()==null){
+    public SummaryGoodsResVO getAuditSingleGoods(GoodsReqVO goodsReqVO, @RequestParam(required = false) Integer state) {
+        if (goodsReqVO.getTime() == null) {
             goodsReqVO.setTime(DateUtil.dateToString(new Date()));
         }
         return verifyGoodsService.getAuditSingleList(goodsReqVO, state);
@@ -57,19 +58,25 @@ public class VerifyGoodsController {
 
     @PostMapping("/save")
     @Operation(summary = "分公司保存物料")
-    public void saveGoods(@RequestBody List<Long> list, @Parameter(hidden = true)@UserId Integer userId){
-        verifyGoodsService.saveGoods(list,userId);
+    public void saveGoods(@RequestBody List<Long> list, @Parameter(hidden = true) @UserId Integer userId) {
+        verifyGoodsService.saveGoods(list, userId);
     }
 
     @PostMapping("/submit")
     @Operation(summary = "分公司提交物料")
-    public void submitGoods(@RequestBody List<Long> list){
+    public void submitGoods(@RequestBody List<Long> list) {
         verifyGoodsService.submitGoods(list);
     }
 
     @PutMapping("/changer")
     @Operation(summary = "分公司修改修改后申请数量")
-    public void changerModifyAmount(List<GoodsChangerVO> list){
+    public void changerModifyAmount(List<GoodsChangerVO> list) {
+        verifyGoodsService.changerModifyAmount(list);
+    }
+
+    @PostMapping("/export")
+    @Operation(summary = "分公司提交物料")
+    public void summaryExport(List<GoodsChangerVO> list) {
         verifyGoodsService.changerModifyAmount(list);
     }
 }

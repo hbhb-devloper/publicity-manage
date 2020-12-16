@@ -98,6 +98,9 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void applyGoods(GoodsCondAppVO goodsCondAppVO) {
+        if (goodsCondAppVO.getTime()==null){
+            goodsCondAppVO.setTime(DateUtil.dateToString(new Date()));
+        }
         List<ApplicationVO> list = goodsCondAppVO.getList();
         // 新增产品（如果该营业厅该产品已有则覆盖）
         GoodsSetting goodsSetting = goodsSettingService.getSetByDate(goodsCondAppVO.getTime());
@@ -122,6 +125,5 @@ public class ApplicationServiceImpl implements ApplicationService {
             applicationDetails.add(applicationDetail);
         }
         applicationDetailMapper.insertBatch(applicationDetails);
-
     }
 }
