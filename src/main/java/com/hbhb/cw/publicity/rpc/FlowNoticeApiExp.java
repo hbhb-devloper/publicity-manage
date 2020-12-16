@@ -1,6 +1,6 @@
 package com.hbhb.cw.publicity.rpc;
 
-import com.hbhb.cw.flowcenter.api.FlowNoticeApi;
+import com.hbhb.cw.flowcenter.api.FlowNodeNoticeApi;
 
 import org.springframework.cloud.openfeign.FeignClient;
 
@@ -9,5 +9,5 @@ import org.springframework.cloud.openfeign.FeignClient;
  * @since 2020-12-04
  */
 @FeignClient(value = "${provider.flow-center}", url = "",contextId = "FlowNoticeApi", path = "/flow/notice")
-public interface FlowNoticeApiExp extends FlowNoticeApi {
+public interface FlowNoticeApiExp extends FlowNodeNoticeApi {
 }

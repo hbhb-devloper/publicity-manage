@@ -2,7 +2,7 @@ package com.hbhb.cw.publicity.service.impl;
 
 import com.hbhb.core.utils.DateUtil;
 import com.hbhb.cw.flowcenter.model.Flow;
-import com.hbhb.cw.flowcenter.vo.FlowNodeNoticeResVO;
+import com.hbhb.cw.flowcenter.vo.FlowNodeNoticeVO;
 import com.hbhb.cw.flowcenter.vo.FlowNodePropVO;
 import com.hbhb.cw.publicity.enums.ApplicationState;
 import com.hbhb.cw.publicity.enums.FlowNodeNoticeState;
@@ -18,7 +18,9 @@ import com.hbhb.cw.publicity.model.Application;
 import com.hbhb.cw.publicity.model.ApplicationDetail;
 import com.hbhb.cw.publicity.model.ApplicationFlow;
 import com.hbhb.cw.publicity.model.GoodsSetting;
+import com.hbhb.cw.publicity.rpc.FlowApiExp;
 import com.hbhb.cw.publicity.rpc.FlowNodeApiExp;
+import com.hbhb.cw.publicity.rpc.FlowNodePropApiExp;
 import com.hbhb.cw.publicity.rpc.FlowNoticeApiExp;
 import com.hbhb.cw.publicity.rpc.FlowRoleUserApiExp;
 import com.hbhb.cw.publicity.rpc.FlowTypeApiExp;
@@ -98,6 +100,10 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
     private GoodsMapper goodsMapper;
     @Resource
     private SysDictApiExp sysDictApiExp;
+    @Resource
+    private FlowNodePropApiExp flowNodePropApiExp;
+    @Resource
+    private FlowApiExp flowApiExp;
     @Value("${cw.flow-role.name}")
     private String name;
 
@@ -149,7 +155,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
     @Override
     public List<UnitGoodsStateVO> getUnitGoodsStateList(GoodsReqVO goodsReqVO) {
         // 通过流程角色名称得到该角色用户
-        List<Integer> userList = flowRoleUserApiExp.getFlowRoleUserList(name);
+        List<Integer> userList = flowRoleUserApiExp.getUserIdByRoleName(name);
         List<UserInfo> userInfoList = sysUserApiExp.getUserInfoBatch(userList);
         Map<Integer, String> userMap = userInfoList.stream()
                 .collect(Collectors.toMap(UserInfo::getId, UserInfo::getNickName));
@@ -196,12 +202,12 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         // 获取登入用户单位
         UserInfo user = sysUserApiExp.getUserInfoById(userId);
         //  2.获取流程id 通过流程状态活动流程id
-        List<Flow> flows = flowTypeApiExp.getFlowsByTypeId(goodsApproveVO.getFlowTypeId());
+        List<Flow> flows = flowApiExp.getFlowsByTypeId(goodsApproveVO.getFlowTypeId());
         if (flows == null || flows.size() != 1) {
             throw new GoodsException(GoodsErrorCode.NOT_RELEVANT_FLOW);
         }
         Flow flow = flows.get(0);
-        List<FlowNodePropVO> flowProps = flowNodeApiExp.getFlowProp(flow.getId());
+        List<FlowNodePropVO> flowProps = flowNodePropApiExp.getNodeProps(flow.getId());
         //  3.校验用户发起审批权限
         boolean hasAccess = hasAccess2Approve(flowProps, user.getUnitId(), userId);
         if (!hasAccess) {
@@ -272,7 +278,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
                 projectState = ApplicationState.APPROVED.value();
             } else {
                 // 获取用户的所有流程角色
-                List<Long> flowRoleIds = flowRoleUserApiExp.getFlowRoleIdByUserId(userId);
+                List<Long> flowRoleIds = flowRoleUserApiExp.getRoleIdByUserId(userId);
                 // 判断当前用户是否为分配者。如果是分配者，则判断是否已指定所有审批人
                 if (flowRoleIds.contains(currentFlow.getAssigner())) {
                     // 判断是否所有审批人已指定
@@ -388,7 +394,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
     private boolean hasAccess2Approve(List<FlowNodePropVO> flowProps, Integer userId, Integer unitId) {
         Integer benbu = UnitEnum.BENBU.value();
         Integer hangzhou = UnitEnum.HANGZHOU.value();
-        List<Long> flowRoleIds = flowRoleUserApiExp.getFlowRoleIdByUserId(userId);
+        List<Long> flowRoleIds = flowRoleUserApiExp.getRoleIdByUserId(userId);
         // 第一个节点属性
         FlowNodePropVO firstNodeProp = flowProps.get(0);
         // 判断是有默认用户
@@ -422,9 +428,9 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
      */
     public String getInform(String flowNodeId, Integer state) {
         String inform = null;
-        List<FlowNodeNoticeResVO> flowNodeNotices = flowNoticeApiExp
-                .getFlowNodeNotice(flowNodeId);
-        for (FlowNodeNoticeResVO flowNodeNotice : flowNodeNotices) {
+        List<FlowNodeNoticeVO> flowNodeNotices = flowNoticeApiExp
+                .getNodeNoticeList(flowNodeId);
+        for (FlowNodeNoticeVO flowNodeNotice : flowNodeNotices) {
             if (flowNodeNotice.getState().equals(state)) {
                 inform = flowNodeNotice.getInform();
             }
@@ -516,7 +522,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
                           Integer userId, String batchNum, String currentFlowNodeId, List<String> flowNodes,
                           Map<String, Integer> approverMap, String suggestion) {
         // 通过flowNodeId得到流程类型id
-        Long flowTypeId = flowTypeApiExp.getIdByNodeId(flowNodes.get(0));
+        Long flowTypeId = flowTypeApiExp.getTypeIdByNode(flowNodes.get(0));
         List<Application> applicationList = applicationMapper.selectByBatchNum(batchNum);
         // 获取用户姓名
         UserInfo user = sysUserApiExp.getUserInfoById(userId);
