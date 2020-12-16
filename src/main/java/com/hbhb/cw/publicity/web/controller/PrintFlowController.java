@@ -1,6 +1,6 @@
 package com.hbhb.cw.publicity.web.controller;
 
-import com.hbhb.cw.publicity.web.vo.PrintFlowInfoVo;
+import com.hbhb.cw.flowcenter.vo.FlowApproveInfoVO;
 import com.hbhb.web.annotation.UserId;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,8 +22,10 @@ import java.util.List;
 public class PrintFlowController {
     @Operation(summary = "获取宣传印刷用品流程详情")
     @GetMapping("/list/{printId}")
-    public List<PrintFlowInfoVo> getPrintFlow(@PathVariable Long printId, @UserId Integer userId) {
+    public List<FlowApproveInfoVO> getPrintFlow(@PathVariable Long printId, @UserId Integer userId) {
         return null;
     }
+
+
 
 }

@@ -66,6 +66,7 @@ public interface PrintService {
      */
     void deleteFile(Long fileId);
 
+
     /**
      * 发起审批
      *
@@ -73,4 +74,11 @@ public interface PrintService {
      */
     void toApprove(PrintInitVO initVO);
 
+    /**
+     * 修改流程状态
+     *
+     * @param printId      印刷品id
+     * @param projectState 流程状态
+     */
+    void updateState(Long printId, Integer projectState);
 }

@@ -13,7 +13,7 @@ import com.hbhb.cw.publicity.web.vo.PictureFileVO;
 import com.hbhb.cw.publicity.web.vo.PictureInfoVO;
 import com.hbhb.cw.publicity.web.vo.PictureReqVO;
 import com.hbhb.cw.publicity.web.vo.PictureResVO;
-import com.hbhb.cw.systemcenter.model.File;
+import com.hbhb.cw.systemcenter.model.SysFile;
 import com.hbhb.cw.systemcenter.vo.UserInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.beetl.sql.core.page.DefaultPageRequest;
@@ -68,7 +68,7 @@ public class PictureServiceImpl implements PictureService {
         // 获取文件列表信息
         List<Integer> fileIds = new ArrayList<>();
         files.forEach(item -> fileIds.add(Math.toIntExact(item.getFileId())));
-        List<File> fileInfoList = fileApi.getFileInfoBatch(fileIds);
+        List<SysFile> fileInfoList = fileApi.getFileInfoBatch(fileIds);
         List<PictureFileVO> fileVo = Optional.of(files)
                 .orElse(new ArrayList<>())
                 .stream()

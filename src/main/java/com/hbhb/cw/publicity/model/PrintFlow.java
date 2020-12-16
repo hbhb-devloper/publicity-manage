@@ -1,6 +1,7 @@
 package com.hbhb.cw.publicity.model;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -13,6 +14,7 @@ import java.util.Date;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class PrintFlow implements Serializable {
     private static final long serialVersionUID = 2989186283780499645L;
     private Long id;
@@ -43,11 +45,11 @@ public class PrintFlow implements Serializable {
     /**
      * 是否能够自定义流程（0-否、1-是）
      */
-    private Integer controlAccess;
+    private Boolean controlAccess;
     /**
      * 是否允许被设置不参与流程（0-不参与、1-参与）
      */
-    private Integer isJoin;
+    private Boolean isJoin;
     /**
      * 操作（0-拒绝、1-同意）
      */

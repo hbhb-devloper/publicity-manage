@@ -12,7 +12,7 @@ import com.hbhb.cw.publicity.rpc.SysUserApiExp;
 import com.hbhb.cw.publicity.rpc.UnitApiExp;
 import com.hbhb.cw.publicity.service.MaterialsService;
 import com.hbhb.cw.publicity.web.vo.*;
-import com.hbhb.cw.systemcenter.model.File;
+import com.hbhb.cw.systemcenter.model.SysFile;
 import com.hbhb.cw.systemcenter.vo.UserInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.beetl.sql.core.page.DefaultPageRequest;
@@ -70,7 +70,7 @@ public class MaterialsServiceImpl implements MaterialsService {
         // 获取文件列表信息
         List<Integer> fileIds = new ArrayList<>();
         files.forEach(item -> fileIds.add(Math.toIntExact(item.getFileId())));
-        List<File> fileInfoList = fileApi.getFileInfoBatch(fileIds);
+        List<SysFile> fileInfoList = fileApi.getFileInfoBatch(fileIds);
         List<MaterialsFileVO> fileVo = Optional.of(files)
                 .orElse(new ArrayList<>())
                 .stream()
