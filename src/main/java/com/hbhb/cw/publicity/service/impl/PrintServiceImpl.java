@@ -17,6 +17,7 @@ import com.hbhb.cw.publicity.model.PrintFlow;
 import com.hbhb.cw.publicity.model.PrintMaterials;
 import com.hbhb.cw.publicity.rpc.*;
 import com.hbhb.cw.publicity.service.PrintFlowService;
+import com.hbhb.cw.publicity.service.PrintNoticeService;
 import com.hbhb.cw.publicity.service.PrintService;
 import com.hbhb.cw.publicity.web.vo.*;
 import com.hbhb.cw.systemcenter.enums.UnitEnum;
@@ -41,6 +42,7 @@ import static com.alibaba.excel.util.StringUtils.isEmpty;
  */
 @Slf4j
 @Service
+@SuppressWarnings(value = {"unchecked"})
 public class PrintServiceImpl implements PrintService {
     @Resource
     private PrintMapper printMapper;
@@ -57,9 +59,7 @@ public class PrintServiceImpl implements PrintService {
     @Resource
     private FlowNodeApiExp nodeApi;
     @Resource
-    private FlowNoticeApiExp noticeApi;
-    @Resource
-    private FlowTypeApiExp typeApi;
+    private PrintNoticeService noticeService;
     @Resource
     private FlowRoleUserApiExp roleUserApi;
     @Resource
@@ -209,8 +209,16 @@ public class PrintServiceImpl implements PrintService {
         // todo 修改推送模板
         inform = inform.replace(""
                 , print.getPrintNum() + "_" + print.getPrintName() + "_" + flow.getFlowName());
-        // todo 推送消息给发起人
-
+        //  推送消息给发起人
+        noticeService.addPrintNotice(
+                PrintNoticeVO.builder()
+                        .printId(print.getId())
+                        .receiver(initVO.getUserId())
+                        .promoter(initVO.getUserId())
+                        .content(inform)
+                        .flowTypeId(initVO.getFlowTypeId())
+                        .build()
+        );
 
         //  6.更改发票流程状态
         print.setId(initVO.getPrintId());

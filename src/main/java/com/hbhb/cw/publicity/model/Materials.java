@@ -1,6 +1,7 @@
 package com.hbhb.cw.publicity.model;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -14,6 +15,7 @@ import java.util.Date;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Materials implements Serializable {
     private static final long serialVersionUID = -948088127398119727L;
     private Long id;
@@ -64,5 +66,9 @@ public class Materials implements Serializable {
     /**
      * 更新者
      */
-    private String updateBy;
+    private Integer updateBy;
+    /**
+     * 流程状态
+     */
+    private Integer state;
 }

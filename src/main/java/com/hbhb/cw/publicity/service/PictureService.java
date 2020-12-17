@@ -1,6 +1,7 @@
 package com.hbhb.cw.publicity.service;
 
 import com.hbhb.cw.publicity.web.vo.PictureInfoVO;
+import com.hbhb.cw.publicity.web.vo.PictureInitVO;
 import com.hbhb.cw.publicity.web.vo.PictureReqVO;
 import com.hbhb.cw.publicity.web.vo.PictureResVO;
 import org.beetl.sql.core.page.PageResult;
@@ -57,4 +58,19 @@ public interface PictureService {
      */
     void deleteFile(Long fileId);
 
+    /**
+     * 修改宣传画面状态
+     *
+     * @param pictureId    宣传画面id
+     * @param projectState 状态
+     */
+    void updateState(Long pictureId, Integer projectState);
+
+
+    /**
+     * 发起审批
+     *
+     * @param initVO 发起条件
+     */
+    void toApprove(PictureInitVO initVO);
 }

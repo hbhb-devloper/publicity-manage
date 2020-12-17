@@ -18,5 +18,5 @@ public interface PrintNoticeService {
      *
      * @param build 提醒实体
      */
-    void andPrintNotice(PrintNoticeVO build);
+    void addPrintNotice(PrintNoticeVO build);
 }

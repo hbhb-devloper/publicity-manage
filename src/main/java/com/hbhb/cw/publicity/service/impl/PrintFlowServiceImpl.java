@@ -43,8 +43,6 @@ public class PrintFlowServiceImpl implements PrintFlowService {
     @Resource
     private FlowApiExp flowApi;
     @Resource
-    private PrintFlowService flowService;
-    @Resource
     private SysUserApiExp userApi;
     @Value("${mail.enable}")
     private Boolean mailEnable;
@@ -424,7 +422,7 @@ public class PrintFlowServiceImpl implements PrintFlowService {
                 inform = inform.replace(TemplateContent.TITLE.getValue(), printName + "_" + flowName);
                 // 推送下一位审批者
                 Integer nextApprover = approverMap.get(getNextNode(currentFlowNodeId, flowNodes));
-                noticeService.andPrintNotice(
+                noticeService.addPrintNotice(
                         PrintNoticeVO.builder().printId(printId)
                                 .receiver(nextApprover)
                                 .promoter(userId)
@@ -450,7 +448,7 @@ public class PrintFlowServiceImpl implements PrintFlowService {
             inform = inform.replace(TemplateContent.TITLE.getValue(), "_" + flowName);
             inform = inform.replace(TemplateContent.APPROVE.getValue(), user.getNickName());
             // 推送发起人
-            noticeService.andPrintNotice(
+            noticeService.addPrintNotice(
                     PrintNoticeVO.builder().printId(printId)
                             .receiver(approvers.get(0).getUserId())
                             .promoter(userId)
@@ -468,7 +466,7 @@ public class PrintFlowServiceImpl implements PrintFlowService {
             String replace = inform.replace(TemplateContent.TITLE.getValue(), "_" + flowName);
             inform = replace.replace(TemplateContent.APPROVE.getValue(), user.getNickName());
             inform = inform.replace(TemplateContent.CAUSE.getValue(), suggestion);
-            noticeService.andPrintNotice(
+            noticeService.addPrintNotice(
                     PrintNoticeVO.builder().printId(printId)
                             .receiver(approvers.get(0).getUserId())
                             .promoter(userId)

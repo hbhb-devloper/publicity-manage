@@ -22,6 +22,8 @@ import java.util.List;
 public class MaterialsInfoVO implements Serializable {
     private static final long serialVersionUID = -4925013973478233876L;
 
+    private Long id;
+
     @Schema(description = "申请单名称")
     private String materialsName;
 
@@ -33,6 +35,9 @@ public class MaterialsInfoVO implements Serializable {
 
     @Schema(description = "是否有宽带")
     private Integer wideBand;
+
+    @Schema(description = "单位id")
+    private Integer unitId;
 
     @Schema(description = "制作商")
     private String producers;

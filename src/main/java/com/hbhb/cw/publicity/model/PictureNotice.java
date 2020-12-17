@@ -21,7 +21,7 @@ public class PictureNotice implements Serializable {
     /**
      * 宣传画面id
      */
-    private Integer pictureId;
+    private Long pictureId;
     /**
      * 接收人id
      */

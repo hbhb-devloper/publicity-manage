@@ -15,7 +15,7 @@ public class PrintNoticeServiceImpl implements PrintNoticeService {
     }
 
     @Override
-    public void andPrintNotice(PrintNoticeVO build) {
+    public void addPrintNotice(PrintNoticeVO build) {
 
     }
 }

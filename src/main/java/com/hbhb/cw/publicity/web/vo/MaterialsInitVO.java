@@ -16,7 +16,7 @@ import java.io.Serializable;
 public class MaterialsInitVO implements Serializable {
     private static final long serialVersionUID = 8750147626397804360L;
     @Schema(description = "物料id")
-    Integer materialsId;
+    Long materialsId;
     @Schema(description = "流程类型id")
     Long flowTypeId;
     @Schema(description = "用户id")

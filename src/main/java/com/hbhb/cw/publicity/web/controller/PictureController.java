@@ -95,7 +95,7 @@ public class PictureController {
     @Operation(summary = "发起审批")
     @PostMapping("/to-approve")
     public void toApprove(@RequestBody PictureInitVO initVO, @Parameter(hidden = false) @UserId Integer userId) {
-
+        pictureService.toApprove(initVO);
     }
 
     @Operation(summary = "删除附件")

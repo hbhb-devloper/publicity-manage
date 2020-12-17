@@ -1,6 +1,7 @@
 package com.hbhb.cw.publicity.model;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -13,8 +14,10 @@ import java.util.Date;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class MaterialsFlow implements Serializable {
-    private static final long serialVersionUID = -2498834507956031338L;
+
+    private static final long serialVersionUID = 6936845781284932832L;
     private Long id;
     /**
      * 物料设计id

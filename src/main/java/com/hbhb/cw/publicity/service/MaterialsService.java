@@ -1,9 +1,6 @@
 package com.hbhb.cw.publicity.service;
 
-import com.hbhb.cw.publicity.web.vo.MaterialsImportVO;
-import com.hbhb.cw.publicity.web.vo.MaterialsInfoVO;
-import com.hbhb.cw.publicity.web.vo.MaterialsReqVO;
-import com.hbhb.cw.publicity.web.vo.MaterialsResVO;
+import com.hbhb.cw.publicity.web.vo.*;
 import org.beetl.sql.core.page.PageResult;
 
 import java.util.List;
@@ -69,5 +66,18 @@ public interface MaterialsService {
      */
     void deleteFile(Long fileId);
 
+    /**
+     * 发起审批
+     *
+     * @param initVO 发起条件
+     */
+    void toApprove(MaterialsInitVO initVO);
 
+    /**
+     * 修改状态
+     *
+     * @param materialsId 物料id
+     * @param state       流程状态
+     */
+    void updateState(Long materialsId, Integer state);
 }

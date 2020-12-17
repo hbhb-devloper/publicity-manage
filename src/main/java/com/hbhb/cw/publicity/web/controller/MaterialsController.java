@@ -106,7 +106,7 @@ public class MaterialsController {
     @Operation(summary = "发起审批")
     @PostMapping("/to-approve")
     public void toApprove(@RequestBody MaterialsInitVO initVO, @UserId Integer userId) {
-
+materialsService.toApprove(initVO);
     }
 
     @Operation(summary = "删除附件")
