@@ -9,25 +9,13 @@ import com.hbhb.cw.publicity.model.ApplicationDetail;
 import com.hbhb.cw.publicity.model.GoodsSetting;
 import com.hbhb.cw.publicity.service.ApplicationService;
 import com.hbhb.cw.publicity.service.GoodsSettingService;
-import com.hbhb.cw.publicity.web.vo.ApplicationVO;
-import com.hbhb.cw.publicity.web.vo.GoodsCondAppVO;
-import com.hbhb.cw.publicity.web.vo.GoodsCondVO;
-import com.hbhb.cw.publicity.web.vo.GoodsReqVO;
-import com.hbhb.cw.publicity.web.vo.GoodsResVO;
-import com.hbhb.cw.publicity.web.vo.GoodsVO;
-
+import com.hbhb.cw.publicity.web.vo.*;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import javax.annotation.Resource;
+import java.util.*;
 
 /**
  * @author yzc
@@ -44,7 +32,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     private GoodsMapper goodsMapper;
     @Resource
     private ApplicationDetailMapper applicationDetailMapper;
-    @Value("${cw.flow-role.name}")
+
     private String name;
 //    @Value("${mail.enable}")
 //    private Boolean mailEnable;

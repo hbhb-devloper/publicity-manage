@@ -1,6 +1,6 @@
 package com.hbhb.cw.publicity.web.controller;
 
-import com.hbhb.cw.publicity.web.vo.PictureFlowInfoVo;
+import com.hbhb.cw.flowcenter.vo.FlowApproveInfoVO;
 import com.hbhb.web.annotation.UserId;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,7 +22,7 @@ import java.util.List;
 public class MaterialsFlowController {
     @Operation(summary = "获取宣传物料设计流程详情")
     @GetMapping("/list/{materialsId}")
-    public List<PictureFlowInfoVo> getMaterialsFlow(@PathVariable Long materialsId, @UserId Integer userId) {
+    public List<FlowApproveInfoVO> getMaterialsFlow(@PathVariable Long materialsId, @UserId Integer userId) {
         return null;
     }
 }

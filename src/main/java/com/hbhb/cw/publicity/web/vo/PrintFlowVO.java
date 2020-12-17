@@ -17,7 +17,7 @@ import java.io.Serializable;
 public class PrintFlowVO implements Serializable {
     private static final long serialVersionUID = -2803698822835097288L;
     private Long id;
-    private Long invoiceId;
+    private Long printId;
     private String flowNodeId;
     private Long flowRoleId;
     private String approverRole;

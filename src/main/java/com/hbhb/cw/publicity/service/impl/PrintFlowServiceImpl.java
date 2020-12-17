@@ -2,19 +2,16 @@ package com.hbhb.cw.publicity.service.impl;
 
 import com.hbhb.core.bean.BeanConverter;
 import com.hbhb.cw.flowcenter.vo.*;
-import com.hbhb.cw.publicity.enums.FlowNodeNoticeState;
-import com.hbhb.cw.publicity.enums.NodeState;
-import com.hbhb.cw.publicity.enums.OperationState;
+import com.hbhb.cw.publicity.Exception.PublicityException;
+import com.hbhb.cw.publicity.enums.*;
 import com.hbhb.cw.publicity.mapper.PrintFlowMapper;
 import com.hbhb.cw.publicity.model.PrintFlow;
 import com.hbhb.cw.publicity.rpc.*;
+import com.hbhb.cw.publicity.service.MailService;
 import com.hbhb.cw.publicity.service.PrintFlowService;
 import com.hbhb.cw.publicity.service.PrintNoticeService;
 import com.hbhb.cw.publicity.service.PrintService;
-import com.hbhb.cw.publicity.web.vo.FlowNodeOperationVO;
-import com.hbhb.cw.publicity.web.vo.PrintApproveVO;
-import com.hbhb.cw.publicity.web.vo.PrintFlowVO;
-import com.hbhb.cw.publicity.web.vo.PrintInfoVO;
+import com.hbhb.cw.publicity.web.vo.*;
 import com.hbhb.cw.systemcenter.vo.UserInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,7 +34,6 @@ public class PrintFlowServiceImpl implements PrintFlowService {
     private PrintService printService;
     @Resource
     private PrintFlowMapper flowMapper;
-    private FlowNodeApiExp nodeApi;
     @Resource
     private FlowNoticeApiExp noticeApi;
     @Resource
@@ -50,12 +46,10 @@ public class PrintFlowServiceImpl implements PrintFlowService {
     private PrintFlowService flowService;
     @Resource
     private SysUserApiExp userApi;
-    @Resource
-    private UnitApiExp unitApi;
     @Value("${mail.enable}")
     private Boolean mailEnable;
     @Resource
-    private MailApiExp mailApi;
+    private MailService mailService;
     @Resource
     private PrintNoticeService noticeService;
 
@@ -268,7 +262,7 @@ public class PrintFlowServiceImpl implements PrintFlowService {
                 .value(flowNode.getOperation()).hidden(operationHidden).build());
         result.setSuggestion(FlowSuggestionVO.builder()
                 .value(flowNode.getSuggestion()).readOnly(suggestionReadOnly).build());
-        result.setApproverSelect(getApproverSelectList(flowNode.getFlowNodeId(), flowNode.getInvoiceId()));
+        result.setApproverSelect(getApproverSelectList(flowNode.getFlowNodeId(), flowNode.getPrintId()));
         result.setProjectFlowName(projectFlowName);
         result.setApproverRole(flowNode.getRoleDesc());
         result.setInput(inputHidden);
@@ -282,7 +276,7 @@ public class PrintFlowServiceImpl implements PrintFlowService {
         PrintFlow currentFlow = flowMapper.single(approveVO.getId());
         // 校验审批人是否为本人
         if (!currentFlow.getUserId().equals(userId)) {
-//            throw new BizException(BizStatus.LOCK_OF_APPROVAL_ROLE.getCode());
+            throw new PublicityException(PublicityErrorCode.NOT_RELEVANT_FLOW);
         }
 
         // 预开发票id
@@ -317,10 +311,10 @@ public class PrintFlowServiceImpl implements PrintFlowService {
                 if (flowRoleIds.contains(currentFlow.getAssigner())) {
                     // 判断是否所有审批人已指定
                     if (!isAllApproverAssigned(approvers)) {
-//                        throw new BizException(BizStatus.NOT_ALL_APPROVERS_ASSIGNED.getCode());
+                        throw new PublicityException(PublicityErrorCode.NOT_RELEVANT_FLOW);
                     }
                     // 更新各节点审批人
-//                    flowMapper.createLambdaQuery().andEq(approvers, printId).update();
+                    //           flowMapper.createLambdaQuery().andEq(approvers, printId).update();
                 }
                 // 如果不是分配者，则判断是否已指定下一个审批人
                 else {
@@ -328,7 +322,7 @@ public class PrintFlowServiceImpl implements PrintFlowService {
                     Integer nextApprover = approverMap
                             .get(getNextNode(currentFlowNodeId, flowNodes));
                     if (nextApprover == null) {
-//                        throw new BizException(BizStatus.NOT_ALL_APPROVERS_ASSIGNED.getCode());
+                        throw new PublicityException(PublicityErrorCode.NOT_RELEVANT_FLOW);
                     }
                 }
             }
@@ -340,7 +334,7 @@ public class PrintFlowServiceImpl implements PrintFlowService {
         }
 
         // 同意或者拒绝后对该发票的代办提醒进行删除
-//        noticeService.updateNoticeState(invoiceId);
+        noticeService.updateNoticeState(printId);
         // 推送提醒
         assert operation != null;
         toInform(operation, approvers, userId, printId, currentFlowNodeId, flowNodes,
@@ -412,7 +406,7 @@ public class PrintFlowServiceImpl implements PrintFlowService {
         // 通过flowNodeId得到流程类型id
         Long flowTypeId = typeApi.getTypeIdByNode(flowNodes.get(0));
         PrintInfoVO print = printService.getPrint(printId);
-
+        String printName = print.getPrintName();
         // 流程名称
         String flowName = flowApi.getNameByNodeId(flowNodes.get(0));
         // 获取用户姓名
@@ -427,23 +421,23 @@ public class PrintFlowServiceImpl implements PrintFlowService {
                 if (inform == null) {
                     return;
                 }
-//                inform = inform.replace(AllName.TITLE.getValue(), "_" + flowName);
+                inform = inform.replace(TemplateContent.TITLE.getValue(), printName + "_" + flowName);
                 // 推送下一位审批者
                 Integer nextApprover = approverMap.get(getNextNode(currentFlowNodeId, flowNodes));
-//                noticeService.andSaveFundInvoiceNotice(
-//                        FundInvoiceNoticeReqVO.builder().invoiceId(invoiceId)
-//                                .receiver(nextApprover)
-//                                .promoter(userId)
-//                                .content(inform)
-//                                .flowTypeId(flowTypeId)
-//                                .build());
+                noticeService.andPrintNotice(
+                        PrintNoticeVO.builder().printId(printId)
+                                .receiver(nextApprover)
+                                .promoter(userId)
+                                .content(inform)
+                                .flowTypeId(flowTypeId)
+                                .build());
                 // 推送邮件
                 if (mailEnable) {
                     // 下一节点审批人信息
                     UserInfo userInfo = userApi.getUserInfoById(nextApprover);
                     // 推送内容
                     String info = "_" + flowName;
-//                    mailApi.postMail(userInfo.getEmail(), userInfo.getNickName(), info);
+                    mailService.postMail(userInfo.getEmail(), userInfo.getNickName(), info);
                 }
             }
 
@@ -453,16 +447,16 @@ public class PrintFlowServiceImpl implements PrintFlowService {
             if (inform == null) {
                 return;
             }
-//            inform = inform.replace(AllName.TITLE.getValue(),  "_" + flowName);
-//            inform = inform.replace(AllName.APPROVE.getValue(), user.getNickName());
+            inform = inform.replace(TemplateContent.TITLE.getValue(), "_" + flowName);
+            inform = inform.replace(TemplateContent.APPROVE.getValue(), user.getNickName());
             // 推送发起人
-//            noticeService.andSaveFundInvoiceNotice(
-//                    FundInvoiceNoticeReqVO.builder().invoiceId(invoiceId)
-//                            .receiver(approvers.get(0).getUserId())
-//                            .promoter(userId)
-//                            .content(inform)
-//                            .flowTypeId(flowTypeId)
-//                            .build());
+            noticeService.andPrintNotice(
+                    PrintNoticeVO.builder().printId(printId)
+                            .receiver(approvers.get(0).getUserId())
+                            .promoter(userId)
+                            .content(inform)
+                            .flowTypeId(flowTypeId)
+                            .build());
         }
         // 拒绝
         else {
@@ -471,16 +465,16 @@ public class PrintFlowServiceImpl implements PrintFlowService {
             if (inform == null) {
                 return;
             }
-//            String replace = inform.replace(AllName.TITLE.getValue(), unitNum + "_" + unitName + "_" + flowName);
-//            inform = replace.replace(AllName.APPROVE.getValue(), user.getNickName());
-//            inform = inform.replace(AllName.CAUSE.getValue(), suggestion);
-//            noticeService.andSaveFundInvoiceNotice(
-//                    FundInvoiceNoticeReqVO.builder().invoiceId(invoiceId)
-//                            .receiver(approvers.get(0).getUserId())
-//                            .promoter(userId)
-//                            .content(inform)
-//                            .flowTypeId(flowTypeId)
-//                            .build());
+            String replace = inform.replace(TemplateContent.TITLE.getValue(), "_" + flowName);
+            inform = replace.replace(TemplateContent.APPROVE.getValue(), user.getNickName());
+            inform = inform.replace(TemplateContent.CAUSE.getValue(), suggestion);
+            noticeService.andPrintNotice(
+                    PrintNoticeVO.builder().printId(printId)
+                            .receiver(approvers.get(0).getUserId())
+                            .promoter(userId)
+                            .content(inform)
+                            .flowTypeId(flowTypeId)
+                            .build());
         }
     }
 
@@ -490,13 +484,13 @@ public class PrintFlowServiceImpl implements PrintFlowService {
     @Override
     public String getInform(String flowNodeId, Integer state) {
         String inform = null;
-//        List<FlowNodeNoticeResVO> flowNodeNotices = flowNodeNoticeService
-//                .getFlowNodeNotice(flowNodeId);
-//        for (FlowNodeNoticeResVO flowNodeNotice : flowNodeNotices) {
-//            if (flowNodeNotice.getState().equals(state)) {
-//                inform = flowNodeNotice.getInform();
-//            }
-//        }
+        List<FlowNodeNoticeVO> nodeNoticeList = noticeApi
+                .getNodeNoticeList(flowNodeId);
+        for (FlowNodeNoticeVO flowNodeNotice : nodeNoticeList) {
+            if (flowNodeNotice.getState().equals(state)) {
+                inform = flowNodeNotice.getInform();
+            }
+        }
         return inform;
     }
 }

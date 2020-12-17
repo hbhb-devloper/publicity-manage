@@ -114,7 +114,7 @@ public class PrintController {
     @Operation(summary = "发起审批")
     @PostMapping("/to-approve")
     public void toApprove(@RequestBody PrintInitVO initVO, @UserId Integer userId) {
-
+        printService.toApprove(initVO);
     }
 
     @Operation(summary = "删除附件")
