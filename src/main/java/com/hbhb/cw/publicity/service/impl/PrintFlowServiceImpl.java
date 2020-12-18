@@ -274,7 +274,7 @@ public class PrintFlowServiceImpl implements PrintFlowService {
         PrintFlow currentFlow = flowMapper.single(approveVO.getId());
         // 校验审批人是否为本人
         if (!currentFlow.getUserId().equals(userId)) {
-            throw new PublicityException(PublicityErrorCode.NOT_RELEVANT_FLOW);
+            throw new PublicityException(PublicityErrorCode.LOCK_OF_APPROVAL_ROLE);
         }
 
         // 预开发票id
@@ -309,7 +309,7 @@ public class PrintFlowServiceImpl implements PrintFlowService {
                 if (flowRoleIds.contains(currentFlow.getAssigner())) {
                     // 判断是否所有审批人已指定
                     if (!isAllApproverAssigned(approvers)) {
-                        throw new PublicityException(PublicityErrorCode.NOT_RELEVANT_FLOW);
+                        throw new PublicityException(PublicityErrorCode.NOT_ALL_APPROVERS_ASSIGNED);
                     }
                     // 更新各节点审批人
                     //           flowMapper.createLambdaQuery().andEq(approvers, printId).update();
@@ -320,7 +320,7 @@ public class PrintFlowServiceImpl implements PrintFlowService {
                     Integer nextApprover = approverMap
                             .get(getNextNode(currentFlowNodeId, flowNodes));
                     if (nextApprover == null) {
-                        throw new PublicityException(PublicityErrorCode.NOT_RELEVANT_FLOW);
+                        throw new PublicityException(PublicityErrorCode.NOT_ALL_APPROVERS_ASSIGNED);
                     }
                 }
             }

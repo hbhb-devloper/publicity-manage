@@ -5,6 +5,7 @@ import org.beetl.sql.core.page.PageResult;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author wangxiaogang
@@ -57,7 +58,7 @@ public interface MaterialsService {
      * @param dataList      导入列表
      * @param importHeadMap 表头
      */
-    void saveMaterials(List<MaterialsImportVO> dataList, Map<Integer, String> importHeadMap);
+    void saveMaterials(List<MaterialsImportVO> dataList, Map<Integer, String> importHeadMap, AtomicLong printId);
 
     /**
      * 删除附件

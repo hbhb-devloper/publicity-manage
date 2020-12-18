@@ -79,7 +79,7 @@ public class PrintController {
         List<Object> list = new ArrayList<>();
         String fileName = ExcelUtil.encodingFileName(request, "中国移动杭州分公司业务单式导入模板");
         ExcelUtil.export2WebWithTemplate(response, fileName, "中国移动杭州分公司业务单式导入模板",
-                fileApi.getTemplatePath() + File.separator + "中国移动杭州分公司业务单式导入模板.xls", list);
+                fileApi.getTemplatePath() + File.separator + "中国移动杭州分公司业务单式导入模板.xlsx", list);
     }
 
     @Operation(summary = "下载宣传单页模板")
@@ -88,7 +88,7 @@ public class PrintController {
         List<Object> list = new ArrayList<>();
         String fileName = ExcelUtil.encodingFileName(request, "中国移动杭州分公司宣传单页导入模板");
         ExcelUtil.export2WebWithTemplate(response, fileName, "中国移动杭州分公司宣传单页导入模板",
-                fileApi.getTemplatePath() + File.separator + "中国移动杭州分公司宣传单页导入模板.xls", list);
+                fileApi.getTemplatePath() + File.separator + "中国移动杭州分公司宣传单页导入模板.xlsx", list);
     }
 
     @Operation(summary = "导入")

@@ -7,7 +7,6 @@ import com.hbhb.cw.publicity.web.vo.PictureInfoVO;
 import com.hbhb.cw.publicity.web.vo.PictureInitVO;
 import com.hbhb.cw.publicity.web.vo.PictureReqVO;
 import com.hbhb.cw.publicity.web.vo.PictureResVO;
-import com.hbhb.cw.systemcenter.enums.FileType;
 import com.hbhb.cw.systemcenter.vo.FileVO;
 import com.hbhb.web.annotation.UserId;
 import io.swagger.v3.oas.annotations.Operation;
@@ -83,7 +82,7 @@ public class PictureController {
     @PostMapping(value = "/upload", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public FileVO uploadPictureFile(@RequestPart(required = false, value = "file") MultipartFile file) {
         // todo 更改文件类型
-        return fileApi.upload(file, FileType.SYSTEM_FILE.value());
+        return fileApi.upload(file, 52);
     }
 
     @Operation(summary = "删除宣传画面")
@@ -101,7 +100,7 @@ public class PictureController {
     @Operation(summary = "删除附件")
     @DeleteMapping("/file/{id}")
     public void deleteFile(@PathVariable Long id) {
-    pictureService.deleteFile(id);
+        pictureService.deleteFile(id);
     }
 }
 

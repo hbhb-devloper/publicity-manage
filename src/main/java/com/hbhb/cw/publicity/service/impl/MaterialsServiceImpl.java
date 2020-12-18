@@ -30,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import static com.alibaba.excel.util.StringUtils.isEmpty;
@@ -141,7 +142,7 @@ public class MaterialsServiceImpl implements MaterialsService {
     }
 
     @Override
-    public void saveMaterials(List<MaterialsImportVO> dataList, Map<Integer, String> importHeadMap) {
+    public void saveMaterials(List<MaterialsImportVO> dataList, Map<Integer, String> importHeadMap, AtomicLong printId) {
         //导入
         List<MaterialsInfo> materialsList = new ArrayList<>();
         Map<String, Integer> unitNameMap = unitApi.getUnitMapByUnitName();
@@ -151,6 +152,8 @@ public class MaterialsServiceImpl implements MaterialsService {
             materials.setUnitId(unitNameMap.get(importVo.getUnitName()));
             materialsList.add(materials);
             // TODO 缺少类型  缺少printId
+
+            //       materials.setMaterialsId(printId);
         }
         materialsInfoMapper.insertBatch(materialsList);
     }
@@ -183,7 +186,7 @@ public class MaterialsServiceImpl implements MaterialsService {
         UserInfo user = userApi.getUserInfoById(initVO.getUserId());
         UserInfo userInfo = userApi.getUserInfoById(materials.getUserId());
         if (!user.getNickName().equals(userInfo.getNickName())) {
-            throw new PublicityException(PublicityErrorCode.NOT_RELEVANT_FLOW);
+            throw new PublicityException(PublicityErrorCode.LOCK_OF_APPROVAL_ROLE);
         }
         //  2.获取流程id
         Long flowId = getRelatedFlow(initVO.getFlowTypeId(), materials.getUserId());
@@ -192,7 +195,7 @@ public class MaterialsServiceImpl implements MaterialsService {
         //  3.校验用户发起审批权限
         boolean hasAccess = hasAccess2Approve(flowProps, materials.getUnitId(), initVO.getUserId());
         if (!hasAccess) {
-            throw new PublicityException(PublicityErrorCode.NOT_RELEVANT_FLOW);
+            throw new PublicityException(PublicityErrorCode.LOCK_OF_APPROVAL_ROLE);
         }
         //  4.同步节点属性
         syncBudgetProjectFlow(flowProps, materials.getId(), initVO.getUserId());
@@ -259,7 +262,7 @@ public class MaterialsServiceImpl implements MaterialsService {
         // 判断节点是否有保存属性
         for (FlowNodePropVO flowPropVO : flowProps) {
             if (flowPropVO.getIsJoin() == null || flowPropVO.getControlAccess() == null) {
-                throw new PublicityException(PublicityErrorCode.NOT_RELEVANT_FLOW);
+                throw new PublicityException(PublicityErrorCode.LACK_OF_NODE_PROP);
             }
         }
         // 判断第一个节点是否有默认用户，如果没有则为当前用户
@@ -290,16 +293,16 @@ public class MaterialsServiceImpl implements MaterialsService {
         List<Flow> flowList = flowApi.getFlowsByTypeId(flowTypeId);
         // 流程有效性校验（发票预开流程存在两条）
         if (flowList.size() == 0) {
-            throw new PublicityException(PublicityErrorCode.NOT_RELEVANT_FLOW);
+            throw new PublicityException(PublicityErrorCode.NOT_EXIST_FLOW);
         } else if (flowList.size() > 2) {
-            throw new PublicityException(PublicityErrorCode.NOT_RELEVANT_FLOW);
+            throw new PublicityException(PublicityErrorCode.EXCEED_LIMIT_FLOW);
         }
         flowList.forEach(flow -> flowMap.put(nodeApi.getNodeNum(flow.getId()), flow.getId()));
         // 预开发票流程默认为4个节点流程 若办理业务为欠费缴纳类型则走另一条两节点流程
         Long flowId;
         flowId = flowMap.get(2L);
         if (flowId == null) {
-            throw new PublicityException(PublicityErrorCode.NOT_RELEVANT_FLOW);
+            throw new PublicityException(PublicityErrorCode.LACK_OF_FLOW);
         }
         // 校验流程是否匹配，如果没有匹配的流程，则抛出提示
         return flowId;

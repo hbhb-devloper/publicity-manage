@@ -21,7 +21,7 @@ public class PrintNotice implements Serializable {
     /**
      * 印刷品id
      */
-    private Integer printId;
+    private Long printId;
     /**
      * 接收人id
      */

@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author wangxiaogang
@@ -31,9 +32,12 @@ public class MaterialsListener extends AnalysisEventListener {
 
     private final MaterialsService materialsService;
 
+    private final AtomicLong printId;
 
-    public MaterialsListener(MaterialsService materialsService) {
+
+    public MaterialsListener(MaterialsService materialsService, AtomicLong printId) {
         this.materialsService = materialsService;
+        this.printId = printId;
     }
 
     /**
@@ -63,7 +67,7 @@ public class MaterialsListener extends AnalysisEventListener {
      */
     private void saveData() {
 
-        materialsService.saveMaterials(dataList, importHeadMap);
+        materialsService.saveMaterials(dataList, importHeadMap, printId);
 
     }
 

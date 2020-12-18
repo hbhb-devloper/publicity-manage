@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author wangxiaogang
@@ -79,12 +80,12 @@ public class MaterialsController {
 
     @Operation(summary = "宣传画面物料导入")
     @PostMapping(value = "/import", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public void materialsImport(@RequestPart(required = false, value = "file") MultipartFile file, Long printId) {
+    public void materialsImport(@RequestPart(required = false, value = "file") MultipartFile file, AtomicLong printId) {
         long begin = System.currentTimeMillis();
 
         try {
             EasyExcel.read(file.getInputStream(), PrintImportVO.class,
-                    new MaterialsListener(materialsService)).sheet().headRowNumber(2).doRead();
+                    new MaterialsListener(materialsService, printId)).sheet().headRowNumber(2).doRead();
         } catch (IOException | NumberFormatException | NullPointerException e) {
             log.error(e.getMessage(), e);
         }
@@ -94,7 +95,7 @@ public class MaterialsController {
     @Operation(summary = "上传附件")
     @PostMapping(value = "/upload", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public FileVO uploadMaterialsFile(@RequestPart(required = false, value = "file") MultipartFile file) {
-        return null;
+        return fileApi.upload(file, 51);
     }
 
     @Operation(summary = "删除宣传画面")
