@@ -12,11 +12,9 @@ import com.hbhb.cw.publicity.service.GoodsSettingService;
 import com.hbhb.cw.publicity.web.vo.ApplicationVO;
 import com.hbhb.cw.publicity.web.vo.GoodsCondAppVO;
 import com.hbhb.cw.publicity.web.vo.GoodsCondVO;
-import com.hbhb.cw.publicity.web.vo.GoodsReqVO;
 import com.hbhb.cw.publicity.web.vo.GoodsResVO;
 import com.hbhb.cw.publicity.web.vo.GoodsVO;
 
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,11 +51,19 @@ public class ApplicationServiceImpl implements ApplicationService {
 //            // 报异常
 //            throw new GoodsException(GoodsErrorCode.NOT_SERVICE_HALL);
 //        }
-        if (goodsCondVO.getTime()==null){
+        if (goodsCondVO.getTime() == null) {
             goodsCondVO.setTime(DateUtil.dateToString(new Date()));
         }
-        GoodsReqVO goodsReqVO = new GoodsReqVO();
-        BeanUtils.copyProperties(goodsCondVO,goodsReqVO);
+        // 几月的第几次
+        GoodsSetting goodsSetting = goodsSettingService.getSetByDate(goodsCondVO.getTime());
+        if (goodsCondVO.getGoodsIndex()==null){
+            goodsCondVO.setGoodsIndex(goodsSetting.getGoodsIndex());
+        }
+        if (goodsCondVO.getBatchNum() == null) {
+            goodsCondVO.setBatchNum(
+                    DateUtil.dateToString(DateUtil.stringToDate(goodsCondVO.getTime()), "yyyyMM")
+                            + goodsCondVO.getGoodsIndex());
+        }
         // 通过营业厅得到该营业厅下该时间的申请详情
         List<GoodsVO> goods = goodsMapper.selectByCond(goodsCondVO);
         // 得到所有产品
@@ -73,8 +79,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             }
         }
         // 申请数量所需条件（置灰或者能使用）
-        // 0.通过时间对比截止时间得到为几月的第几次
-        GoodsSetting goodsSetting = goodsSettingService.getSetByDate(goodsCondVO.getTime());
+        // 0.通过时间对比截止时间得到为
         // 1.得到此刻时间，通过截止时间，判断为几月的第几次。如何0的结果与1的结果不符则直接置灰。
         GoodsSetting setting = goodsSettingService.getSetByDate(DateUtil.dateToString(new Date()));
         if (!goodsSetting.getId().equals(setting.getId())) {
@@ -86,7 +91,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         }
         // 3.判断本月此次下该分公司是否已保存
         List<Application> applications = applicationMapper.selectApplicationByUnitId(goodsCondVO.getUnitId(),
-                DateUtil.dateToString(DateUtil.stringToDate(setting.getDeadline()),"yyyyMM")+setting.getGoodsIndex());
+                DateUtil.dateToString(DateUtil.stringToDate(setting.getDeadline()), "yyyyMM") + setting.getGoodsIndex());
         if (applications != null && (applications.size() == 0 || applications.get(0).getEditable())) {
             return new GoodsResVO(list, false);
         }
@@ -96,18 +101,43 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void applyGoods(GoodsCondAppVO goodsCondAppVO) {
-        if (goodsCondAppVO.getTime()==null){
+        if (goodsCondAppVO.getTime() == null) {
             goodsCondAppVO.setTime(DateUtil.dateToString(new Date()));
         }
+        if (goodsCondAppVO.getTime() == null) {
+            goodsCondAppVO.setTime(DateUtil.dateToString(new Date()));
+        }
+        GoodsSetting goodsSetting = goodsSettingService.getSetByDate(DateUtil.dateToString(new Date()));
+        if (goodsCondAppVO.getGoodsIndex() == null) {
+            goodsCondAppVO.setGoodsIndex(goodsSetting.getGoodsIndex());
+        }
+        String batchNum = DateUtil
+                .dateToString(DateUtil.stringToDate(goodsCondAppVO.getTime()), "yyyyMM") + goodsCondAppVO.getGoodsIndex();
+        List<Application> applications = applicationMapper.createLambdaQuery()
+                .andEq(Application::getBatchNum, batchNum)
+                .andEq(Application::getHallId, goodsCondAppVO.getHallId())
+                .select();
+        List<Long> applicationIds = new ArrayList<>();
+        for (Application application : applications) {
+            applicationIds.add(application.getId());
+        }
+        applicationDetailMapper.createLambdaQuery()
+                .andIn(ApplicationDetail::getApplicationId, applicationIds)
+                .delete();
+        applicationMapper.createLambdaQuery()
+                .andEq(Application::getBatchNum, batchNum)
+                .andEq(Application::getHallId, goodsCondAppVO.getHallId())
+                .delete();
         List<ApplicationVO> list = goodsCondAppVO.getList();
         // 新增产品（如果该营业厅该产品已有则覆盖）
-        GoodsSetting goodsSetting = goodsSettingService.getSetByDate(goodsCondAppVO.getTime());
         Date date = new Date();
         Application application = new Application();
-        application.setBatchNum(DateUtil.dateToString(date,"yyyyMM") + goodsSetting.getGoodsIndex());
+        application.setBatchNum(DateUtil.dateToString(date, "yyyyMM") + goodsSetting.getGoodsIndex());
         application.setCreateTime(date);
         application.setUnitId(goodsCondAppVO.getUnitId());
         application.setHallId(goodsCondAppVO.getHallId());
+        application.setEditable(false);
+        application.setSubmit(false);
         applicationMapper.insert(application);
         List<ApplicationDetail> applicationDetails = new ArrayList<>();
         goodsCondAppVO.setGoodsIndex(goodsSetting.getGoodsIndex());

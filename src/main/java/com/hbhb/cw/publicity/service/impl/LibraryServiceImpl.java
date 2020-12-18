@@ -1,8 +1,8 @@
 package com.hbhb.cw.publicity.service.impl;
 
 import com.hbhb.core.utils.DateUtil;
-import com.hbhb.cw.publicity.enums.GoodsErrorCode;
-import com.hbhb.cw.publicity.exception.GoodsException;
+import com.hbhb.cw.publicity.enums.PublicityErrorCode;
+import com.hbhb.cw.publicity.exception.PublicityException;
 import com.hbhb.cw.publicity.mapper.GoodsMapper;
 import com.hbhb.cw.publicity.model.Goods;
 import com.hbhb.cw.publicity.rpc.SysUserApiExp;
@@ -15,6 +15,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,14 +49,14 @@ public class LibraryServiceImpl implements LibraryService {
         for (LibraryVO libraryVO : list) {
             parents.add(libraryVO.getId());
         }
-        if (parents.size()==0){
+        if (parents.size() == 0) {
             return list;
         }
         List<LibraryVO> actList = goodsMapper.selectGoodsByActIds(parents);
         Map<Long, List<LibraryVO>> actMap = new HashMap<>();
         for (LibraryVO cond : actList) {
-            // 判断该活动下是否有货物
-            List<LibraryVO> condList = actMap.get(cond.getId());
+            // 判断该活动下是否有类别
+            List<LibraryVO> condList = actMap.get(cond.getParentId());
             // 如果没有则新建
             if (condList == null) {
                 List<LibraryVO> goods = new ArrayList<>();
@@ -80,7 +81,7 @@ public class LibraryServiceImpl implements LibraryService {
         for (LibraryVO libraryVO : actList) {
             activities.add(libraryVO.getId());
         }
-        if(activities.size()==0){
+        if (activities.size() == 0) {
             return list;
         }
         // 与活动结合转为树形结构
@@ -89,7 +90,7 @@ public class LibraryServiceImpl implements LibraryService {
         Map<Long, List<LibraryVO>> goodsMap = new HashMap<>();
         for (LibraryVO cond : goodsList) {
             // 判断该活动下是否有货物
-            List<LibraryVO> condList = goodsMap.get(cond.getId());
+            List<LibraryVO> condList = goodsMap.get(cond.getParentId());
             // 如果没有则新建
             if (condList == null) {
                 List<LibraryVO> goods = new ArrayList<>();
@@ -111,21 +112,31 @@ public class LibraryServiceImpl implements LibraryService {
     public void addLibrary(Integer userId, Goods libraryAddVO) {
         // 通过flag判断增加的是产品还是活动， 添加
         // 如果为活动
-        if (libraryAddVO.getMold()){
-            if (libraryAddVO.getUnitId()==null||libraryAddVO.getGoodsName()==null){
-                throw new GoodsException(GoodsErrorCode.NOT_FILLED_IN);
+        if (libraryAddVO.getMold()) {
+            if (libraryAddVO.getUnitId() == null || libraryAddVO.getGoodsName() == null) {
+                throw new PublicityException(PublicityErrorCode.NOT_FILLED_IN);
             }
         }
         // 如果为产品
         else {
+            if (libraryAddVO.getParentId() == null) {
+                throw new PublicityException(PublicityErrorCode.PLEASE_ADD_SECONDARY_DIRECTORY);
+            }
+            // 判断物料所在位置是否为第三层
+            List<Goods> actGoods = goodsMapper.createLambdaQuery()
+                    .andEq(Goods::getId, libraryAddVO.getParentId()).select();
+            if (actGoods == null || actGoods.size() == 0 || actGoods.get(0).getParentId() == null) {
+                throw new PublicityException(PublicityErrorCode.PLEASE_ADD_SECONDARY_DIRECTORY);
+            }
             // 判断必填项是否添加
-            if (libraryAddVO.getGoodsName()==null||libraryAddVO.getGoodsNum()==null||libraryAddVO.getType()==null
-            ||libraryAddVO.getChecker()==null||libraryAddVO.getUnit()==null||libraryAddVO.getSize()==null||libraryAddVO.getPaper()==null
-            ||!libraryAddVO.getState()){
-                throw new GoodsException(GoodsErrorCode.NOT_FILLED_IN);
+            if (libraryAddVO.getGoodsName() == null || libraryAddVO.getGoodsNum() == null || libraryAddVO.getType() == null
+                    || libraryAddVO.getChecker() == null || libraryAddVO.getUnit() == null || libraryAddVO.getSize() == null || libraryAddVO.getPaper() == null
+                    || !libraryAddVO.getState()) {
+                throw new PublicityException(PublicityErrorCode.NOT_FILLED_IN);
             }
             // 添加产品
         }
+        libraryAddVO.setUpdateTime(new Date());
         goodsMapper.insert(libraryAddVO);
     }
 
@@ -133,48 +144,52 @@ public class LibraryServiceImpl implements LibraryService {
     public void updateLibrary(Integer userId, Goods libraryAddVO) {
         // 通过flag判断修改的是活动还是产品，启用
         // 如果为活动
-        if (libraryAddVO.getMold()){
-            if (libraryAddVO.getUnitId()==null||libraryAddVO.getGoodsName()==null){
-                throw new GoodsException(GoodsErrorCode.NOT_FILLED_IN);
+        if (libraryAddVO.getMold()) {
+            if (libraryAddVO.getUnitId() == null || libraryAddVO.getGoodsName() == null) {
+                throw new PublicityException(PublicityErrorCode.NOT_FILLED_IN);
             }
         }
         // 如果为产品
         else {
             // 判断必填项是否添加
-            if (libraryAddVO.getGoodsName()==null||libraryAddVO.getGoodsNum()==null||libraryAddVO.getType()==null
-                    ||libraryAddVO.getChecker()==null||libraryAddVO.getUnitId()==null||libraryAddVO.getSize()==null||libraryAddVO.getPaper()==null
-                    ||libraryAddVO.getUpdateBy()==null|libraryAddVO.getState()){
-                throw new GoodsException(GoodsErrorCode.NOT_FILLED_IN);
+            if (libraryAddVO.getGoodsName() == null || libraryAddVO.getGoodsNum() == null || libraryAddVO.getType() == null
+                    || libraryAddVO.getChecker() == null || libraryAddVO.getUnitId() == null || libraryAddVO.getSize() == null || libraryAddVO.getPaper() == null
+                    || libraryAddVO.getUpdateBy() == null || !libraryAddVO.getState()) {
+                throw new PublicityException(PublicityErrorCode.NOT_FILLED_IN);
             }
-            // 修改产品
         }
-        goodsMapper.createLambdaQuery().andEq(Goods::getId,libraryAddVO.getId()).updateSelective(libraryAddVO);
+        // 修改
+        libraryAddVO.setUpdateTime(new Date());
+        goodsMapper.createLambdaQuery().andEq(Goods::getId, libraryAddVO.getId()).updateSelective(libraryAddVO);
     }
 
     @Override
     public GoodsInfoVO getInfo(Long id) {
         Goods goods = goodsMapper.single(id);
         GoodsInfoVO goodsInfo = new GoodsInfoVO();
-        BeanUtils.copyProperties(goods,goodsInfo);
+        BeanUtils.copyProperties(goods, goodsInfo);
         goodsInfo.setUpdateTime(DateUtil.dateToString(goods.getUpdateTime()));
         String checkerName = userApi.getUserInfoById(goods.getChecker()).getNickName();
         String updateName = userApi.getUserInfoById(goods.getUpdateBy()).getNickName();
         goodsInfo.setCheckerName(checkerName);
         goodsInfo.setUpdateName(updateName);
-        if (goods.getState()){
-            goodsInfo.setState("是");
-        }else {
-            goodsInfo.setState("否");
+        if (goods.getState()) {
+            goodsInfo.setStateLable("是");
+        } else {
+            goodsInfo.setStateLable("否");
         }
-        if (goods.getHasNum()){
-            goodsInfo.setHasNum("有");
-        }else {
-            goodsInfo.setHasNum("无");
+        if (goods.getMold()) {
+            return goodsInfo;
         }
-        if (goods.getHasSeal()){
-            goodsInfo.setHasSeal("有");
-        }else {
-            goodsInfo.setHasSeal("无");
+        if (goods.getHasNum()) {
+            goodsInfo.setHasNumLable("有");
+        } else {
+            goodsInfo.setHasNumLable("无");
+        }
+        if (goods.getHasSeal()) {
+            goodsInfo.setHasSealLable("有");
+        } else {
+            goodsInfo.setHasSealLable("无");
         }
         return goodsInfo;
     }

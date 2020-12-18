@@ -1,8 +1,9 @@
-package com.hbhb.cw.publicity.Exception;
+package com.hbhb.cw.publicity.exception;
 
 import com.hbhb.core.bean.MessageConvert;
 import com.hbhb.cw.publicity.enums.PublicityErrorCode;
 import com.hbhb.web.exception.BusinessException;
+
 import lombok.Getter;
 
 /**

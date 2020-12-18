@@ -15,16 +15,13 @@ selectByCond
             -- @if(isNotEmpty(unitId)){
                 and g.unit_id = #{unitId}
             -- @}
-            -- @if(isNotEmpty(time)){
-                and gs.deadline like concat(#{time},'%')
-            -- @}
-            -- @if(isNotEmpty(goodsIndex)){
-                and gs.goods_index = #{goodsIndex}
+            -- @if(isNotEmpty(batchNum)){
+                and a.batch_num = #{batchNum}
             -- @}
             -- @if(isNotEmpty(hallId)){
                 and a.hall_id = #{hallId}
             -- @}
-     group by a.hall_id,g.id;
+     group by g.id;
 ```
 
 selectById

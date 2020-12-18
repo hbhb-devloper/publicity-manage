@@ -31,7 +31,4 @@ public class GoodsVO implements Serializable {
 
     @Schema(description = "图片")
     private String pic;
-
-    @Schema(description = "是否保存")
-    private Boolean editable;
 }

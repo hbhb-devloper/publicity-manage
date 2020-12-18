@@ -49,7 +49,7 @@ public class LibraryController {
         libraryService.addLibrary(userId, libraryAddVO);
     }
 
-    @PutMapping("/")
+    @PutMapping("")
     @Operation(summary = "修改活动或产品")
     public void library(@Parameter(hidden = true) @UserId Integer userId, @RequestBody Goods libraryAddVO) {
         libraryService.updateLibrary(userId, libraryAddVO);

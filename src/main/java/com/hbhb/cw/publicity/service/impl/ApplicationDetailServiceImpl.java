@@ -7,11 +7,11 @@ import com.hbhb.cw.flowcenter.vo.FlowNodePropVO;
 import com.hbhb.cw.publicity.enums.ApplicationState;
 import com.hbhb.cw.publicity.enums.FlowNodeNoticeState;
 import com.hbhb.cw.publicity.enums.FlowRoleName;
-import com.hbhb.cw.publicity.enums.GoodsErrorCode;
 import com.hbhb.cw.publicity.enums.GoodsType;
 import com.hbhb.cw.publicity.enums.NodeState;
 import com.hbhb.cw.publicity.enums.OperationState;
-import com.hbhb.cw.publicity.exception.GoodsException;
+import com.hbhb.cw.publicity.enums.PublicityErrorCode;
+import com.hbhb.cw.publicity.exception.PublicityException;
 import com.hbhb.cw.publicity.mapper.ApplicationDetailMapper;
 import com.hbhb.cw.publicity.mapper.ApplicationMapper;
 import com.hbhb.cw.publicity.mapper.GoodsMapper;
@@ -202,14 +202,14 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         //  2.获取流程id 通过流程状态活动流程id
         List<Flow> flows = flowApiExp.getFlowsByTypeId(goodsApproveVO.getFlowTypeId());
         if (flows == null || flows.size() != 1) {
-            throw new GoodsException(GoodsErrorCode.NOT_RELEVANT_FLOW);
+            throw new PublicityException(PublicityErrorCode.NOT_RELEVANT_FLOW);
         }
         Flow flow = flows.get(0);
         List<FlowNodePropVO> flowProps = flowNodePropApiExp.getNodeProps(flow.getId());
         //  3.校验用户发起审批权限
         boolean hasAccess = hasAccess2Approve(flowProps, user.getUnitId(), userId);
         if (!hasAccess) {
-            throw new GoodsException(GoodsErrorCode.NOT_RELEVANT_FLOW);
+            throw new PublicityException(PublicityErrorCode.NOT_RELEVANT_FLOW);
         }
         // 通过时间和次序得到该次下的所有申请id（已提交且未被拒绝）
         GoodsSetting setInfo = goodsSettingService.getSetByDate(goodsApproveVO.getTime());
@@ -281,7 +281,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
                 if (flowRoleIds.contains(currentFlow.getAssigner())) {
                     // 判断是否所有审批人已指定
                     if (!isAllApproverAssigned(approvers)) {
-                        throw new GoodsException(GoodsErrorCode.NOT_RELEVANT_FLOW);
+                        throw new PublicityException(PublicityErrorCode.NOT_RELEVANT_FLOW);
                     }
                     // 更新各节点审批人
                     applicationFlowService.updateBatchByNodeId(approvers, batchNum);
@@ -292,7 +292,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
                     Integer nextApprover = approverMap
                             .get(getNextNode(currentFlowNodeId, flowNodes));
                     if (nextApprover == null) {
-                        throw new GoodsException(GoodsErrorCode.NOT_RELEVANT_FLOW);
+                        throw new PublicityException(PublicityErrorCode.NOT_RELEVANT_FLOW);
                     }
                 }
             }
@@ -446,7 +446,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         // 判断节点是否有保存属性
         for (FlowNodePropVO flowPropVO : flowProps) {
             if (flowPropVO.getIsJoin() == null || flowPropVO.getControlAccess() == null) {
-                throw new GoodsException(GoodsErrorCode.NOT_RELEVANT_FLOW);
+                throw new PublicityException(PublicityErrorCode.NOT_RELEVANT_FLOW);
             }
         }
         // 判断第一个节点是否有默认用户，如果没有则为当前用户

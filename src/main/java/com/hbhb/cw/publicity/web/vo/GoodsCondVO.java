@@ -29,4 +29,7 @@ public class GoodsCondVO implements Serializable {
 
     @Schema(description = "次序")
     private Integer goodsIndex;
+
+    @Schema(description = "批次号")
+    private String batchNum;
 }

@@ -74,17 +74,35 @@ public class GoodsInfoVO implements Serializable {
      * 是否加盖杭州分公司合同章
      */
     @Schema(description = "是否加盖杭州分公司合同章")
-    private String hasSeal;
+    private String hasSealLable;
+
+    /**
+     * 是否加盖杭州分公司合同章
+     */
+    @Schema(description = "是否加盖杭州分公司合同章")
+    private Boolean hasSeal;
     /**
      * 是否有编号
      */
     @Schema(description = "是否又编号")
-    private String hasNum;
+    private String hasNumLable;
+
+    /**
+     * 是否有编号
+     */
+    @Schema(description = "是否又编号")
+    private Boolean hasNum;
     /**
      * 是否使用
      */
     @Schema(description = "是否使用")
-    private String state;
+    private String stateLable;
+
+    /**
+     * 是否使用
+     */
+    @Schema(description = "是否使用")
+    private Boolean state;
     /**
      * 备注
      */
@@ -104,7 +122,7 @@ public class GoodsInfoVO implements Serializable {
      * 0业务单式，1宣传单页
      */
     @Schema(description = "0业务单式，1宣传单页")
-    private String type;
+    private Integer type;
     /**
      * 编辑时间
      */

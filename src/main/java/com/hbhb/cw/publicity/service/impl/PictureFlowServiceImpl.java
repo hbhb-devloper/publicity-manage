@@ -1,13 +1,27 @@
 package com.hbhb.cw.publicity.service.impl;
 
 import com.hbhb.core.bean.BeanConverter;
-import com.hbhb.cw.flowcenter.vo.*;
-import com.hbhb.cw.publicity.Exception.PublicityException;
-import com.hbhb.cw.publicity.enums.*;
+import com.hbhb.cw.flowcenter.vo.FlowApproveInfoVO;
+import com.hbhb.cw.flowcenter.vo.FlowApproveVO;
+import com.hbhb.cw.flowcenter.vo.FlowApproverVO;
+import com.hbhb.cw.flowcenter.vo.FlowNodeNoticeVO;
+import com.hbhb.cw.flowcenter.vo.FlowOperationVO;
+import com.hbhb.cw.flowcenter.vo.FlowRoleResVO;
+import com.hbhb.cw.flowcenter.vo.FlowSuggestionVO;
+import com.hbhb.cw.publicity.enums.FlowNodeNoticeState;
+import com.hbhb.cw.publicity.enums.NodeState;
+import com.hbhb.cw.publicity.enums.OperationState;
+import com.hbhb.cw.publicity.enums.PublicityErrorCode;
+import com.hbhb.cw.publicity.enums.TemplateContent;
+import com.hbhb.cw.publicity.exception.PublicityException;
 import com.hbhb.cw.publicity.mapper.PictureFlowMapper;
 import com.hbhb.cw.publicity.model.PictureFlow;
 import com.hbhb.cw.publicity.model.PictureNotice;
-import com.hbhb.cw.publicity.rpc.*;
+import com.hbhb.cw.publicity.rpc.FlowApiExp;
+import com.hbhb.cw.publicity.rpc.FlowNoticeApiExp;
+import com.hbhb.cw.publicity.rpc.FlowRoleUserApiExp;
+import com.hbhb.cw.publicity.rpc.FlowTypeApiExp;
+import com.hbhb.cw.publicity.rpc.SysUserApiExp;
 import com.hbhb.cw.publicity.service.MailService;
 import com.hbhb.cw.publicity.service.PictureFlowService;
 import com.hbhb.cw.publicity.service.PictureNoticeService;
@@ -17,16 +31,23 @@ import com.hbhb.cw.publicity.web.vo.PictureApproveVO;
 import com.hbhb.cw.publicity.web.vo.PictureFlowVO;
 import com.hbhb.cw.publicity.web.vo.PictureInfoVO;
 import com.hbhb.cw.systemcenter.vo.UserInfo;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import javax.annotation.Resource;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author wangxiaogang

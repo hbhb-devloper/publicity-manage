@@ -22,7 +22,23 @@ public enum PublicityErrorCode {
     // 请指定所有审批人
     NOT_ALL_APPROVERS_ASSIGNED("85009", "not.all.approvers.assigned"),
     // 下一节点未指定审批人，请联系管理员
-    NEXT_NODE_NO_USER("85010", "next.node.no.user");
+    NEXT_NODE_NO_USER("85010", "next.node.no.user"),
+
+
+
+
+    // 无营业厅!
+    NOT_SERVICE_HALL("84000","not.service.hall"),
+    // 本次已截止
+    ALREADY_CLOSE("84001","already.close"),
+    // 本次已截止
+    PARENT_NOT_ACTIVITY("84002","parent.not.activity"),
+    // 必填项未填
+    NOT_FILLED_IN("84003","not.filled.in"),
+    // 相关流程异常
+    NOT_RELEVANT_FLOW("84004","not.relevant.flow"),
+    // 请在二级目录添加
+    PLEASE_ADD_SECONDARY_DIRECTORY("84005","please.add.secondary.directory"),;
 
 
     private String code;

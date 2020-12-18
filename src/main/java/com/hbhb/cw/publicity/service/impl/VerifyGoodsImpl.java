@@ -2,9 +2,9 @@ package com.hbhb.cw.publicity.service.impl;
 
 import com.hbhb.core.bean.BeanConverter;
 import com.hbhb.core.utils.DateUtil;
-import com.hbhb.cw.publicity.enums.GoodsErrorCode;
 import com.hbhb.cw.publicity.enums.GoodsType;
-import com.hbhb.cw.publicity.exception.GoodsException;
+import com.hbhb.cw.publicity.enums.PublicityErrorCode;
+import com.hbhb.cw.publicity.exception.PublicityException;
 import com.hbhb.cw.publicity.mapper.ApplicationMapper;
 import com.hbhb.cw.publicity.mapper.GoodsMapper;
 import com.hbhb.cw.publicity.model.Application;
@@ -61,7 +61,7 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
         // 得到第几次，判断此次是否结束。
         if (setting.getIsEnd() != null || DateUtil.stringToDate(setting.getDeadline()).getTime() < date.getTime()) {
             // 报异常
-            throw new GoodsException(GoodsErrorCode.ALREADY_CLOSE);
+            throw new PublicityException(PublicityErrorCode.ALREADY_CLOSE);
         }
         applicationMapper.createLambdaQuery()
                 .andIn(Application::getId,list)
@@ -76,7 +76,7 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
         // 得到第几次，判断此次是否结束。
         if (setting.getIsEnd() != null || DateUtil.stringToDate(setting.getDeadline()).getTime() < date.getTime()) {
             // 报异常
-            throw new GoodsException(GoodsErrorCode.ALREADY_CLOSE);
+            throw new PublicityException(PublicityErrorCode.ALREADY_CLOSE);
         }
         // 提交 applicationMapper.updateSubmit(list);
         applicationMapper.createLambdaQuery()
