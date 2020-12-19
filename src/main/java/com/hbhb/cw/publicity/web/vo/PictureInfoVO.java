@@ -4,11 +4,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.beetl.sql.annotation.entity.ResultProvider;
-import org.beetl.sql.core.mapping.join.AutoJsonMapper;
+import org.beetl.sql.annotation.entity.AutoID;
 
 import java.io.Serializable;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -17,9 +15,10 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@ResultProvider(AutoJsonMapper.class)
+
 public class PictureInfoVO implements Serializable {
     private static final long serialVersionUID = -9113779419276377978L;
+    @AutoID
     private Long id;
 
     @Schema(description = "申请单名称")
@@ -32,7 +31,7 @@ public class PictureInfoVO implements Serializable {
     private Integer unitId;
 
     @Schema(description = "申请时间")
-    private Date applyTime;
+    private String applyTime;
 
     @Schema(description = "用户id")
     private Integer userId;

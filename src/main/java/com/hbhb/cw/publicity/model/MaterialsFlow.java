@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.Date;
 
 /**
@@ -46,11 +47,19 @@ public class MaterialsFlow implements Serializable {
     /**
      * 是否能够自定义流程（0-否、1-是）
      */
-    private Integer controlAccess;
+    private Boolean controlAccess;
     /**
      * 是否允许被设置不参与流程（0-不参与、1-参与）
      */
-    private Integer isJoin;
+    private Boolean isJoin;
+    /**
+     * 启用条件
+     */
+    private Integer enableCond;
+    /**
+     * 金额阀值
+     */
+    private BigDecimal amount;
     /**
      * 操作（0-拒绝、1-同意）
      */

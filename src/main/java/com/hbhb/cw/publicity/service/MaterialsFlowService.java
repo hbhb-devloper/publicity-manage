@@ -20,13 +20,6 @@ public interface MaterialsFlowService {
     String getInform(String flowNodeId, Integer value);
 
     /**
-     * 跟据物料制作id删除对应流程
-     *
-     * @param printId id
-     */
-    void deletePictureFlow(Long printId);
-
-    /**
      * 批量新增流程信息
      *
      * @param pictureFlowList 列表
@@ -53,7 +46,7 @@ public interface MaterialsFlowService {
     /**
      * 删除流程
      *
-     * @param id id
+     * @param materialsId 物料id
      */
-    void deletePrintFlow(Long id);
+    void deleteMaterialsFlow(Long materialsId);
 }

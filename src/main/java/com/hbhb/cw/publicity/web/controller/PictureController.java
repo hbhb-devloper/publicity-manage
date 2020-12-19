@@ -7,6 +7,7 @@ import com.hbhb.cw.publicity.web.vo.PictureInfoVO;
 import com.hbhb.cw.publicity.web.vo.PictureInitVO;
 import com.hbhb.cw.publicity.web.vo.PictureReqVO;
 import com.hbhb.cw.publicity.web.vo.PictureResVO;
+import com.hbhb.cw.systemcenter.enums.FileType;
 import com.hbhb.cw.systemcenter.vo.FileVO;
 import com.hbhb.web.annotation.UserId;
 import io.swagger.v3.oas.annotations.Operation;
@@ -49,7 +50,8 @@ public class PictureController {
 
     @Operation(summary = "添加宣传画面")
     @PostMapping("/add")
-    public void addPicture(@RequestBody PictureInfoVO pictureInfoVO, @UserId Integer userId) {
+    public void addPicture(@Parameter(description = "实体") @RequestBody PictureInfoVO pictureInfoVO,
+                           @Parameter(hidden = true) @UserId Integer userId) {
         pictureService.addPicture(pictureInfoVO, userId);
     }
 
@@ -68,7 +70,7 @@ public class PictureController {
 
     @Operation(summary = "修改宣传画面")
     @PutMapping("/update")
-    public void updatePicture(@RequestBody PictureInfoVO pictureInfoVO, @UserId Integer userId) {
+    public void updatePicture(@RequestBody PictureInfoVO pictureInfoVO, @Parameter(hidden = true) @UserId Integer userId) {
         pictureService.updatePicture(pictureInfoVO, userId);
     }
 
@@ -82,7 +84,7 @@ public class PictureController {
     @PostMapping(value = "/upload", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public FileVO uploadPictureFile(@RequestPart(required = false, value = "file") MultipartFile file) {
         // todo 更改文件类型
-        return fileApi.upload(file, 52);
+        return fileApi.upload(file, FileType.PUBLICITY_PICTURE_FILE.value());
     }
 
     @Operation(summary = "删除宣传画面")

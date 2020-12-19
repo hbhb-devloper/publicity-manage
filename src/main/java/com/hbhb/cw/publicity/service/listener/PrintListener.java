@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author wangxiaogang
@@ -30,9 +32,13 @@ public class PrintListener extends AnalysisEventListener {
     private final List<PrintImportVO> dataList = new ArrayList<>();
 
     private final PrintService printService;
+    private final AtomicLong printId;
+    private final AtomicInteger type;
 
 
-    public PrintListener(PrintService printService) {
+    public PrintListener(PrintService printService, AtomicLong printId, AtomicInteger type) {
+        this.printId = printId;
+        this.type = type;
         this.printService = printService;
     }
 
@@ -63,7 +69,7 @@ public class PrintListener extends AnalysisEventListener {
      */
     private void saveData() {
 
-        printService.savePrint(dataList, importHeadMap);
+        printService.savePrint(dataList, importHeadMap, printId, type);
 
     }
 

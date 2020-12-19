@@ -14,25 +14,15 @@ import com.hbhb.cw.publicity.model.Picture;
 import com.hbhb.cw.publicity.model.PictureFile;
 import com.hbhb.cw.publicity.model.PictureFlow;
 import com.hbhb.cw.publicity.model.PictureNotice;
-import com.hbhb.cw.publicity.rpc.FileApiExp;
-import com.hbhb.cw.publicity.rpc.FlowApiExp;
-import com.hbhb.cw.publicity.rpc.FlowNodeApiExp;
-import com.hbhb.cw.publicity.rpc.FlowNodePropApiExp;
-import com.hbhb.cw.publicity.rpc.FlowRoleUserApiExp;
-import com.hbhb.cw.publicity.rpc.SysUserApiExp;
-import com.hbhb.cw.publicity.rpc.UnitApiExp;
+import com.hbhb.cw.publicity.rpc.*;
 import com.hbhb.cw.publicity.service.PictureFlowService;
 import com.hbhb.cw.publicity.service.PictureNoticeService;
 import com.hbhb.cw.publicity.service.PictureService;
-import com.hbhb.cw.publicity.web.vo.PictureFileVO;
-import com.hbhb.cw.publicity.web.vo.PictureInfoVO;
-import com.hbhb.cw.publicity.web.vo.PictureInitVO;
-import com.hbhb.cw.publicity.web.vo.PictureReqVO;
-import com.hbhb.cw.publicity.web.vo.PictureResVO;
+import com.hbhb.cw.publicity.web.vo.*;
 import com.hbhb.cw.systemcenter.enums.UnitEnum;
 import com.hbhb.cw.systemcenter.model.SysFile;
 import com.hbhb.cw.systemcenter.vo.UserInfo;
-
+import lombok.extern.slf4j.Slf4j;
 import org.beetl.sql.core.page.DefaultPageRequest;
 import org.beetl.sql.core.page.PageRequest;
 import org.beetl.sql.core.page.PageResult;
@@ -40,17 +30,9 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
 import javax.annotation.Resource;
-
-import lombok.extern.slf4j.Slf4j;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.alibaba.excel.util.StringUtils.isEmpty;
 
@@ -98,6 +80,7 @@ public class PictureServiceImpl implements PictureService {
             item.setUnitName(unitMapById.get(item.getUnitId()));
         });
         return list;
+
     }
 
     @Override
@@ -141,7 +124,7 @@ public class PictureServiceImpl implements PictureService {
         Picture picture = new Picture();
         BeanUtils.copyProperties(picture, infoVO);
         pictureMapper.updateById(picture);
-        // 保存附件
+        // 保存附件 todo 附件为毕传，若附件未传抛出业务异常
         List<PictureFileVO> fileVOList = infoVO.getFiles();
         List<PictureFileVO> files = new ArrayList<>();
         for (PictureFileVO fileVo : fileVOList) {
@@ -199,7 +182,7 @@ public class PictureServiceImpl implements PictureService {
             throw new PublicityException(PublicityErrorCode.LOCK_OF_APPROVAL_ROLE);
         }
         //  4.同步节点属性
-        syncBudgetProjectFlow(flowProps, picture.getId(), initVO.getUserId());
+        syncPrintFlow(flowProps, picture.getId(), initVO.getUserId());
         // 得到推送模板
         String inform = flowService.getInform(flowProps.get(0).getFlowNodeId()
                 , FlowNodeNoticeState.DEFAULT_REMINDER.value());
@@ -222,7 +205,7 @@ public class PictureServiceImpl implements PictureService {
                         .build());
 
 
-        //  6.更改发票流程状态
+        //  6.更改印刷品流程状态
         picture.setId(initVO.getPictureId());
         picture.setFlowState(NodeState.APPROVING.value());
         picture.setUpdateBy(initVO.getUserId());
@@ -259,7 +242,7 @@ public class PictureServiceImpl implements PictureService {
         }
     }
 
-    private void syncBudgetProjectFlow(List<FlowNodePropVO> flowProps, Long id, Integer userId) {
+    private void syncPrintFlow(List<FlowNodePropVO> flowProps, Long id, Integer userId) {
 
         // 用来存储同步节点的list
         List<PictureFlow> pictureFlowList = new ArrayList<>();

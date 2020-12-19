@@ -5,6 +5,8 @@ import org.beetl.sql.core.page.PageResult;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author wangxiaogang
@@ -57,7 +59,7 @@ public interface PrintService {
      * @param dataList      导入列表
      * @param importHeadMap 表头
      */
-    void savePrint(List<PrintImportVO> dataList, Map<Integer, String> importHeadMap);
+    void savePrint(List<PrintImportVO> dataList, Map<Integer, String> importHeadMap, AtomicLong printId, AtomicInteger type);
 
     /**
      * 删除附件

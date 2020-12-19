@@ -6,6 +6,7 @@ import com.hbhb.cw.publicity.rpc.FileApiExp;
 import com.hbhb.cw.publicity.service.MaterialsService;
 import com.hbhb.cw.publicity.service.listener.MaterialsListener;
 import com.hbhb.cw.publicity.web.vo.*;
+import com.hbhb.cw.systemcenter.enums.FileType;
 import com.hbhb.cw.systemcenter.vo.FileVO;
 import com.hbhb.web.annotation.UserId;
 import io.swagger.v3.oas.annotations.Operation;
@@ -44,7 +45,8 @@ public class MaterialsController {
     public PageResult<MaterialsResVO> getMaterialsList(
             @Parameter(description = "页码，默认为1") @RequestParam(required = false) Integer pageNum,
             @Parameter(description = "每页数量，默认为10") @RequestParam(required = false) Integer pageSize,
-            @Parameter(description = "查询参数") MaterialsReqVO reqVO, @UserId Integer userId) {
+            @Parameter(description = "查询参数") MaterialsReqVO reqVO,
+            @Parameter(hidden = true) @UserId Integer userId) {
         pageNum = pageNum == null ? 1 : pageNum;
         pageSize = pageSize == null ? 10 : pageSize;
 
@@ -59,13 +61,15 @@ public class MaterialsController {
 
     @Operation(summary = "添加宣传物料设计制作")
     @PostMapping("/add")
-    private void addMaterials(@RequestBody MaterialsInfoVO materialsInfoVO, @UserId Integer userId) {
+    private void addMaterials(@RequestBody MaterialsInfoVO materialsInfoVO,
+                              @Parameter(hidden = true) @UserId Integer userId) {
         materialsService.addMaterials(materialsInfoVO, userId);
     }
 
     @Operation(summary = "修改宣传物料设计制作")
     @PutMapping("/update")
-    private void updateMaterials(@RequestBody MaterialsInfoVO materialsInfoVO, @UserId Integer userId) {
+    private void updateMaterials(@RequestBody MaterialsInfoVO materialsInfoVO,
+                                 @Parameter(hidden = true) @UserId Integer userId) {
         materialsService.updateMaterials(materialsInfoVO, userId);
     }
 
@@ -95,7 +99,7 @@ public class MaterialsController {
     @Operation(summary = "上传附件")
     @PostMapping(value = "/upload", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public FileVO uploadMaterialsFile(@RequestPart(required = false, value = "file") MultipartFile file) {
-        return fileApi.upload(file, 51);
+        return fileApi.upload(file, FileType.PUBLICITY_MATERIALS_FILE.value());
     }
 
     @Operation(summary = "删除宣传画面")
@@ -106,8 +110,9 @@ public class MaterialsController {
 
     @Operation(summary = "发起审批")
     @PostMapping("/to-approve")
-    public void toApprove(@RequestBody MaterialsInitVO initVO, @UserId Integer userId) {
-materialsService.toApprove(initVO);
+    public void toApprove(@RequestBody MaterialsInitVO initVO,
+                          @Parameter(hidden = true) @UserId Integer userId) {
+        materialsService.toApprove(initVO);
     }
 
     @Operation(summary = "删除附件")

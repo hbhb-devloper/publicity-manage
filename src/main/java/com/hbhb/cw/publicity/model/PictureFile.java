@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.beetl.sql.annotation.entity.AutoID;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -20,6 +21,7 @@ public class PictureFile implements Serializable {
     /**
      * id
      */
+    @AutoID
     private Long id;
     /**
      * 附件id

@@ -7,6 +7,7 @@ import com.hbhb.cw.publicity.rpc.FileApiExp;
 import com.hbhb.cw.publicity.service.PrintService;
 import com.hbhb.cw.publicity.service.listener.PrintListener;
 import com.hbhb.cw.publicity.web.vo.*;
+import com.hbhb.cw.systemcenter.enums.FileType;
 import com.hbhb.cw.systemcenter.vo.FileVO;
 import com.hbhb.web.annotation.UserId;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,6 +26,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 
 /**
@@ -48,7 +51,8 @@ public class PrintController {
     public PageResult<PrintResVO> getPrintList(
             @Parameter(description = "页码，默认为1") @RequestParam(required = false) Integer pageNum,
             @Parameter(description = "每页数量，默认为10") @RequestParam(required = false) Integer pageSize,
-            @Parameter(description = "查询参数") PrintReqVO reqVO, @Parameter(hidden = true) @UserId Integer userId) {
+            @Parameter(description = "查询参数") PrintReqVO reqVO,
+            @Parameter(hidden = true) @UserId Integer userId) {
         pageNum = pageNum == null ? 1 : pageNum;
         pageSize = pageSize == null ? 10 : pageSize;
 
@@ -57,7 +61,8 @@ public class PrintController {
 
     @Operation(summary = "添加印刷品")
     @PostMapping("/add")
-    public void addPrint(@Parameter(description = "新增参数实体") PrintInfoVO infoVO, @UserId Integer userId) {
+    public void addPrint(@Parameter(description = "新增参数实体") PrintInfoVO infoVO,
+                         @Parameter(hidden = true) @UserId Integer userId) {
         printService.addPrint(infoVO, userId);
     }
 
@@ -69,7 +74,8 @@ public class PrintController {
 
     @Operation(summary = "修改印刷品")
     @PostMapping("/update")
-    public void updatePrint(@Parameter(description = "新增参数实体") PrintInfoVO infoVO, @UserId Integer userId) {
+    public void updatePrint(@Parameter(description = "新增参数实体") PrintInfoVO infoVO,
+                            @Parameter(hidden = true) @UserId Integer userId) {
         printService.updatePrint(infoVO, userId);
     }
 
@@ -93,11 +99,11 @@ public class PrintController {
 
     @Operation(summary = "导入")
     @PostMapping(value = "/import", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public void printImport(@RequestPart(required = false, value = "file") MultipartFile file, Long printId, Integer type) {
+    public void printImport(@RequestPart(required = false, value = "file") MultipartFile file, AtomicLong printId, AtomicInteger type) {
         long begin = System.currentTimeMillis();
         try {
             EasyExcel.read(file.getInputStream(), PrintImportVO.class,
-                    new PrintListener(printService)).sheet().headRowNumber(2).doRead();
+                    new PrintListener(printService, printId, type)).sheet().headRowNumber(2).doRead();
         } catch (IOException | NumberFormatException | NullPointerException e) {
             log.error(e.getMessage(), e);
         }
@@ -107,13 +113,14 @@ public class PrintController {
     @Operation(summary = "上传附件")
     @PostMapping(value = "/upload", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public FileVO uploadPrintFile(@RequestPart(required = false, value = "file") MultipartFile file) {
-        //todo  上传文件的类型
-        return fileApi.upload(file, 50);
+
+        return fileApi.upload(file, FileType.PUBLICITY_PRINT_FILE.value());
     }
 
     @Operation(summary = "发起审批")
     @PostMapping("/to-approve")
-    public void toApprove(@RequestBody PrintInitVO initVO, @UserId Integer userId) {
+    public void toApprove(@RequestBody PrintInitVO initVO,
+                          @Parameter(hidden = true) @UserId Integer userId) {
         printService.toApprove(initVO);
     }
 

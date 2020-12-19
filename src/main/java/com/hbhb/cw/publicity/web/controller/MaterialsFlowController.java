@@ -4,6 +4,7 @@ import com.hbhb.cw.flowcenter.vo.FlowApproveInfoVO;
 import com.hbhb.cw.publicity.service.MaterialsFlowService;
 import com.hbhb.web.annotation.UserId;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,7 +28,8 @@ public class MaterialsFlowController {
 
     @Operation(summary = "获取宣传物料设计流程详情")
     @GetMapping("/list/{materialsId}")
-    public List<FlowApproveInfoVO> getMaterialsFlow(@PathVariable Long materialsId, @UserId Integer userId) {
+    public List<FlowApproveInfoVO> getMaterialsFlow(@PathVariable Long materialsId,
+                                                    @Parameter(hidden = true) @UserId Integer userId) {
         return flowService.getInvoiceNodeList(materialsId, userId);
     }
 }

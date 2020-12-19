@@ -3,39 +3,24 @@ package com.hbhb.cw.publicity.service.impl;
 import com.hbhb.core.bean.BeanConverter;
 import com.hbhb.cw.flowcenter.model.Flow;
 import com.hbhb.cw.flowcenter.vo.FlowNodePropVO;
-import com.hbhb.cw.publicity.enums.FlowNodeNoticeState;
-import com.hbhb.cw.publicity.enums.NodeState;
-import com.hbhb.cw.publicity.enums.OperationState;
-import com.hbhb.cw.publicity.enums.PublicityErrorCode;
+import com.hbhb.cw.publicity.enums.*;
 import com.hbhb.cw.publicity.exception.PublicityException;
 import com.hbhb.cw.publicity.mapper.MaterialsFileMapper;
 import com.hbhb.cw.publicity.mapper.MaterialsInfoMapper;
 import com.hbhb.cw.publicity.mapper.MaterialsMapper;
-import com.hbhb.cw.publicity.model.Materials;
-import com.hbhb.cw.publicity.model.MaterialsFile;
-import com.hbhb.cw.publicity.model.MaterialsInfo;
-import com.hbhb.cw.publicity.model.MaterialsNotice;
-import com.hbhb.cw.publicity.model.PictureFlow;
-import com.hbhb.cw.publicity.rpc.FileApiExp;
-import com.hbhb.cw.publicity.rpc.FlowApiExp;
-import com.hbhb.cw.publicity.rpc.FlowNodeApiExp;
-import com.hbhb.cw.publicity.rpc.FlowNodePropApiExp;
-import com.hbhb.cw.publicity.rpc.FlowRoleUserApiExp;
-import com.hbhb.cw.publicity.rpc.SysUserApiExp;
-import com.hbhb.cw.publicity.rpc.UnitApiExp;
+import com.hbhb.cw.publicity.model.*;
+import com.hbhb.cw.publicity.rpc.*;
+import com.hbhb.cw.publicity.service.MaterialsFlowService;
 import com.hbhb.cw.publicity.service.MaterialsNoticeService;
 import com.hbhb.cw.publicity.service.MaterialsService;
-import com.hbhb.cw.publicity.service.PictureFlowService;
-import com.hbhb.cw.publicity.web.vo.MaterialsFileVO;
-import com.hbhb.cw.publicity.web.vo.MaterialsImportVO;
-import com.hbhb.cw.publicity.web.vo.MaterialsInfoVO;
-import com.hbhb.cw.publicity.web.vo.MaterialsInitVO;
-import com.hbhb.cw.publicity.web.vo.MaterialsReqVO;
-import com.hbhb.cw.publicity.web.vo.MaterialsResVO;
+import com.hbhb.cw.publicity.web.vo.*;
+import com.hbhb.cw.systemcenter.enums.DictCode;
+import com.hbhb.cw.systemcenter.enums.TypeCode;
 import com.hbhb.cw.systemcenter.enums.UnitEnum;
 import com.hbhb.cw.systemcenter.model.SysFile;
+import com.hbhb.cw.systemcenter.vo.DictVO;
 import com.hbhb.cw.systemcenter.vo.UserInfo;
-
+import lombok.extern.slf4j.Slf4j;
 import org.beetl.sql.core.page.DefaultPageRequest;
 import org.beetl.sql.core.page.PageRequest;
 import org.beetl.sql.core.page.PageResult;
@@ -43,18 +28,11 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import javax.annotation.Resource;
+import java.math.BigDecimal;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
-
-import javax.annotation.Resource;
-
-import lombok.extern.slf4j.Slf4j;
 
 import static com.alibaba.excel.util.StringUtils.isEmpty;
 
@@ -86,9 +64,11 @@ public class MaterialsServiceImpl implements MaterialsService {
     @Resource
     private FlowApiExp flowApi;
     @Resource
-    private PictureFlowService flowService;
+    private MaterialsFlowService flowService;
     @Resource
     private FlowNodePropApiExp propApi;
+    @Resource
+    private SysDictApiExp dictApi;
 
     @Override
     public PageResult<MaterialsResVO> getMaterialsList(MaterialsReqVO reqVO, Integer pageNum, Integer pageSize) {
@@ -165,7 +145,7 @@ public class MaterialsServiceImpl implements MaterialsService {
     }
 
     @Override
-    public void saveMaterials(List<MaterialsImportVO> dataList, Map<Integer, String> importHeadMap, AtomicLong printId) {
+    public void saveMaterials(List<MaterialsImportVO> dataList, Map<Integer, String> importHeadMap, AtomicLong materialsId) {
         //导入
         List<MaterialsInfo> materialsList = new ArrayList<>();
         Map<String, Integer> unitNameMap = unitApi.getUnitMapByUnitName();
@@ -174,9 +154,7 @@ public class MaterialsServiceImpl implements MaterialsService {
             BeanUtils.copyProperties(materials, importVo);
             materials.setUnitId(unitNameMap.get(importVo.getUnitName()));
             materialsList.add(materials);
-            // TODO 缺少类型  缺少printId
-
-            //       materials.setMaterialsId(printId);
+            materials.setMaterialsId(materialsId.get());
         }
         materialsInfoMapper.insertBatch(materialsList);
     }
@@ -221,7 +199,7 @@ public class MaterialsServiceImpl implements MaterialsService {
             throw new PublicityException(PublicityErrorCode.LOCK_OF_APPROVAL_ROLE);
         }
         //  4.同步节点属性
-        syncBudgetProjectFlow(flowProps, materials.getId(), initVO.getUserId());
+        syncMaterialsFlow(flowProps, materials.getId(), initVO.getUserId());
         // 得到推送模板
         String inform = flowService.getInform(flowProps.get(0).getFlowNodeId()
                 , FlowNodeNoticeState.DEFAULT_REMINDER.value());
@@ -278,10 +256,10 @@ public class MaterialsServiceImpl implements MaterialsService {
         }
     }
 
-    private void syncBudgetProjectFlow(List<FlowNodePropVO> flowProps, Long id, Integer userId) {
+    private void syncMaterialsFlow(List<FlowNodePropVO> flowProps, Long id, Integer userId) {
 
         // 用来存储同步节点的list
-        List<PictureFlow> pictureFlowList = new ArrayList<>();
+        List<MaterialsFlow> materialsFlowList = new ArrayList<>();
         // 判断节点是否有保存属性
         for (FlowNodePropVO flowPropVO : flowProps) {
             if (flowPropVO.getIsJoin() == null || flowPropVO.getControlAccess() == null) {
@@ -293,11 +271,26 @@ public class MaterialsServiceImpl implements MaterialsService {
             flowProps.get(0).setUserId(userId);
         }
         // 所以需要先清空节点，再同步节点。
-        flowService.deletePrintFlow(id);
-        for (FlowNodePropVO flowPropVO : flowProps) {
-            pictureFlowList.add(PictureFlow.builder()
+        flowService.deleteMaterialsFlow(id);
+        // 判断物料设计预估金额是否大于预设阀值
+        Materials materials = materialsMapper.single(id);
+        BigDecimal amount = materials.getPredictAmount();
+        // 物料制作流程共4个节点，若预估金额对比第二、第三节点 点设置金额阀值条件为真则返回需审批节点数
+        int num = 1;
+        FlowNodePropVO twoNode = flowProps.get(1);
+        boolean twoEnableCond = isEnableCond(amount, twoNode);
+        FlowNodePropVO threeNode = flowProps.get(2);
+        boolean threeEnableCond = isEnableCond(amount, threeNode);
+        if (threeEnableCond) {
+            num = 3;
+        } else if (twoEnableCond) {
+            num = 2;
+        }
+        for (int i = 0; i <= num; i++) {
+            FlowNodePropVO flowPropVO = flowProps.get(i);
+            materialsFlowList.add(MaterialsFlow.builder()
                     .flowNodeId(flowPropVO.getFlowNodeId())
-                    .pictureId(id)
+                    .materialsId(id)
                     .userId(flowPropVO.getUserId())
                     .flowRoleId(flowPropVO.getFlowRoleId())
                     .roleDesc(flowPropVO.getRoleDesc())
@@ -307,21 +300,21 @@ public class MaterialsServiceImpl implements MaterialsService {
                     .operation(OperationState.UN_EXECUTED.value())
                     .build());
         }
-        flowService.insertBatch(pictureFlowList);
+        flowService.insertBatch(materialsFlowList);
     }
 
     private Long getRelatedFlow(Long flowTypeId, Integer userId) {
         // 流程节点数量 => 流程id
-        Map<Long, Long> flowMap = new HashMap<>();
+        Map<Long, Long> flowMap = new HashMap<>(5);
         List<Flow> flowList = flowApi.getFlowsByTypeId(flowTypeId);
-        // 流程有效性校验（发票预开流程存在两条）
+        // 流程有效性校验（物料制作流程存在1条）
         if (flowList.size() == 0) {
             throw new PublicityException(PublicityErrorCode.NOT_EXIST_FLOW);
-        } else if (flowList.size() > 2) {
+        } else if (flowList.size() > 1) {
             throw new PublicityException(PublicityErrorCode.EXCEED_LIMIT_FLOW);
         }
         flowList.forEach(flow -> flowMap.put(nodeApi.getNodeNum(flow.getId()), flow.getId()));
-        // 预开发票流程默认为4个节点流程 若办理业务为欠费缴纳类型则走另一条两节点流程
+        // 物料制作流程默认为4个节点流程
         Long flowId;
         flowId = flowMap.get(2L);
         if (flowId == null) {
@@ -338,6 +331,45 @@ public class MaterialsServiceImpl implements MaterialsService {
                 .id(materialsId)
                 .state(projectState)
                 .build());
+    }
+
+
+    private Map<String, String> enableCondMap() {
+        List<DictVO> dict = dictApi.getDict(TypeCode.FLOW.value(), DictCode.FLOW_NODE_PROP_ENABLE_COND.value());
+        return dict.stream().collect(Collectors.toMap(DictVO::getValue, DictVO::getLabel));
+    }
+
+
+    private boolean isEnableCond(BigDecimal amount, FlowNodePropVO propVO) {
+        Map<String, String> enableMap = enableCondMap();
+        String enable = enableMap.get(propVO.getEnableCond().toString());
+        boolean flag = false;
+        if (EnableCond.GREATER.value().equals(enable)) {
+            if (amount.compareTo(propVO.getAmount()) > 0) {
+                flag = true;
+            }
+        }
+        if (EnableCond.EQUAL_GREATER.value().equals(enable)) {
+            if (amount.compareTo(propVO.getAmount()) >= 0) {
+                flag = true;
+            }
+        }
+        if (EnableCond.LESS.value().equals(enable)) {
+            if (amount.compareTo(propVO.getAmount()) < 0) {
+                flag = true;
+            }
+        }
+        if (EnableCond.EQUAL_LESS.value().equals(enable)) {
+            if (amount.compareTo(propVO.getAmount()) <= 0) {
+                flag = true;
+            }
+        }
+        if (EnableCond.EQUAL.value().equals(enable)) {
+            if (amount.compareTo(propVO.getAmount()) == 0) {
+                flag = true;
+            }
+        }
+        return flag;
     }
 
 

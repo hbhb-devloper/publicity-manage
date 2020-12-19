@@ -15,27 +15,15 @@ import com.hbhb.cw.publicity.model.Print;
 import com.hbhb.cw.publicity.model.PrintFile;
 import com.hbhb.cw.publicity.model.PrintFlow;
 import com.hbhb.cw.publicity.model.PrintMaterials;
-import com.hbhb.cw.publicity.rpc.FileApiExp;
-import com.hbhb.cw.publicity.rpc.FlowApiExp;
-import com.hbhb.cw.publicity.rpc.FlowNodeApiExp;
-import com.hbhb.cw.publicity.rpc.FlowNodePropApiExp;
-import com.hbhb.cw.publicity.rpc.FlowRoleUserApiExp;
-import com.hbhb.cw.publicity.rpc.SysUserApiExp;
-import com.hbhb.cw.publicity.rpc.UnitApiExp;
+import com.hbhb.cw.publicity.rpc.*;
 import com.hbhb.cw.publicity.service.PrintFlowService;
 import com.hbhb.cw.publicity.service.PrintNoticeService;
 import com.hbhb.cw.publicity.service.PrintService;
-import com.hbhb.cw.publicity.web.vo.PrintFileVO;
-import com.hbhb.cw.publicity.web.vo.PrintImportVO;
-import com.hbhb.cw.publicity.web.vo.PrintInfoVO;
-import com.hbhb.cw.publicity.web.vo.PrintInitVO;
-import com.hbhb.cw.publicity.web.vo.PrintNoticeVO;
-import com.hbhb.cw.publicity.web.vo.PrintReqVO;
-import com.hbhb.cw.publicity.web.vo.PrintResVO;
+import com.hbhb.cw.publicity.web.vo.*;
 import com.hbhb.cw.systemcenter.enums.UnitEnum;
 import com.hbhb.cw.systemcenter.model.SysFile;
 import com.hbhb.cw.systemcenter.vo.UserInfo;
-
+import lombok.extern.slf4j.Slf4j;
 import org.beetl.sql.core.page.DefaultPageRequest;
 import org.beetl.sql.core.page.PageRequest;
 import org.beetl.sql.core.page.PageResult;
@@ -43,17 +31,11 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
 import javax.annotation.Resource;
-
-import lombok.extern.slf4j.Slf4j;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 import static com.alibaba.excel.util.StringUtils.isEmpty;
 
@@ -177,7 +159,7 @@ public class PrintServiceImpl implements PrintService {
     }
 
     @Override
-    public void savePrint(List<PrintImportVO> dataList, Map<Integer, String> importHeadMap) {
+    public void savePrint(List<PrintImportVO> dataList, Map<Integer, String> importHeadMap, AtomicLong printId, AtomicInteger type) {
         //导入
         List<PrintMaterials> materialsList = new ArrayList<>();
         Map<String, Integer> unitNameMap = unitApi.getUnitMapByUnitName();
@@ -185,8 +167,10 @@ public class PrintServiceImpl implements PrintService {
             PrintMaterials materials = new PrintMaterials();
             BeanUtils.copyProperties(materials, importVo);
             materials.setUnitId(unitNameMap.get(importVo.getUnitName()));
+            materials.setType(type.get());
+            materials.setPrintId(printId.get());
             materialsList.add(materials);
-            // TODO 缺少类型  缺少printId
+
         }
         printMaterialsMapper.insertBatch(materialsList);
 
@@ -217,7 +201,7 @@ public class PrintServiceImpl implements PrintService {
             throw new PublicityException(PublicityErrorCode.LOCK_OF_APPROVAL_ROLE);
         }
         //  4.同步节点属性
-        syncBudgetProjectFlow(flowProps, print.getId(), initVO.getUserId());
+        syncPrintFlow(flowProps, print.getId(), initVO.getUserId());
         // 得到推送模板
         String inform = flowService.getInform(flowProps.get(0).getFlowNodeId()
                 , FlowNodeNoticeState.DEFAULT_REMINDER.value());
@@ -226,7 +210,6 @@ public class PrintServiceImpl implements PrintService {
         }
         // 跟据流程id获取流程名称
         Flow flow = flowApi.getFlowById(flowId);
-        // todo 修改推送模板
         inform = inform.replace(""
                 , print.getPrintNum() + "_" + print.getPrintName() + "_" + flow.getFlowName());
         //  推送消息给发起人
@@ -277,7 +260,7 @@ public class PrintServiceImpl implements PrintService {
         }
     }
 
-    private void syncBudgetProjectFlow(List<FlowNodePropVO> flowProps, Long id, Integer userId) {
+    private void syncPrintFlow(List<FlowNodePropVO> flowProps, Long id, Integer userId) {
 
         // 用来存储同步节点的list
         List<PrintFlow> printFlowList = new ArrayList<>();
@@ -313,16 +296,16 @@ public class PrintServiceImpl implements PrintService {
         // 流程节点数量 => 流程id
         Map<Long, Long> flowMap = new HashMap<>();
         List<Flow> flowList = flowApi.getFlowsByTypeId(flowTypeId);
-        // 流程有效性校验（发票预开流程存在两条）
+        // 流程有效性校验（印刷用品流程存在1条）
         if (flowList.size() == 0) {
             throw new PublicityException(PublicityErrorCode.NOT_EXIST_FLOW);
-        } else if (flowList.size() > 2) {
+        } else if (flowList.size() > 1) {
             throw new PublicityException(PublicityErrorCode.EXCEED_LIMIT_FLOW);
         }
         flowList.forEach(flow -> flowMap.put(nodeApi.getNodeNum(flow.getId()), flow.getId()));
         // 印刷品流程默认为4个节点流程 若办理业务为欠费缴纳类型则走另一条两节点流程
         Long flowId;
-        flowId = flowMap.get(2L);
+        flowId = flowMap.get(3L);
         if (flowId == null) {
             throw new PublicityException(PublicityErrorCode.LACK_OF_FLOW);
         }
