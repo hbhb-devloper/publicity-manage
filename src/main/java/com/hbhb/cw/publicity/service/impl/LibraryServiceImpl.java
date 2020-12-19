@@ -137,6 +137,7 @@ public class LibraryServiceImpl implements LibraryService {
             // 添加产品
         }
         libraryAddVO.setUpdateTime(new Date());
+        libraryAddVO.setState(true);
         goodsMapper.insert(libraryAddVO);
     }
 

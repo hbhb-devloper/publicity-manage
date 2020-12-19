@@ -5,24 +5,24 @@ import java.util.List;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
  * @author yzc
- * @since 2020-11-26
+ * @since 2020-12-19
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class SummaryGoodsResVO implements Serializable {
-    private static final long serialVersionUID = -8342592896230845102L;
+@Builder
+public class SummaryByUnitVO implements Serializable {
+    private static final long serialVersionUID = 8855478827435299291L;
 
     @Schema(description = "业务单式申请数量")
-    private List<SummaryGoodsVO> simplexList;
-    @Schema(description = "宣传单页申请数量")
-    private List<SummaryGoodsVO> singleList;
+    private List<SummaryUnitGoodsVO> simList;
 
-    private Boolean flag;
-    private String checkerState;
+    @Schema(description = "宣传单页申请数量")
+    private List<SummaryUnitGoodsVO> singList;
 }

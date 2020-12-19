@@ -8,7 +8,7 @@ public enum FlowRoleName {
     /**
      * 物料审核员
      */
-    REJECT("物料审核员"),
+    CHECKER("物料审核员"),
     ;
 
     private final String  value;

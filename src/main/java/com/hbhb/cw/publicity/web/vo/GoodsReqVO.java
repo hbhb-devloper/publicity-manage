@@ -19,6 +19,9 @@ import lombok.NoArgsConstructor;
 public class GoodsReqVO implements Serializable {
     private static final long serialVersionUID = -6469305293332933203L;
 
+    @Schema(description = "营业厅")
+    private Long hallId;
+
     @Schema(description = "单位id")
     private Integer unitId;
 
@@ -27,4 +30,10 @@ public class GoodsReqVO implements Serializable {
 
     @Schema(description = "次序")
     private Integer goodsIndex;
+
+    @Schema(description = "申请状态")
+    private Integer detailState;
+
+    @Schema(description = "提交是否置会")
+    private Boolean flag;
 }

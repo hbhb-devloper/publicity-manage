@@ -23,6 +23,9 @@ public class SummaryUnitGoodsVO implements Serializable {
     @Schema(description = "物料id")
     private Long goodsId;
 
+    @Schema(description = "单位id")
+    private Integer unitId;
+
     @Schema(description = "单位")
     private String unitName;
 

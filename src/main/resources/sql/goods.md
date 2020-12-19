@@ -24,11 +24,23 @@ selectByCond
      group by g.id;
 ```
 
-selectById
+selectGoodsList
 ===
 ```sql
-     select * from goods where id = #{id}
+ select g.id         as  goodsId,
+            g.goods_name  as goodsName,
+            g.unit       as unit,
+            0           as applyAmount,
+            a.editable   as  editable
+     from goods g
+              left join application_detail ad on g.id = ad.goods_id
+              left join application a on a.id = ad.application_id
+              left join goods_setting gs on CONCAT(date_format(gs.deadline,'%y%m%d'),gs.goods_index) = a.batch_num
+     where g.mold = 0
+     and g.state = 1
+ group by g.id;
 ```
+
 
 selectByUnitId
 ===
@@ -36,7 +48,8 @@ selectByUnitId
     select g.id as `id`,
            g.goods_name as `label`,
            g.parent_id as parentId,
-           g.mold  as mold
+           g.mold  as mold,
+           g.state as state
     from goods g
     where mold = 1
     and parent_id is null
@@ -47,7 +60,8 @@ selectGoodsByActIds
       select id as id,
              goods_name as label,
              parent_id as parentId,
-             mold as mold
+             mold as mold,
+             state as state
              from goods
              where parent_id in (#{join(list)})
 ```
@@ -56,10 +70,11 @@ selectSummaryUnitByType
 ===
 ```sql
     select  g.id as `goodsId`,
-            ifnull(sum(ad.modify_amount),0) as `simplexAmountAmount`,
+            ifnull(sum(ad.modify_amount),0) as `simplexAmount`,
             ifnull(sum(ad.modify_amount),0) as `singleAmount`,
             g.goods_name as `goodsName`,
             g.unit as `unit`,
+            a.unit_id as unitId,
             ad.modify_amount as `modifyAmount`
     from goods g
              left join application_detail ad on g.id = ad.goods_id
@@ -77,51 +92,21 @@ selectSummaryUnitByType
                     -- @if(isNotEmpty(type)){
                          and g.type = #{type}
                     -- @}
-    group by g.unit_id,g.id;
-```
-
-selectSummaryByType
-===
-```sql
-    select a.id  as `applicationId`,
-           g.goods_name as `goodsName`,
-           g.unit as `unit`,
-           ad.apply_amount as `applyAmount`,
-           ad.modify_amount as `modifyAmount`,
-           g.type as `type`,
-           ad.state as `state`,
-           a.create_time as `time`  
-    from goods g
-             left join application_detail ad on g.id = ad.goods_id
-             left join application a on a.id = ad.application_id
-             left join goods_setting gs on CONCAT(date_format(gs.deadline,'%y%m%d'),gs.goods_index) = a.batch_num
-    -- @where(){
-                -- @if(isNotEmpty(unitId)){
-                    and a.unit_id = #{unitId}
-                -- @}
-                 -- @if(isNotEmpty(batchNum)){
-                    and a.batch_num = #{batchNum}
-                 -- @}
-                -- @if(isNotEmpty(hallId)){
-                    and a.hall_id = #{hallId}
-                -- @}
-                -- @if(isNotEmpty(type)){
-                    and g.type = #{type}
-                -- @}
-             -- @}
-    group by g.unit_id,g.id;
+    group by a.unit_id,g.id;
 ```
 
 
 selectSummaryByState
 ===
 ```sql
-    select  a.id  as `applicationId`,
+    select  ad.id  as `applicationDetailId`,
+            a.id as applicationId,
             g.goods_name as `goodsName`,
             g.unit as `unit`,
-            a.hall_id as 'hallId',
-            ad.apply_amount as `applyAmount`,
-            ad.modify_amount as `modifyAmount`,
+            g.unit_id as unitId,
+            a.hall_id as hallId,
+            ifnull(sum(ad.apply_amount),0) as `applyAmount`,
+            ifnull(sum(ad.modify_amount),0) as `modifyAmount`,
             g.type as `type`,
             ad.state as `state`,
             a.create_time as `time` 
@@ -129,7 +114,33 @@ selectSummaryByState
              left join application_detail ad on g.id = ad.goods_id
              left join application a on a.id = ad.application_id
              left join goods_setting gs on CONCAT(date_format(gs.deadline,'%y%m%d'),gs.goods_index) = a.batch_num
-    where  g.mold = 0
+    where a.batch_num = #{batchNum}
+            and g.mold = 0
+                -- @if(isNotEmpty(unitId)){
+                    and a.unit_id = #{unitId}
+                -- @}
+                -- @if(isNotEmpty(type)){
+                    and g.type = #{type}
+                -- @}
+                -- @if(isNotEmpty(state)){
+                    and ad.state = #{state}
+                -- @}
+                -- @if(isNotEmpty(hallId)){
+                    and a.hall_id = #{hallId}
+                -- @}
+    group by a.hall_id,g.id;
+```
+
+
+selectIdsByCond
+===
+```sql
+    select a.id 
+    from goods g
+             left join application_detail ad on g.id = ad.goods_id
+             left join application a on a.id = ad.application_id
+             left join goods_setting gs on CONCAT(date_format(gs.deadline,'%y%m%d'),gs.goods_index) = a.batch_num
+    where  ad.state in (0,3)
                 -- @if(isNotEmpty(unitId)){
                     and a.unit_id = #{unitId}
                 -- @}
@@ -139,10 +150,10 @@ selectSummaryByState
                 -- @if(isNotEmpty(type)){
                     and g.type = #{type}
                 -- @}
-                -- @if(isNotEmpty(state)){
-                    and ad.state = #{state}
+                -- @if(isNotEmpty(hallId)){
+                    and a.hall_id = #{hallId}
                 -- @}
-    group by g.unit_id,g.id;
+    group by a.id;
 ```
 
 selectPurchaseGoods
@@ -249,13 +260,4 @@ selectVerifyHallList
                    and a.unit_id = #{unitId}
                 -- @}
     group by a.hall_id;
-```
-
-updateVerifyHallBatch
-===
-```sql
-   -- @for(item in list){
-            update application_detail set state = 2
-            where id = #{item.id}
-    -- @}
 ```

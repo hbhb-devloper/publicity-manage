@@ -4,6 +4,7 @@ import com.hbhb.cw.publicity.service.ApplicationDetailService;
 import com.hbhb.cw.publicity.web.vo.ApplicationApproveVO;
 import com.hbhb.cw.publicity.web.vo.GoodsApproveVO;
 import com.hbhb.cw.publicity.web.vo.GoodsReqVO;
+import com.hbhb.cw.publicity.web.vo.SummaryByUnitVO;
 import com.hbhb.cw.publicity.web.vo.SummaryUnitGoodsResVO;
 import com.hbhb.cw.publicity.web.vo.SummaryUnitGoodsVO;
 import com.hbhb.cw.publicity.web.vo.UnitGoodsStateVO;
@@ -40,25 +41,19 @@ public class ApplicationDetailController {
     @Resource
     private ApplicationDetailService applicationDetailService;
 
-    @GetMapping("/unit/goods")
+    @GetMapping("/goods")
     @Operation(summary = "营业厅物料分公司汇总（政企/市场部）")
     public SummaryUnitGoodsResVO getUnitGoods(GoodsReqVO goodsReqVO) {
         return applicationDetailService.getUnitGoodsList(goodsReqVO);
     }
 
-    @GetMapping("/unit/simplex")
+    @GetMapping("/info/list")
     @Operation(summary = "营业厅物料业务单式分公司汇总（政企/市场部）")
-    public List<SummaryUnitGoodsVO> getUnitSimplexGoods(GoodsReqVO goodsReqVO) {
-        return applicationDetailService.getUnitSimplexList(goodsReqVO);
+    public SummaryByUnitVO getInfoList(GoodsReqVO goodsReqVO) {
+        return applicationDetailService.getUnitList(goodsReqVO);
     }
 
-    @GetMapping("/unit/single")
-    @Operation(summary = "营业厅物料宣传单页分公司汇总（政企/市场部）")
-    public List<SummaryUnitGoodsVO> getUnitSingleGoods(GoodsReqVO goodsReqVO) {
-        return applicationDetailService.getUnitSingleList(goodsReqVO);
-    }
-
-    @GetMapping("/unit/state")
+    @GetMapping("/state")
     @Operation(summary = "营业厅物料宣传单页分公司汇总状态（政企/市场部）")
     public List<UnitGoodsStateVO> getUnitGoodsState(GoodsReqVO goodsReqVO) {
         return applicationDetailService.getUnitGoodsStateList(goodsReqVO);

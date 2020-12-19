@@ -3,7 +3,6 @@ package com.hbhb.cw.publicity.mapper;
 import com.hbhb.beetlsql.BaseMapper;
 import com.hbhb.cw.publicity.model.Application;
 import com.hbhb.cw.publicity.web.vo.ApplicationByUnitVO;
-import com.hbhb.cw.publicity.web.vo.GoodsChangerVO;
 import com.hbhb.cw.publicity.web.vo.GoodsReqVO;
 
 import java.util.List;
@@ -17,9 +16,7 @@ public interface ApplicationMapper extends BaseMapper<Application> {
 
     Application selectByHall(Integer unitId, String batchNum, Long hallId);
 
-    void updateBatch(List<GoodsChangerVO> list);
-
-    List<Application> selectApplicationByUnitId(Integer unitId, String batchNum);
+    List<Application> selectApplicationByUnitId(Integer unitId, Long hallId, String batchNum);
 
     List<Application> selectByBatchNum(String batchNum);
 

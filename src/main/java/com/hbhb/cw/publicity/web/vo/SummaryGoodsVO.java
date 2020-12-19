@@ -23,6 +23,9 @@ public class SummaryGoodsVO implements Serializable {
     @Schema(description = "物料申请id")
     private Long applicationId;
 
+    @Schema(description = "物料申请id")
+    private Long applicationDetailId;
+
     @Schema(description = "营业厅Id")
     private Long hallId;
 
@@ -34,6 +37,9 @@ public class SummaryGoodsVO implements Serializable {
 
     @Schema(description = "计量单位")
     private String unit;
+
+    @Schema(description = "物料归属单位id")
+    private Integer unitId;
 
     @Schema(description = "物料归属单位")
     private String unitName;
@@ -47,8 +53,8 @@ public class SummaryGoodsVO implements Serializable {
     @Schema(description = "业务单式/宣传单页(0/1)")
     private Integer type;
 
-    @Schema(description = "状态")
-    private String state;
+    @Schema(description = "审核状态")
+    private Integer state;
 
     @Schema(description = "日期")
     private String time;

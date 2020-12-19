@@ -21,6 +21,7 @@ public class LibraryVO implements Serializable {
     private Long parentId;
     private Boolean mold;
     private String label;
+    private Boolean state;
     @Schema(description ="宣传物料活动")
     private List<LibraryVO> children;
 }

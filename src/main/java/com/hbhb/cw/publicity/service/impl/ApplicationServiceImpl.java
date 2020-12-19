@@ -56,7 +56,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         }
         // 几月的第几次
         GoodsSetting goodsSetting = goodsSettingService.getSetByDate(goodsCondVO.getTime());
-        if (goodsCondVO.getGoodsIndex()==null){
+        if (goodsCondVO.getGoodsIndex() == null) {
             goodsCondVO.setGoodsIndex(goodsSetting.getGoodsIndex());
         }
         if (goodsCondVO.getBatchNum() == null) {
@@ -67,7 +67,10 @@ public class ApplicationServiceImpl implements ApplicationService {
         // 通过营业厅得到该营业厅下该时间的申请详情
         List<GoodsVO> goods = goodsMapper.selectByCond(goodsCondVO);
         // 得到所有产品
-        List<GoodsVO> list = goodsMapper.selectByCond(new GoodsCondVO());
+        List<GoodsVO> list = goodsMapper.selectGoodsList();
+        for (GoodsVO goodsVO : list) {
+            goodsVO.setApplyAmount(0L);
+        }
         // 赋值于Goods， 若无，则为申请数量为0
         Map<Long, GoodsVO> map = new HashMap<>();
         for (GoodsVO good : goods) {
@@ -91,8 +94,9 @@ public class ApplicationServiceImpl implements ApplicationService {
         }
         // 3.判断本月此次下该分公司是否已保存
         List<Application> applications = applicationMapper.selectApplicationByUnitId(goodsCondVO.getUnitId(),
+                goodsCondVO.getHallId(),
                 DateUtil.dateToString(DateUtil.stringToDate(setting.getDeadline()), "yyyyMM") + setting.getGoodsIndex());
-        if (applications != null && (applications.size() == 0 || applications.get(0).getEditable())) {
+        if (applications != null && applications.size() != 0 && applications.get(0).getEditable()) {
             return new GoodsResVO(list, false);
         }
         return new GoodsResVO(list, true);
@@ -101,18 +105,24 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void applyGoods(GoodsCondAppVO goodsCondAppVO) {
+        // 判断是否有时间如果没有则默认当前时间
         if (goodsCondAppVO.getTime() == null) {
             goodsCondAppVO.setTime(DateUtil.dateToString(new Date()));
         }
-        if (goodsCondAppVO.getTime() == null) {
-            goodsCondAppVO.setTime(DateUtil.dateToString(new Date()));
-        }
+        // 通过时间判断批次
         GoodsSetting goodsSetting = goodsSettingService.getSetByDate(DateUtil.dateToString(new Date()));
-        if (goodsCondAppVO.getGoodsIndex() == null) {
+        // 如果没有次序且时间与截止时间一样则为该次截止时间
+        if (goodsCondAppVO.getGoodsIndex()==null && goodsCondAppVO.getTime().equals(goodsSetting.getDeadline())) {
             goodsCondAppVO.setGoodsIndex(goodsSetting.getGoodsIndex());
         }
+        // 如果没有次序且时间与该次截止时间不一样则为该次截止时间 （本月第一次）
+        else if (goodsCondAppVO.getGoodsIndex()==null && !goodsCondAppVO.getTime().equals(goodsSetting.getDeadline())){
+            goodsCondAppVO.setGoodsIndex(1);
+        }
+        // 得到批次号
         String batchNum = DateUtil
                 .dateToString(DateUtil.stringToDate(goodsCondAppVO.getTime()), "yyyyMM") + goodsCondAppVO.getGoodsIndex();
+        // 得到改营业厅申领单号
         List<Application> applications = applicationMapper.createLambdaQuery()
                 .andEq(Application::getBatchNum, batchNum)
                 .andEq(Application::getHallId, goodsCondAppVO.getHallId())
@@ -121,15 +131,14 @@ public class ApplicationServiceImpl implements ApplicationService {
         for (Application application : applications) {
             applicationIds.add(application.getId());
         }
-        applicationDetailMapper.createLambdaQuery()
-                .andIn(ApplicationDetail::getApplicationId, applicationIds)
-                .delete();
-        applicationMapper.createLambdaQuery()
-                .andEq(Application::getBatchNum, batchNum)
-                .andEq(Application::getHallId, goodsCondAppVO.getHallId())
-                .delete();
+        // 删除申领详情
+        if (applicationIds.size()!=0) {
+            applicationDetailMapper.createLambdaQuery()
+                    .andIn(ApplicationDetail::getApplicationId, applicationIds)
+                    .delete();
+        }
         List<ApplicationVO> list = goodsCondAppVO.getList();
-        // 新增产品（如果该营业厅该产品已有则覆盖）
+        // 新增产品（如果该营业厅该产品已有则修改）
         Date date = new Date();
         Application application = new Application();
         application.setBatchNum(DateUtil.dateToString(date, "yyyyMM") + goodsSetting.getGoodsIndex());
@@ -138,10 +147,16 @@ public class ApplicationServiceImpl implements ApplicationService {
         application.setHallId(goodsCondAppVO.getHallId());
         application.setEditable(false);
         application.setSubmit(false);
-        applicationMapper.insert(application);
+        application.setBatchNum(batchNum);
+        // 如果存在则修改不存在则删除
+        if (applicationIds.size()!=0) {
+            application.setId(applicationIds.get(0));
+            applicationMapper.updateById(application);
+        }else {
+            applicationMapper.insert(application);
+        }
         List<ApplicationDetail> applicationDetails = new ArrayList<>();
-        goodsCondAppVO.setGoodsIndex(goodsSetting.getGoodsIndex());
-        // 得到id
+        // 查询修改（新增）后的申领表的id
         Application applicationRes = applicationMapper.selectByHall(goodsCondAppVO.getUnitId(),
                 application.getBatchNum(),
                 goodsCondAppVO.getHallId());

@@ -24,6 +24,8 @@ public interface GoodsMapper extends BaseMapper<Goods> {
 
     List<GoodsVO> selectByCond(GoodsCondVO goodsCondVO);
 
+    List<GoodsVO> selectGoodsList();
+
     List<LibraryVO> selectByUnitId(Integer unitId);
 
     List<LibraryVO> selectGoodsByActIds(List<Long> list);
@@ -31,6 +33,8 @@ public interface GoodsMapper extends BaseMapper<Goods> {
     List<SummaryUnitGoodsVO> selectSummaryUnitByType(SummaryCondVO cond);
 
     List<SummaryGoodsVO> selectSummaryByState(SummaryCondVO cond);
+
+    List<Long> selectIdsByCond(SummaryCondVO cond);
 
     List<PurchaseGoodsResVO> selectPurchaseGoods(GoodsReqVO goodsReqVO);
 

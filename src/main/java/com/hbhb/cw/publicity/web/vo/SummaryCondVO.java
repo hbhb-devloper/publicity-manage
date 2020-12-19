@@ -32,6 +32,10 @@ public class SummaryCondVO implements Serializable {
      *
      */
     private Integer type;
+    /**
+     * 营业厅
+     */
+    private Long hallId;
 
     private Integer state;
 }
