@@ -32,4 +32,10 @@ public class MaterialsFlowController {
                                                     @Parameter(hidden = true) @UserId Integer userId) {
         return flowService.getInvoiceNodeList(materialsId, userId);
     }
+
+    @Operation(summary = "节点提醒")
+    @GetMapping("/node")
+    public String getNotice(@Parameter(description = "节点id") String flowNode, @Parameter(description = "状态") Integer state) {
+        return flowService.getInform(flowNode, state);
+    }
 }

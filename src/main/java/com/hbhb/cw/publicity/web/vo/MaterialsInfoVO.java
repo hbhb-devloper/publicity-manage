@@ -9,7 +9,6 @@ import org.beetl.sql.core.mapping.join.AutoJsonMapper;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -27,11 +26,14 @@ public class MaterialsInfoVO implements Serializable {
     @Schema(description = "申请单名称")
     private String materialsName;
 
+    @Schema(description = "申请单号")
+    private String materialsNum;
+
     @Schema(description = "用户id")
     private Integer userId;
 
     @Schema(description = "申请时间")
-    private Date applyTime;
+    private String applyTime;
 
     @Schema(description = "是否有宽带")
     private Integer wideBand;

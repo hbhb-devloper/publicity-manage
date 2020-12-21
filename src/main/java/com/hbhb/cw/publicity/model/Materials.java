@@ -28,6 +28,10 @@ public class Materials implements Serializable {
      */
     private String materialsName;
     /**
+     * 申请单号
+     */
+    private String materialsNum;
+    /**
      * 用户id
      */
     private Integer userId;

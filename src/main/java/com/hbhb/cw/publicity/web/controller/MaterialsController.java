@@ -2,6 +2,7 @@ package com.hbhb.cw.publicity.web.controller;
 
 import com.alibaba.excel.EasyExcel;
 import com.hbhb.core.utils.ExcelUtil;
+import com.hbhb.cw.publicity.model.MaterialsBudget;
 import com.hbhb.cw.publicity.rpc.FileApiExp;
 import com.hbhb.cw.publicity.service.MaterialsService;
 import com.hbhb.cw.publicity.service.listener.MaterialsListener;
@@ -118,6 +119,26 @@ public class MaterialsController {
     @Operation(summary = "删除附件")
     @DeleteMapping("/file/{id}")
     public void deleteFile(@PathVariable Long id) {
-        materialsService.deleteMaterials(id);
+        materialsService.deleteFile(id);
     }
+
+    @Operation(summary = "修改物料制作预算控制")
+    @PutMapping("/budget")
+    public void updateBudget(@RequestBody List<MaterialsBudget> budget) {
+        materialsService.updateBudget(budget);
+    }
+
+    @Operation(summary = "物料制作预算控制列表")
+    @GetMapping("/budget/list")
+    public List<MaterialsBudgetResVO> getMaterialsBudgetList() {
+        return materialsService.getMaterialsBudgetList();
+    }
+
+    @Operation(summary = "物料制作控制预算统计")
+    @GetMapping("/statistics")
+    public MaterialsBudgetVO getMaterialsBudget(@Parameter(description = "单位") Integer unitId) {
+        return materialsService.getMaterialsBudget(unitId);
+    }
+
+
 }

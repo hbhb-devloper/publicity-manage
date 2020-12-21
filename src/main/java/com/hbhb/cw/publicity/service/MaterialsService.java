@@ -1,5 +1,6 @@
 package com.hbhb.cw.publicity.service;
 
+import com.hbhb.cw.publicity.model.MaterialsBudget;
 import com.hbhb.cw.publicity.web.vo.*;
 import org.beetl.sql.core.page.PageResult;
 
@@ -81,4 +82,26 @@ public interface MaterialsService {
      * @param state       流程状态
      */
     void updateState(Long materialsId, Integer state);
+
+    /**
+     * 修改物料制作预算控制
+     *
+     * @param budget 预算
+     */
+    void updateBudget(List<MaterialsBudget> budget);
+
+    /**
+     * 获取物料预算控制列表
+     *
+     * @return 列表
+     */
+    List<MaterialsBudgetResVO> getMaterialsBudgetList();
+
+    /**
+     * 跟据登录单位id
+     *
+     * @param unitId 单位id
+     * @return 统计
+     */
+    MaterialsBudgetVO getMaterialsBudget(Integer unitId);
 }

@@ -115,6 +115,9 @@ public class PrintServiceImpl implements PrintService {
     public void addPrint(PrintInfoVO infoVO, Integer userId) {
         Print print = new Print();
         BeanUtils.copyProperties(print, infoVO);
+        print.setCreateTime(new Date());
+        print.setUpdateTime(new Date());
+        print.setState(NodeState.NOT_APPROVED.value());
         // 新增印刷用品
         printMapper.insert(print);
         List<PrintFile> fileList = setPrintFile(infoVO.getFiles(), userId);
@@ -192,7 +195,7 @@ public class PrintServiceImpl implements PrintService {
             throw new PublicityException(PublicityErrorCode.LOCK_OF_APPROVAL_ROLE);
         }
         //  2.获取流程id
-        Long flowId = getRelatedFlow(initVO.getFlowTypeId(), print.getUserId());
+        Long flowId = getRelatedFlow(initVO.getFlowTypeId());
         // 通过流程id得到流程节点属性
         List<FlowNodePropVO> flowProps = propApi.getNodeProps(flowId);
         //  3.校验用户发起审批权限
@@ -232,7 +235,7 @@ public class PrintServiceImpl implements PrintService {
 
 
     private boolean hasAccess2Approve(List<FlowNodePropVO> flowProps, Integer unitId, Integer userId) {
-
+        // 获取用户所有角色
         List<Long> flowRoleIds = roleUserApi.getRoleIdByUserId(userId);
         // 第一个节点属性
         FlowNodePropVO firstNodeProp = flowProps.get(0);
@@ -261,7 +264,6 @@ public class PrintServiceImpl implements PrintService {
     }
 
     private void syncPrintFlow(List<FlowNodePropVO> flowProps, Long id, Integer userId) {
-
         // 用来存储同步节点的list
         List<PrintFlow> printFlowList = new ArrayList<>();
         // 判断节点是否有保存属性
@@ -292,7 +294,7 @@ public class PrintServiceImpl implements PrintService {
         flowService.insertBatch(printFlowList);
     }
 
-    private Long getRelatedFlow(Long flowTypeId, Integer userId) {
+    private Long getRelatedFlow(Long flowTypeId) {
         // 流程节点数量 => 流程id
         Map<Long, Long> flowMap = new HashMap<>();
         List<Flow> flowList = flowApi.getFlowsByTypeId(flowTypeId);
@@ -303,7 +305,7 @@ public class PrintServiceImpl implements PrintService {
             throw new PublicityException(PublicityErrorCode.EXCEED_LIMIT_FLOW);
         }
         flowList.forEach(flow -> flowMap.put(nodeApi.getNodeNum(flow.getId()), flow.getId()));
-        // 印刷品流程默认为4个节点流程 若办理业务为欠费缴纳类型则走另一条两节点流程
+        // 印刷品流程默认为4个节点流程
         Long flowId;
         flowId = flowMap.get(3L);
         if (flowId == null) {

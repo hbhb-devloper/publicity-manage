@@ -8,7 +8,10 @@ import com.hbhb.cw.publicity.mapper.MaterialsFlowMapper;
 import com.hbhb.cw.publicity.model.MaterialsFlow;
 import com.hbhb.cw.publicity.model.MaterialsNotice;
 import com.hbhb.cw.publicity.rpc.*;
-import com.hbhb.cw.publicity.service.*;
+import com.hbhb.cw.publicity.service.MailService;
+import com.hbhb.cw.publicity.service.MaterialsFlowService;
+import com.hbhb.cw.publicity.service.MaterialsNoticeService;
+import com.hbhb.cw.publicity.service.MaterialsService;
 import com.hbhb.cw.publicity.web.vo.FlowNodeOperationVO;
 import com.hbhb.cw.publicity.web.vo.MaterialsApproveVO;
 import com.hbhb.cw.publicity.web.vo.MaterialsFlowVO;
@@ -44,8 +47,6 @@ public class MaterialsFlowServiceImpl implements MaterialsFlowService {
     @Resource
     private FlowApiExp flowApi;
     @Resource
-    private PrintFlowService flowService;
-    @Resource
     private SysUserApiExp userApi;
     @Value("${mail.enable}")
     private Boolean mailEnable;
@@ -73,7 +74,7 @@ public class MaterialsFlowServiceImpl implements MaterialsFlowService {
         // 通过签报id得到发票单位名称
         MaterialsInfoVO materials = materialsService.getMaterials(materialsId);
         // 签报流程名称 todo
-        String MaterialsFlowName = materials.getUnitId() + flowName;
+        String materialsFlowName = materials.getUnitId() + flowName;
         // 通过userId得到nickName
         UserInfo userInfo = userApi.getUserInfoById(userId);
         // 如果流程已结束，参与流程的角色登入
@@ -92,7 +93,7 @@ public class MaterialsFlowServiceImpl implements MaterialsFlowService {
                             .value(flowNode.getSuggestion()).readOnly(true).build());
                     result.setApproverSelect(getApproverSelectList(flowNode.getFlowNodeId(),
                             materials.getId()));
-                    result.setProjectFlowName(MaterialsFlowName);
+                    result.setProjectFlowName(materialsFlowName);
                     list.add(result);
                 }
                 return list;
@@ -128,20 +129,20 @@ public class MaterialsFlowServiceImpl implements MaterialsFlowService {
             // 2.判断登录用户是否为该审批人
             if (!userId.equals(currentNode.getApprover())) {
                 // 2-1.如果不是，则所有节点信息全部为只读
-                flowNodes.forEach(flowNode -> list.add(buildFlowNode(flowNode, currentNodeId, 0, MaterialsFlowName)));
+                flowNodes.forEach(flowNode -> list.add(buildFlowNode(flowNode, currentNodeId, 0, materialsFlowName)));
             } else {
                 // 2-2-a.如果是审批人，且为分配者
                 if (flowRoleIds.contains(currentNode.getAssigner())) {
                     flowNodes.forEach(
-                            flowNode -> list.add(buildFlowNode(flowNode, currentNodeId, 2, MaterialsFlowName)));
+                            flowNode -> list.add(buildFlowNode(flowNode, currentNodeId, 2, materialsFlowName)));
                     // // 2-2-c.如果是审批人，且为收账员
                 } else if (isLastNode(currentNodeId, flowNodeIds)) {
                     flowNodes.forEach(
-                            flowNode -> list.add(buildFlowNode(flowNode, currentNodeId, 3, MaterialsFlowName)));
+                            flowNode -> list.add(buildFlowNode(flowNode, currentNodeId, 3, materialsFlowName)));
                 } else {
                     // 2-2-b.如果是审批人，但不是分配者
                     flowNodes.forEach(
-                            flowNode -> list.add(buildFlowNode(flowNode, currentNodeId, 1, MaterialsFlowName)));
+                            flowNode -> list.add(buildFlowNode(flowNode, currentNodeId, 1, materialsFlowName)));
                 }
 
             }
@@ -175,7 +176,7 @@ public class MaterialsFlowServiceImpl implements MaterialsFlowService {
                         .value(infoVO.getSuggestion().getValue()).readOnly(true).build());
                 infoVO.setApproverSelect(getApproverSelectList(infoVO.getFlowNodeId(),
                         infoVO.getBusinessId()));
-                infoVO.setProjectFlowName(MaterialsFlowName);
+                infoVO.setProjectFlowName(materialsFlowName);
             } else {
                 break;
             }
@@ -487,10 +488,9 @@ public class MaterialsFlowServiceImpl implements MaterialsFlowService {
     @Override
     public String getInform(String flowNodeId, Integer state) {
         String inform = null;
-        List<FlowNodeNoticeVO> nodeNoticeList = noticeApi
-                .getNodeNoticeList(flowNodeId);
+        List<FlowNodeNoticeVO> nodeNoticeList = noticeApi.getNodeNoticeList(flowNodeId);
         for (FlowNodeNoticeVO flowNodeNotice : nodeNoticeList) {
-            if (flowNodeNotice.getState().equals(state)) {
+            if (state.equals(flowNodeNotice.getState())) {
                 inform = flowNodeNotice.getInform();
             }
         }

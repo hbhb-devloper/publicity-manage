@@ -1,10 +1,12 @@
 package com.hbhb.cw.publicity.service.impl;
 
 import com.hbhb.core.bean.BeanConverter;
+import com.hbhb.core.utils.DateUtil;
 import com.hbhb.cw.flowcenter.model.Flow;
 import com.hbhb.cw.flowcenter.vo.FlowNodePropVO;
 import com.hbhb.cw.publicity.enums.*;
 import com.hbhb.cw.publicity.exception.PublicityException;
+import com.hbhb.cw.publicity.mapper.MaterialsBudgetMapper;
 import com.hbhb.cw.publicity.mapper.MaterialsFileMapper;
 import com.hbhb.cw.publicity.mapper.MaterialsInfoMapper;
 import com.hbhb.cw.publicity.mapper.MaterialsMapper;
@@ -69,6 +71,8 @@ public class MaterialsServiceImpl implements MaterialsService {
     private FlowNodePropApiExp propApi;
     @Resource
     private SysDictApiExp dictApi;
+    @Resource
+    private MaterialsBudgetMapper budgetMapper;
 
     @Override
     public PageResult<MaterialsResVO> getMaterialsList(MaterialsReqVO reqVO, Integer pageNum, Integer pageSize) {
@@ -113,12 +117,25 @@ public class MaterialsServiceImpl implements MaterialsService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void addMaterials(MaterialsInfoVO infoVO, Integer userId) {
+        // 判断该用户所属单位下物料制作费用是否充足
+        UserInfo user = userApi.getUserInfoById(userId);
+        MaterialsBudgetVO materialsBudget = getMaterialsBudget(user.getUnitId());
+        int i = materialsBudget.getBalance().compareTo(infoVO.getPredictAmount());
+        if (i < 0) {
+            throw new PublicityException(PublicityErrorCode.BUDGET_INSUFFICIENT);
+        }
         Materials materials = new Materials();
-        BeanUtils.copyProperties(materials, infoVO);
+        BeanUtils.copyProperties(infoVO, materials);
+        materials.setApplyTime(DateUtil.string2DateYMD(infoVO.getApplyTime()));
+        materials.setCreateTime(new Date());
+        materials.setUpdateTime(new Date());
+        materials.setState(NodeState.NOT_APPROVED.value());
         // 新增印刷用品
         materialsMapper.insert(materials);
-        List<MaterialsFile> fileList = setMaterialsFile(infoVO.getFiles(), userId);
-        fileMapper.insertBatch(fileList);
+        if (infoVO.getFiles() != null) {
+            List<MaterialsFile> fileList = setMaterialsFile(infoVO.getFiles(), userId);
+            fileMapper.insertBatch(fileList);
+        }
     }
 
     @Override
@@ -189,16 +206,18 @@ public class MaterialsServiceImpl implements MaterialsService {
         if (!user.getNickName().equals(userInfo.getNickName())) {
             throw new PublicityException(PublicityErrorCode.LOCK_OF_APPROVAL_ROLE);
         }
-        //  2.获取流程id
-        Long flowId = getRelatedFlow(initVO.getFlowTypeId(), materials.getUserId());
+
+
+        //  3.获取流程id
+        Long flowId = getRelatedFlow(initVO.getFlowTypeId());
         // 通过流程id得到流程节点属性
         List<FlowNodePropVO> flowProps = propApi.getNodeProps(flowId);
-        //  3.校验用户发起审批权限
+        //  4.校验用户发起审批权限
         boolean hasAccess = hasAccess2Approve(flowProps, materials.getUnitId(), initVO.getUserId());
         if (!hasAccess) {
             throw new PublicityException(PublicityErrorCode.LOCK_OF_APPROVAL_ROLE);
         }
-        //  4.同步节点属性
+        //  5.同步节点属性
         syncMaterialsFlow(flowProps, materials.getId(), initVO.getUserId());
         // 得到推送模板
         String inform = flowService.getInform(flowProps.get(0).getFlowNodeId()
@@ -303,7 +322,7 @@ public class MaterialsServiceImpl implements MaterialsService {
         flowService.insertBatch(materialsFlowList);
     }
 
-    private Long getRelatedFlow(Long flowTypeId, Integer userId) {
+    private Long getRelatedFlow(Long flowTypeId) {
         // 流程节点数量 => 流程id
         Map<Long, Long> flowMap = new HashMap<>(5);
         List<Flow> flowList = flowApi.getFlowsByTypeId(flowTypeId);
@@ -316,7 +335,7 @@ public class MaterialsServiceImpl implements MaterialsService {
         flowList.forEach(flow -> flowMap.put(nodeApi.getNodeNum(flow.getId()), flow.getId()));
         // 物料制作流程默认为4个节点流程
         Long flowId;
-        flowId = flowMap.get(2L);
+        flowId = flowMap.get(4L);
         if (flowId == null) {
             throw new PublicityException(PublicityErrorCode.LACK_OF_FLOW);
         }
@@ -331,6 +350,21 @@ public class MaterialsServiceImpl implements MaterialsService {
                 .id(materialsId)
                 .state(projectState)
                 .build());
+    }
+
+    @Override
+    public void updateBudget(List<MaterialsBudget> budget) {
+        budgetMapper.updateBatchTempById(budget);
+    }
+
+    @Override
+    public List<MaterialsBudgetResVO> getMaterialsBudgetList() {
+        return budgetMapper.selectBudgetList();
+    }
+
+    @Override
+    public MaterialsBudgetVO getMaterialsBudget(Integer unitId) {
+        return materialsMapper.selectMaterialsBudgetByUnitId(unitId);
     }
 
 

@@ -30,7 +30,7 @@
 //    /**
 //     * 数据库表名
 //     */
-//    private static final String TABLE_NAME = "print_notice";
+//    private static final String TABLE_NAME = "materials_budget";
 //
 //    public static void main(String[] args) {
 //        // 设置自定义模版路径
