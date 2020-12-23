@@ -4,7 +4,7 @@ selectMaterialsById
 select m.id           as id,
        unit_id        as unitId,
        materials_name as materialsName,
-       apply_time     as applyTime,
+       date_format(apply_time,'%Y-%m-%d %H:%i:%s')       as applyTime,
        wide_band      as wideBand,
        predict_amount as predictAmount,
        producers      as producers,
@@ -67,4 +67,14 @@ select t1.*, t2.declaration, t3.amountPaid
         where state = 31
     ) t3 on t1.unitId = t3.unit_id
 where unitId = #{unitId}
+```
+
+selectMaterialsNumCountByUnitId
+===
+```sql
+select max(right(print_num, 4))
+from materials
+where year(create_time) = #{createTime}
+  and delete_flag = 1
+  and unit_id = #{unitId}
 ```

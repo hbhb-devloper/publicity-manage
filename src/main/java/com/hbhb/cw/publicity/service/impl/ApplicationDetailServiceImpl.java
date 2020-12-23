@@ -1,16 +1,10 @@
 package com.hbhb.cw.publicity.service.impl;
 
+import com.hbhb.api.core.bean.SelectVO;
 import com.hbhb.core.utils.DateUtil;
 import com.hbhb.cw.flowcenter.model.Flow;
-import com.hbhb.cw.flowcenter.vo.FlowNodeNoticeVO;
 import com.hbhb.cw.flowcenter.vo.FlowNodePropVO;
-import com.hbhb.cw.publicity.enums.ApplicationState;
-import com.hbhb.cw.publicity.enums.FlowNodeNoticeState;
-import com.hbhb.cw.publicity.enums.FlowRoleName;
-import com.hbhb.cw.publicity.enums.GoodsType;
-import com.hbhb.cw.publicity.enums.NodeState;
-import com.hbhb.cw.publicity.enums.OperationState;
-import com.hbhb.cw.publicity.enums.PublicityErrorCode;
+import com.hbhb.cw.publicity.enums.*;
 import com.hbhb.cw.publicity.exception.PublicityException;
 import com.hbhb.cw.publicity.mapper.ApplicationDetailMapper;
 import com.hbhb.cw.publicity.mapper.ApplicationMapper;
@@ -19,52 +13,25 @@ import com.hbhb.cw.publicity.model.Application;
 import com.hbhb.cw.publicity.model.ApplicationDetail;
 import com.hbhb.cw.publicity.model.ApplicationFlow;
 import com.hbhb.cw.publicity.model.GoodsSetting;
-import com.hbhb.cw.publicity.rpc.FlowApiExp;
-import com.hbhb.cw.publicity.rpc.FlowNodePropApiExp;
-import com.hbhb.cw.publicity.rpc.FlowNoticeApiExp;
-import com.hbhb.cw.publicity.rpc.FlowRoleUserApiExp;
-import com.hbhb.cw.publicity.rpc.FlowTypeApiExp;
-import com.hbhb.cw.publicity.rpc.SysDictApiExp;
-import com.hbhb.cw.publicity.rpc.SysUserApiExp;
-import com.hbhb.cw.publicity.rpc.UnitApiExp;
+import com.hbhb.cw.publicity.rpc.*;
 import com.hbhb.cw.publicity.service.ApplicationDetailService;
 import com.hbhb.cw.publicity.service.ApplicationFlowService;
 import com.hbhb.cw.publicity.service.ApplicationNoticeService;
 import com.hbhb.cw.publicity.service.GoodsSettingService;
-import com.hbhb.cw.publicity.web.vo.ApplicationApproveVO;
-import com.hbhb.cw.publicity.web.vo.ApplicationByUnitVO;
-import com.hbhb.cw.publicity.web.vo.ApplicationFlowNodeVO;
-import com.hbhb.cw.publicity.web.vo.ApplicationNoticeVO;
-import com.hbhb.cw.publicity.web.vo.GoodsApproveVO;
-import com.hbhb.cw.publicity.web.vo.GoodsReqVO;
-import com.hbhb.cw.publicity.web.vo.SummaryByUnitVO;
-import com.hbhb.cw.publicity.web.vo.SummaryCondVO;
-import com.hbhb.cw.publicity.web.vo.SummaryUnitGoodsResVO;
-import com.hbhb.cw.publicity.web.vo.SummaryUnitGoodsVO;
-import com.hbhb.cw.publicity.web.vo.UnitGoodsStateVO;
-import com.hbhb.cw.publicity.web.vo.VerifyGoodsVO;
-import com.hbhb.cw.publicity.web.vo.VerifyHallGoodsReqVO;
-import com.hbhb.cw.publicity.web.vo.VerifyHallGoodsVO;
+import com.hbhb.cw.publicity.web.vo.*;
 import com.hbhb.cw.systemcenter.enums.DictCode;
 import com.hbhb.cw.systemcenter.enums.TypeCode;
 import com.hbhb.cw.systemcenter.enums.UnitEnum;
 import com.hbhb.cw.systemcenter.vo.DictVO;
 import com.hbhb.cw.systemcenter.vo.UserInfo;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 import javax.annotation.Resource;
-
-import lombok.extern.slf4j.Slf4j;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author yzc
@@ -148,21 +115,24 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         Map<Integer, String> unitMap = unitApiExp.getUnitMapById();
         List<SummaryUnitGoodsVO> singList = getUnitSummaryList(goodsReqVO, GoodsType.FLYER_PAGE.getValue());
         for (int i = 0; i < singList.size(); i++) {
-            singList.get(i).setLineNum(i+1L);
+            singList.get(i).setLineNum(i + 1L);
             singList.get(i).setUnitName(unitMap.get(singList.get(i).getUnitId()));
         }
         List<SummaryUnitGoodsVO> simList = getUnitSummaryList(goodsReqVO, GoodsType.BUSINESS_SIMPLEX.getValue());
         for (int i = 0; i < simList.size(); i++) {
-            simList.get(i).setLineNum(i+1L);
+            simList.get(i).setLineNum(i + 1L);
             simList.get(i).setUnitName(unitMap.get(simList.get(i).getUnitId()));
         }
-        return new SummaryByUnitVO(simList,singList);
+        return new SummaryByUnitVO(simList, singList);
     }
 
     @Override
     public List<UnitGoodsStateVO> getUnitGoodsStateList(GoodsReqVO goodsReqVO) {
         // 通过流程角色名称得到该角色用户
-        List<Integer> userList = flowRoleUserApiExp.getUserIdByRoleName(FlowRoleName.CHECKER.value());
+        List<SelectVO> roleUserList = flowRoleUserApiExp.getUserIdByRoleName(FlowRoleName.CHECKER.value());
+        List<Integer> userList = new ArrayList<>();
+        roleUserList.forEach(item -> userList.add(Math.toIntExact(item.getId())));
+
         List<UserInfo> userInfoList = sysUserApiExp.getUserInfoBatch(userList);
         Map<Integer, String> userMap = userInfoList.stream()
                 .collect(Collectors.toMap(UserInfo::getId, UserInfo::getNickName));
@@ -439,15 +409,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
      * 提醒信息
      */
     public String getInform(String flowNodeId, Integer state) {
-        String inform = null;
-        List<FlowNodeNoticeVO> flowNodeNotices = flowNoticeApiExp
-                .getNodeNoticeList(flowNodeId);
-        for (FlowNodeNoticeVO flowNodeNotice : flowNodeNotices) {
-            if (flowNodeNotice.getState().equals(state)) {
-                inform = flowNodeNotice.getInform();
-            }
-        }
-        return inform;
+        return flowNoticeApiExp.getInform(flowNodeId, state);
     }
 
     /**

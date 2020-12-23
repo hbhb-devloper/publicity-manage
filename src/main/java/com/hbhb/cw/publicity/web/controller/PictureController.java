@@ -49,7 +49,7 @@ public class PictureController {
     }
 
     @Operation(summary = "添加宣传画面")
-    @PostMapping("/add")
+    @PostMapping("")
     public void addPicture(@Parameter(description = "实体") @RequestBody PictureInfoVO pictureInfoVO,
                            @Parameter(hidden = true) @UserId Integer userId) {
         pictureService.addPicture(pictureInfoVO, userId);
@@ -69,7 +69,7 @@ public class PictureController {
     }
 
     @Operation(summary = "修改宣传画面")
-    @PutMapping("/update")
+    @PutMapping("")
     public void updatePicture(@RequestBody PictureInfoVO pictureInfoVO, @Parameter(hidden = true) @UserId Integer userId) {
         pictureService.updatePicture(pictureInfoVO, userId);
     }
@@ -95,7 +95,8 @@ public class PictureController {
 
     @Operation(summary = "发起审批")
     @PostMapping("/to-approve")
-    public void toApprove(@RequestBody PictureInitVO initVO, @Parameter(hidden = false) @UserId Integer userId) {
+    public void toApprove(@RequestBody PictureInitVO initVO, @Parameter(hidden = true) @UserId Integer userId) {
+        initVO.setUserId(userId);
         pictureService.toApprove(initVO);
     }
 

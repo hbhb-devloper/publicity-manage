@@ -25,6 +25,8 @@ public enum PublicityErrorCode {
     NEXT_NODE_NO_USER("85010", "next.node.no.user"),
     //  该单位下物料制作费用预算不足
     BUDGET_INSUFFICIENT("80011", "budget.insufficient"),
+    // 导入失败
+    INPUT_DATA_ERROR("80012", "input.data.error"),
 
 
     // 无营业厅!
@@ -34,7 +36,7 @@ public enum PublicityErrorCode {
     // 本次已截止
     PARENT_NOT_ACTIVITY("84002", "parent.not.activity"),
     // 必填项未填
-    NOT_FILLED_IN("84003","not.filled.in"),
+    NOT_FILLED_IN("84003", "not.filled.in"),
     // 相关流程异常
     NOT_RELEVANT_FLOW("84004","not.relevant.flow"),
     // 请在二级目录添加

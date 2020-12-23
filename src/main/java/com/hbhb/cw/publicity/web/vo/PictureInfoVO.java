@@ -39,4 +39,9 @@ public class PictureInfoVO implements Serializable {
     @Schema(description = "附件")
     private List<PictureFileVO> files;
 
+    @Schema(description = "画面设计文件id")
+    private Integer fileId;
+
+    @Schema(description = "画面设计文件id")
+    private String filePath;
 }

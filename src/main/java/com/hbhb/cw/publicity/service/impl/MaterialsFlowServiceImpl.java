@@ -487,13 +487,6 @@ public class MaterialsFlowServiceImpl implements MaterialsFlowService {
      */
     @Override
     public String getInform(String flowNodeId, Integer state) {
-        String inform = null;
-        List<FlowNodeNoticeVO> nodeNoticeList = noticeApi.getNodeNoticeList(flowNodeId);
-        for (FlowNodeNoticeVO flowNodeNotice : nodeNoticeList) {
-            if (state.equals(flowNodeNotice.getState())) {
-                inform = flowNodeNotice.getInform();
-            }
-        }
-        return inform;
+        return noticeApi.getInform(flowNodeId, state);
     }
 }

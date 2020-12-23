@@ -20,6 +20,8 @@ import java.math.BigDecimal;
 public class PrintResVO implements Serializable {
     private static final long serialVersionUID = 7049861070718204635L;
 
+    private Long id;
+
     @Schema(description = "申请单号")
     private String printNum;
 

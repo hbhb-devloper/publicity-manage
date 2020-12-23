@@ -6,6 +6,9 @@ import com.hbhb.cw.publicity.web.vo.PrintReqVO;
 import com.hbhb.cw.publicity.web.vo.PrintResVO;
 import org.beetl.sql.core.page.PageRequest;
 import org.beetl.sql.core.page.PageResult;
+import org.beetl.sql.mapper.annotation.Param;
+
+import java.util.Date;
 
 /**
  * @author wangxiaogang
@@ -20,4 +23,12 @@ public interface PrintMapper extends BaseMapper<Print> {
      */
     PageResult<PrintResVO> selectPrintByCond(PrintReqVO cond, PageRequest<PrintResVO> request);
 
+    /**
+     * 跟据单位id获取编号最大值
+     *
+     * @param createTime 时间
+     * @param unitId     单位id
+     * @return 数量
+     */
+    Integer selectPrintNumCountByUnitId(@Param("createTime") Date createTime, @Param("unitId") Integer unitId);
 }

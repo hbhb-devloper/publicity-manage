@@ -2,6 +2,8 @@ package com.hbhb.cw.publicity.web.controller;
 
 import com.alibaba.excel.EasyExcel;
 import com.hbhb.core.utils.ExcelUtil;
+import com.hbhb.cw.publicity.enums.PublicityErrorCode;
+import com.hbhb.cw.publicity.exception.PublicityException;
 import com.hbhb.cw.publicity.model.MaterialsBudget;
 import com.hbhb.cw.publicity.rpc.FileApiExp;
 import com.hbhb.cw.publicity.service.MaterialsService;
@@ -61,14 +63,14 @@ public class MaterialsController {
     }
 
     @Operation(summary = "添加宣传物料设计制作")
-    @PostMapping("/add")
+    @PostMapping("")
     private void addMaterials(@RequestBody MaterialsInfoVO materialsInfoVO,
                               @Parameter(hidden = true) @UserId Integer userId) {
         materialsService.addMaterials(materialsInfoVO, userId);
     }
 
     @Operation(summary = "修改宣传物料设计制作")
-    @PutMapping("/update")
+    @PutMapping("")
     private void updateMaterials(@RequestBody MaterialsInfoVO materialsInfoVO,
                                  @Parameter(hidden = true) @UserId Integer userId) {
         materialsService.updateMaterials(materialsInfoVO, userId);
@@ -85,7 +87,7 @@ public class MaterialsController {
 
     @Operation(summary = "宣传画面物料导入")
     @PostMapping(value = "/import", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public void materialsImport(@RequestPart(required = false, value = "file") MultipartFile file, AtomicLong printId) {
+    public String materialsImport(@RequestPart(required = false, value = "file") MultipartFile file, AtomicLong printId) {
         long begin = System.currentTimeMillis();
 
         try {
@@ -93,8 +95,10 @@ public class MaterialsController {
                     new MaterialsListener(materialsService, printId)).sheet().headRowNumber(2).doRead();
         } catch (IOException | NumberFormatException | NullPointerException e) {
             log.error(e.getMessage(), e);
+            throw new PublicityException(PublicityErrorCode.INPUT_DATA_ERROR);
         }
         log.info("导入成功，总共耗时：" + (System.currentTimeMillis() - begin) / 1000 + "s");
+        return materialsService.getImportDataId();
     }
 
     @Operation(summary = "上传附件")

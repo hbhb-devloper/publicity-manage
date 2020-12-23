@@ -18,6 +18,8 @@ import java.io.Serializable;
 public class PrintReqVO implements Serializable {
     private static final long serialVersionUID = 577459651284293766L;
 
+    private Long id;
+
     @Schema(description = "单位id")
     private Integer unitId;
 

@@ -1,6 +1,6 @@
 package com.hbhb.cw.publicity.service.impl;
 
-import com.hbhb.core.bean.BeanConverter;
+import com.hbhb.core.utils.DateUtil;
 import com.hbhb.cw.flowcenter.model.Flow;
 import com.hbhb.cw.flowcenter.vo.FlowNodePropVO;
 import com.hbhb.cw.publicity.enums.FlowNodeNoticeState;
@@ -32,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.alibaba.excel.util.StringUtils.isEmpty;
@@ -86,24 +87,35 @@ public class PictureServiceImpl implements PictureService {
     @Override
     public PictureInfoVO getPicture(Long id) {
         Picture picture = pictureMapper.single(id);
-        List<PictureFile> files = fileMapper.createLambdaQuery().andEq(PictureFile::getPictureId, id).select();
-        // 获取文件列表信息
-        List<Integer> fileIds = new ArrayList<>();
-        files.forEach(item -> fileIds.add(Math.toIntExact(item.getFileId())));
-        List<SysFile> fileInfoList = fileApi.getFileInfoBatch(fileIds);
-        List<PictureFileVO> fileVo = Optional.of(files)
-                .orElse(new ArrayList<>())
-                .stream()
-                .map(file -> PictureFileVO.builder()
-                        .author(file.getCreateBy())
-                        .createTime(file.getCreateTime().toString())
-                        .id(file.getId())
-                        .build())
-                .collect(Collectors.toList());
-        BeanConverter.copyBeanList(fileVo, fileInfoList.getClass());
         PictureInfoVO info = new PictureInfoVO();
-        BeanConverter.convert(info, picture.getClass());
-        info.setFiles(fileVo);
+        BeanUtils.copyProperties(picture, info);
+        // 获取文件列表信息
+        List<PictureFile> files = fileMapper.createLambdaQuery().andEq(PictureFile::getPictureId, id).select();
+        if (files.size() != 0) {
+            List<Integer> fileIds = new ArrayList<>();
+            files.forEach(item -> fileIds.add(Math.toIntExact(item.getFileId())));
+            List<SysFile> fileInfoList = fileApi.getFileInfoBatch(fileIds);
+            Map<Long, SysFile> fileInfoMap = fileInfoList.stream()
+                    .collect(Collectors.toMap(SysFile::getId, Function.identity()));
+            List<PictureFileVO> fileVo = Optional.of(files)
+                    .orElse(new ArrayList<>())
+                    .stream()
+                    .map(file -> PictureFileVO.builder()
+                            .author(file.getCreateBy())
+                            .createTime(DateUtil.dateToStringYmd(file.getCreateTime()))
+                            .id(file.getId())
+                            .fileName(fileInfoMap.get(file.getFileId()).getFileName())
+                            .filePath(fileInfoMap.get(file.getFileId()).getFilePath())
+                            .fileSize(fileInfoMap.get(file.getFileId()).getFileSize())
+                            .build())
+                    .collect(Collectors.toList());
+            info.setFiles(fileVo);
+        }
+        // 获取画面设计文件信息
+        if (picture.getFileId() != null) {
+            SysFile file = fileApi.getFileInfo(picture.getFileId());
+            info.setFilePath(file.getFilePath());
+        }
         return info;
     }
 
@@ -114,26 +126,32 @@ public class PictureServiceImpl implements PictureService {
         BeanUtils.copyProperties(infoVO, picture);
         pictureMapper.insert(picture);
         // 保存附件
-        List<PictureFile> fileList = setPictureFile(infoVO.getFiles(), userId);
-        fileMapper.insertBatch(fileList);
+        if (!isEmpty(infoVO.getFiles())) {
+            List<PictureFile> fileList = setPictureFile(infoVO.getFiles(), userId);
+            fileMapper.insertBatch(fileList);
+        }
 
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updatePicture(PictureInfoVO infoVO, Integer userId) {
+        // 修改宣传画面
         Picture picture = new Picture();
         BeanUtils.copyProperties(picture, infoVO);
         pictureMapper.updateById(picture);
-        // 保存附件 todo 附件为毕传，若附件未传抛出业务异常
-        List<PictureFileVO> fileVOList = infoVO.getFiles();
-        List<PictureFileVO> files = new ArrayList<>();
-        for (PictureFileVO fileVo : fileVOList) {
-            if (isEmpty(fileVo.getId())) {
-                files.add(fileVo);
+        // 修改保存附件 todo 附件为毕传，若附件未传抛出业务异常
+        if (infoVO.getFiles().size() != 0) {
+            List<PictureFileVO> fileVOList = infoVO.getFiles();
+            List<PictureFileVO> files = new ArrayList<>();
+            for (PictureFileVO fileVo : fileVOList) {
+                if (isEmpty(fileVo.getId())) {
+                    files.add(fileVo);
+                }
             }
+            List<PictureFile> fileList = setPictureFile(files, userId);
+            fileMapper.insertBatch(fileList);
         }
-        List<PictureFile> fileList = setPictureFile(files, userId);
-        fileMapper.insertBatch(fileList);
     }
 
     @Override
@@ -146,14 +164,12 @@ public class PictureServiceImpl implements PictureService {
         //获取用户姓名
         UserInfo user = userApi.getUserInfoById(userId);
         List<PictureFile> fileList = new ArrayList<>();
-        if (fileVOList != null && !fileVOList.isEmpty()) {
-            fileVOList.forEach(item -> fileList.add(PictureFile.builder()
-                    .createBy(user.getNickName())
-                    .createTime(new Date())
-                    .fileId(item.getFileId())
-                    .pictureId(item.getPictureId())
-                    .build()));
-        }
+        fileVOList.forEach(item -> fileList.add(PictureFile.builder()
+                .createBy(user.getNickName())
+                .createTime(new Date())
+                .fileId(item.getFileId())
+                .pictureId(item.getPictureId())
+                .build()));
         return fileList;
     }
 
@@ -285,7 +301,7 @@ public class PictureServiceImpl implements PictureService {
             throw new PublicityException(PublicityErrorCode.EXCEED_LIMIT_FLOW);
         }
         flowList.forEach(flow -> flowMap.put(nodeApi.getNodeNum(flow.getId()), flow.getId()));
-        // 预开发票流程默认为4个节点流程 若办理业务为欠费缴纳类型则走另一条两节点流程
+        // 预开发票流程默认为4个节点流程
         Long flowId;
         flowId = flowMap.get(2L);
         if (flowId == null) {

@@ -1,6 +1,5 @@
 package com.hbhb.cw.publicity.web.vo;
 
-import com.alibaba.excel.annotation.ExcelIgnore;
 import com.alibaba.excel.annotation.ExcelProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -8,7 +7,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
-import java.util.Date;
 
 /**
  * @author wangxiaogang
@@ -59,14 +57,10 @@ public class MaterialsImportVO implements Serializable {
 
     @Schema(description = "需送达日期")
     @ExcelProperty(index = 9)
-    private Date deliveryDate;
+    private String deliveryDate;
 
     @Schema(description = "备注")
     @ExcelProperty(index = 10)
     private String remake;
 
-
-    @Schema(description = "印刷品id")
-    @ExcelIgnore
-    private Long materialsId;
 }

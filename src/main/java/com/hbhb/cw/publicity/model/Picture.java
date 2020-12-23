@@ -78,4 +78,8 @@ public class Picture implements Serializable {
      * 流程状态
      */
     private Integer flowState;
+    /**
+     * 画面文件id
+     */
+    private Integer fileId;
 }

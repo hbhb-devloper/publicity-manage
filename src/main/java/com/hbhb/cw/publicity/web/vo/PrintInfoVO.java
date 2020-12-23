@@ -1,5 +1,6 @@
 package com.hbhb.cw.publicity.web.vo;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -53,6 +54,10 @@ public class PrintInfoVO implements Serializable {
 
     @Schema(description = "备注")
     private String remark;
+
+    @JsonIgnore
+    @Schema(description = "导入业务单式或宣传单页excel数据id")
+    private String importDateId;
 
     @Schema(description = "附件列表")
     private List<PrintFileVO> files;

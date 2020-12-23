@@ -1,5 +1,6 @@
 package com.hbhb.cw.publicity.service;
 
+import com.hbhb.cw.publicity.model.PrintMaterials;
 import com.hbhb.cw.publicity.web.vo.*;
 import org.beetl.sql.core.page.PageResult;
 
@@ -83,4 +84,20 @@ public interface PrintService {
      * @param projectState 流程状态
      */
     void updateState(Long printId, Integer projectState);
+
+    /**
+     * 获取宣传印刷品物料列表
+     *
+     * @param uuId id
+     * @return 列表
+     */
+    List<PrintMaterials> getPrintMaterialsList(String uuId);
+
+    /**
+     * 获取导入id
+     *
+     * @return id
+     */
+    String getImportDataId();
+
 }

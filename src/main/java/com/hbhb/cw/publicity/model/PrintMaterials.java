@@ -70,7 +70,7 @@ public class PrintMaterials implements Serializable {
      */
     private String materialsName;
     /**
-     * 类型（10-业务单式、20-宣传单页）
+     * 类型（1-业务单式、2-宣传单页）
      */
     private Integer type;
     /**

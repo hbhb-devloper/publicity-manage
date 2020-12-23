@@ -3,11 +3,12 @@ selectPrintByCond
 ```sql
 select
 -- @pageTag(){
+       id             as id ,
        print_num      as printNum,
        print_name     as printName,
        unit_id        as unitId,
        material_type  as materialType,
-       apply_time     as applyTime,
+       date_format(apply_time,'%Y-%m-%d %H:%i:%s')       as applyTime,
        user_id        as userId,
        predict_amount as predictAmount,
        state          as state
@@ -29,6 +30,7 @@ select
     -- @if(!isEmpty(cond.printNum)){
       and print_num = #{cond.printNum}
     -- @}
+      and delete_flag =1
     -- @}
 ```
 
@@ -43,4 +45,14 @@ select p.id             as `p.id`,
        p.apply_time     as `p.applyTime`,
 from print p
 where p.id = #{id}
+```
+
+selectPrintNumCountByUnitId
+===
+```sql
+select max(right(print_num, 4))
+from print
+where year(create_time) = #{createTime}
+  and delete_flag = 1
+  and unit_id = #{unitId}
 ```

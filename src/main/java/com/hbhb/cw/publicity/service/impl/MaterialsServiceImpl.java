@@ -1,6 +1,5 @@
 package com.hbhb.cw.publicity.service.impl;
 
-import com.hbhb.core.bean.BeanConverter;
 import com.hbhb.core.utils.DateUtil;
 import com.hbhb.cw.flowcenter.model.Flow;
 import com.hbhb.cw.flowcenter.vo.FlowNodePropVO;
@@ -27,6 +26,9 @@ import org.beetl.sql.core.page.DefaultPageRequest;
 import org.beetl.sql.core.page.PageRequest;
 import org.beetl.sql.core.page.PageResult;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +36,7 @@ import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.alibaba.excel.util.StringUtils.isEmpty;
@@ -60,6 +63,8 @@ public class MaterialsServiceImpl implements MaterialsService {
     @Resource
     private FlowNodeApiExp nodeApi;
     @Resource
+    private MongoTemplate mongoTemplate;
+    @Resource
     private MaterialsNoticeService noticeService;
     @Resource
     private FlowRoleUserApiExp roleUserApi;
@@ -73,6 +78,7 @@ public class MaterialsServiceImpl implements MaterialsService {
     private SysDictApiExp dictApi;
     @Resource
     private MaterialsBudgetMapper budgetMapper;
+    private StringBuffer id = new StringBuffer();
 
     @Override
     public PageResult<MaterialsResVO> getMaterialsList(MaterialsReqVO reqVO, Integer pageNum, Integer pageSize) {
@@ -94,23 +100,31 @@ public class MaterialsServiceImpl implements MaterialsService {
     public MaterialsInfoVO getMaterials(Long id) {
         Materials materials = materialsMapper.single(id);
         List<MaterialsFile> files = fileMapper.createLambdaQuery().andEq(MaterialsFile::getMaterialsId, id).select();
-        // 获取文件列表信息
-        List<Integer> fileIds = new ArrayList<>();
-        files.forEach(item -> fileIds.add(Math.toIntExact(item.getFileId())));
-        List<SysFile> fileInfoList = fileApi.getFileInfoBatch(fileIds);
-        List<MaterialsFileVO> fileVo = Optional.of(files)
-                .orElse(new ArrayList<>())
-                .stream()
-                .map(file -> MaterialsFileVO.builder()
-                        .author(file.getCreateBy())
-                        .createTime(file.getCreateTime().toString())
-                        .id(file.getId())
-                        .build())
-                .collect(Collectors.toList());
-        BeanConverter.copyBeanList(fileVo, fileInfoList.getClass());
         MaterialsInfoVO info = new MaterialsInfoVO();
-        BeanConverter.convert(info, materials.getClass());
-        info.setFiles(fileVo);
+        BeanUtils.copyProperties(materials, info);
+        // 获取文件列表信息
+        if (files.size() != 0) {
+            List<Integer> fileIds = new ArrayList<>();
+            files.forEach(item -> fileIds.add(Math.toIntExact(item.getFileId())));
+            List<SysFile> fileInfoList = fileApi.getFileInfoBatch(fileIds);
+            Map<Long, SysFile> fileInfoMap = fileInfoList.stream()
+                    .collect(Collectors.toMap(SysFile::getId, Function.identity()));
+            List<MaterialsFileVO> fileVo = Optional.of(files)
+                    .orElse(new ArrayList<>())
+                    .stream()
+                    .map(file -> MaterialsFileVO.builder()
+                            .author(file.getCreateBy())
+                            .createTime(file.getCreateTime().toString())
+                            .id(file.getId())
+                            .fileName(fileInfoMap.get(file.getFileId()).getFileName())
+                            .filePath(fileInfoMap.get(file.getFileId()).getFilePath())
+                            .fileSize(fileInfoMap.get(file.getFileId()).getFileSize())
+                            .build())
+                    .collect(Collectors.toList());
+            info.setFiles(fileVo);
+        }
+
+
         return info;
     }
 
@@ -170,9 +184,17 @@ public class MaterialsServiceImpl implements MaterialsService {
             MaterialsInfo materials = new MaterialsInfo();
             BeanUtils.copyProperties(materials, importVo);
             materials.setUnitId(unitNameMap.get(importVo.getUnitName()));
+            materials.setDeliveryDate(DateUtil.string3DateYMD(importVo.getDeliveryDate()));
             materialsList.add(materials);
             materials.setMaterialsId(materialsId.get());
         }
+        // 将读取到的数据存放入mongodb中
+        String uuId = UUID.randomUUID().toString();
+        MaterialsInfoImportDataVO data = new MaterialsInfoImportDataVO();
+        data.setId(uuId);
+        data.setMaterialsInfo(materialsList);
+        mongoTemplate.insert(data);
+        id = new StringBuffer(uuId);
         materialsInfoMapper.insertBatch(materialsList);
     }
 
@@ -407,4 +429,18 @@ public class MaterialsServiceImpl implements MaterialsService {
     }
 
 
+    @Override
+    public List<PrintMaterials> getPrintMaterialsList(String uuId) {
+        Query query = new Query(Criteria.where("id").is(uuId));
+        PrintMaterialsImportDataVO data = mongoTemplate.findOne(query, PrintMaterialsImportDataVO.class);
+        if (data != null) {
+            return data.getMaterials();
+        }
+        return null;
+    }
+
+    @Override
+    public String getImportDataId() {
+        return String.valueOf(this.id);
+    }
 }

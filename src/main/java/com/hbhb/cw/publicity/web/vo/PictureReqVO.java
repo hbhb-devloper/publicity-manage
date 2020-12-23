@@ -16,6 +16,8 @@ import java.io.Serializable;
 public class PictureReqVO implements Serializable {
     private static final long serialVersionUID = -6391317459017840130L;
 
+    private Long id;
+
     @Schema(description = "单位id")
     private Integer unitId;
 

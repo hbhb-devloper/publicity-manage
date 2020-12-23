@@ -3,6 +3,9 @@ package com.hbhb.cw.publicity.web.controller;
 
 import com.alibaba.excel.EasyExcel;
 import com.hbhb.core.utils.ExcelUtil;
+import com.hbhb.cw.publicity.enums.PublicityErrorCode;
+import com.hbhb.cw.publicity.exception.PublicityException;
+import com.hbhb.cw.publicity.model.PrintMaterials;
 import com.hbhb.cw.publicity.rpc.FileApiExp;
 import com.hbhb.cw.publicity.service.PrintService;
 import com.hbhb.cw.publicity.service.listener.PrintListener;
@@ -55,13 +58,12 @@ public class PrintController {
             @Parameter(hidden = true) @UserId Integer userId) {
         pageNum = pageNum == null ? 1 : pageNum;
         pageSize = pageSize == null ? 10 : pageSize;
-
         return printService.getPrintList(reqVO, pageNum, pageSize);
     }
 
     @Operation(summary = "添加印刷品")
-    @PostMapping("/add")
-    public void addPrint(@Parameter(description = "新增参数实体") PrintInfoVO infoVO,
+    @PostMapping("")
+    public void addPrint(@Parameter(description = "新增参数实体") @RequestBody PrintInfoVO infoVO,
                          @Parameter(hidden = true) @UserId Integer userId) {
         printService.addPrint(infoVO, userId);
     }
@@ -73,8 +75,8 @@ public class PrintController {
     }
 
     @Operation(summary = "修改印刷品")
-    @PostMapping("/update")
-    public void updatePrint(@Parameter(description = "新增参数实体") PrintInfoVO infoVO,
+    @PutMapping("")
+    public void updatePrint(@Parameter(description = "新增参数实体") @RequestBody PrintInfoVO infoVO,
                             @Parameter(hidden = true) @UserId Integer userId) {
         printService.updatePrint(infoVO, userId);
     }
@@ -99,21 +101,29 @@ public class PrintController {
 
     @Operation(summary = "导入")
     @PostMapping(value = "/import", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public void printImport(@RequestPart(required = false, value = "file") MultipartFile file, AtomicLong printId, AtomicInteger type) {
+    public String printImport(@RequestPart(required = false, value = "file") MultipartFile file,
+                              @Parameter(description = "id") Long printId,
+                              @Parameter(description = "类型") Integer type) {
+
+        AtomicLong printIds = new AtomicLong();
+        printIds.set(printId);
+        AtomicInteger types = new AtomicInteger();
+        types.set(type);
         long begin = System.currentTimeMillis();
         try {
             EasyExcel.read(file.getInputStream(), PrintImportVO.class,
-                    new PrintListener(printService, printId, type)).sheet().headRowNumber(2).doRead();
+                    new PrintListener(printService, printIds, types)).sheet().doRead();
         } catch (IOException | NumberFormatException | NullPointerException e) {
             log.error(e.getMessage(), e);
+            throw new PublicityException(PublicityErrorCode.INPUT_DATA_ERROR);
         }
         log.info("导入成功，总共耗时：" + (System.currentTimeMillis() - begin) / 1000 + "s");
+        return printService.getImportDataId();
     }
 
     @Operation(summary = "上传附件")
     @PostMapping(value = "/upload", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public FileVO uploadPrintFile(@RequestPart(required = false, value = "file") MultipartFile file) {
-
         return fileApi.upload(file, FileType.PUBLICITY_PRINT_FILE.value());
     }
 
@@ -121,6 +131,7 @@ public class PrintController {
     @PostMapping("/to-approve")
     public void toApprove(@RequestBody PrintInitVO initVO,
                           @Parameter(hidden = true) @UserId Integer userId) {
+        initVO.setUserId(userId);
         printService.toApprove(initVO);
     }
 
@@ -134,6 +145,12 @@ public class PrintController {
     @GetMapping("/{id}")
     public PrintInfoVO getPrint(@PathVariable Long id) {
         return printService.getPrint(id);
+    }
+
+    @Operation(summary = "获取excel导入数据")
+    @GetMapping("/materials")
+    List<PrintMaterials> getMaterialsList(@Parameter(description = "id") String uuid) {
+        return printService.getPrintMaterialsList(uuid);
     }
 }
 
