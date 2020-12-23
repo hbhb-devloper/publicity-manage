@@ -56,7 +56,6 @@ public class MaterialsFlowServiceImpl implements MaterialsFlowService {
     private MaterialsNoticeService noticeService;
 
 
-
     @Override
     public void insertBatch(List<MaterialsFlow> pictureFlowList) {
 
@@ -114,14 +113,6 @@ public class MaterialsFlowServiceImpl implements MaterialsFlowService {
 
         // 1.先获取流程流转的当前节点
         List<FlowNodeOperationVO> voList = new ArrayList<>();
-        List<String> flowNodeIds = new ArrayList<>();
-        flowNodes.forEach(flowNode -> {
-            voList.add(FlowNodeOperationVO.builder()
-                    .flowNodeId(flowNode.getFlowNodeId())
-                    .operation(flowNode.getOperation())
-                    .build());
-            flowNodeIds.add(flowNode.getFlowNodeId());
-        });
         // 当前节点id
         String currentNodeId = getCurrentNode(voList);
         if (!StringUtils.isEmpty(currentNodeId)) {
@@ -135,10 +126,6 @@ public class MaterialsFlowServiceImpl implements MaterialsFlowService {
                 if (flowRoleIds.contains(currentNode.getAssigner())) {
                     flowNodes.forEach(
                             flowNode -> list.add(buildFlowNode(flowNode, currentNodeId, 2, materialsFlowName)));
-                    // // 2-2-c.如果是审批人，且为收账员
-                } else if (isLastNode(currentNodeId, flowNodeIds)) {
-                    flowNodes.forEach(
-                            flowNode -> list.add(buildFlowNode(flowNode, currentNodeId, 3, materialsFlowName)));
                 } else {
                     // 2-2-b.如果是审批人，但不是分配者
                     flowNodes.forEach(
@@ -239,13 +226,6 @@ public class MaterialsFlowServiceImpl implements MaterialsFlowService {
                 operationHidden = !isCurrentNode;
                 suggestionReadOnly = !isCurrentNode;
                 inputHidden = !isCurrentNode;
-                break;
-            // 审批节点（收账员）
-            case 3:
-                approverReadOnly = isCurrentNode;
-                operationHidden = !isCurrentNode;
-                suggestionReadOnly = !isCurrentNode;
-                inputHidden = isCurrentNode;
                 break;
             // 默认只读
             default:
