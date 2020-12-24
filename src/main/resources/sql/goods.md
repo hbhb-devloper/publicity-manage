@@ -84,7 +84,7 @@ selectSummaryUnitByType
             and ad.state in (1,2)
             and g.mold = 0
                     -- @if(isNotEmpty(unitId)){
-                         and a.unit_id = #{unitId}
+                         and g.unit_id = #{unitId}
                     -- @}
                     -- @if(isNotEmpty(batchNum)){
                          and a.batch_num = #{batchNum}

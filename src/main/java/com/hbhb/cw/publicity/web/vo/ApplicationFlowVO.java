@@ -23,7 +23,7 @@ public class ApplicationFlowVO implements Serializable {
     private Long flowRoleId;
     private String approverRole;
     private String nickName;
-    private Integer approver;
+    private Integer userId;
     private Integer operation;
     private String suggestion;
     private Boolean controlAccess;

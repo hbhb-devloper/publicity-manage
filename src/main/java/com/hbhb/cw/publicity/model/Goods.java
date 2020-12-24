@@ -5,6 +5,7 @@ import java.util.Date;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -12,6 +13,7 @@ import lombok.NoArgsConstructor;
  * @author wangxiaogang
  */
 @Data
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class Goods implements Serializable {
@@ -32,11 +34,6 @@ public class Goods implements Serializable {
      */
     @Schema(description = "宣传产品")
     private String goodsName;
-    /**
-     * 宣传编号
-     */
-    @Schema(description = "宣传编号")
-    private String goodsNum;
     /**
      * 物料审核人
      */
@@ -70,7 +67,7 @@ public class Goods implements Serializable {
     /**
      * 是否有编号
      */
-    @Schema(description = "是否又编号")
+    @Schema(description = "是否有编号")
     private Boolean hasNum;
     /**
      * 是否使用

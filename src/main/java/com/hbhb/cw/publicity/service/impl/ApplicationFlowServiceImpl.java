@@ -1,11 +1,11 @@
 package com.hbhb.cw.publicity.service.impl;
 
 import com.alibaba.excel.util.StringUtils;
+import com.hbhb.api.core.bean.SelectVO;
 import com.hbhb.core.bean.BeanConverter;
-import com.hbhb.cw.flowcenter.vo.FlowApproverVO;
-import com.hbhb.cw.flowcenter.vo.FlowOperationVO;
-import com.hbhb.cw.flowcenter.vo.FlowRoleResVO;
-import com.hbhb.cw.flowcenter.vo.FlowSuggestionVO;
+import com.hbhb.cw.flowcenter.vo.NodeApproverVO;
+import com.hbhb.cw.flowcenter.vo.NodeOperationVO;
+import com.hbhb.cw.flowcenter.vo.NodeSuggestionVO;
 import com.hbhb.cw.publicity.enums.OperationState;
 import com.hbhb.cw.publicity.mapper.ApplicationFlowMapper;
 import com.hbhb.cw.publicity.model.ApplicationFlow;
@@ -61,8 +61,17 @@ public class ApplicationFlowServiceImpl implements ApplicationFlowService {
 
     @Override
     public void updateBatchByNodeId(List<ApplicationFlowNodeVO> approvers, String batchNum) {
+        List<ApplicationFlow> list = new ArrayList<>();
+        for (ApplicationFlowNodeVO approver : approvers) {
+            list.add(ApplicationFlow.builder()
+                    .batchNum(batchNum)
+                    .flowNodeId(approver.getFlowNodeId())
+                    .userId(approver.getUserId())
+                    .id(approver.getId())
+                    .build());
+        }
         // 更新各节点审批人
-        applicationFlowMapper.updateBatchByNodeId(approvers, batchNum);
+        applicationFlowMapper.updateBatchTempById(list);
     }
 
     @Override
@@ -74,8 +83,12 @@ public class ApplicationFlowServiceImpl implements ApplicationFlowService {
     public List<ApplicationFlowInfoVO> getInfoByBatchNum(String batchNum, Integer userId) {
         List<ApplicationFlowInfoVO> list = new ArrayList<>();
         // 查询流程的所有节点
-        List<ApplicationFlow> applicationFlows= applicationFlowMapper.createLambdaQuery().andEq(ApplicationFlow::getBatchNum, batchNum).select();
+        List<ApplicationFlow> applicationFlows= applicationFlowMapper.createLambdaQuery()
+                .andEq(ApplicationFlow::getBatchNum, batchNum).select();
         List<ApplicationFlowVO> flowNodes = BeanConverter.copyBeanList(applicationFlows, ApplicationFlowVO.class);
+        for (ApplicationFlowVO flowNode : flowNodes) {
+            flowNode.setNickName(sysUserApiExp.getUserInfoById(flowNode.getUserId()).getNickName());
+        }
         // 通过userId得到nickName
         UserInfo userInfo = sysUserApiExp.getUserInfoById(userId);
         // 如果流程已结束，参与流程的角色登入
@@ -86,12 +99,18 @@ public class ApplicationFlowServiceImpl implements ApplicationFlowService {
                     ApplicationFlowInfoVO result = new ApplicationFlowInfoVO();
                     BeanConverter.copyProp(flowNode, result);
                     result.setApproverRole(flowNode.getRoleDesc());
-                    result.setApprover(FlowApproverVO.builder()
-                            .value(flowNode.getApprover()).readOnly(true).build());
-                    result.setOperation(FlowOperationVO.builder()
-                            .value(flowNode.getOperation()).hidden(true).build());
-                    result.setSuggestion(FlowSuggestionVO.builder()
-                            .value(flowNode.getSuggestion()).readOnly(true).build());
+                    result.setApprover(NodeApproverVO.builder()
+                            .value(flowNode.getUserId())
+                            .readOnly(true)
+                            .build());
+                    result.setOperation(NodeOperationVO.builder()
+                            .value(flowNode.getOperation())
+                            .hidden(true)
+                            .build());
+                    result.setSuggestion(NodeSuggestionVO.builder()
+                            .value(flowNode.getSuggestion())
+                            .readOnly(true)
+                            .build());
                     result.setApproverSelect(getApproverSelectList(flowNode.getFlowNodeId(),
                            batchNum));
                     list.add(result);
@@ -123,7 +142,7 @@ public class ApplicationFlowServiceImpl implements ApplicationFlowService {
         if (!StringUtils.isEmpty(currentNodeId)) {
             ApplicationFlowVO currentNode = flowNodeMap.get(currentNodeId);
             // 2.判断登录用户是否为该审批人
-            if (!userId.equals(currentNode.getApprover())) {
+            if (!userId.equals(currentNode.getUserId())) {
                 // 2-1.如果不是，则所有节点信息全部为只读
                 flowNodes.forEach(flowNode -> list.add(buildFlowNode(flowNode, currentNodeId, 0)));
             } else {
@@ -142,14 +161,14 @@ public class ApplicationFlowServiceImpl implements ApplicationFlowService {
         for (ApplicationFlowInfoVO applicationFlowInfoVO : list) {
             if (userId.equals(applicationFlowInfoVO.getApprover().getValue())) {
                 ArrayList<Integer> userIds = new ArrayList<>();
-                List<FlowRoleResVO> approverSelect = applicationFlowInfoVO.getApproverSelect();
-                for (FlowRoleResVO flowRoleResVO : approverSelect) {
-                    userIds.add(flowRoleResVO.getUserId());
+                List<SelectVO> approverSelect = applicationFlowInfoVO.getApproverSelect();
+                for (SelectVO flowRoleResVO : approverSelect) {
+                    userIds.add(Math.toIntExact(flowRoleResVO.getId()));
                 }
                 if (!userIds.contains(userId)) {
-                    FlowRoleResVO flowRoleResVO = new FlowRoleResVO();
-                    flowRoleResVO.setUserId(userId);
-                    flowRoleResVO.setNickName(userInfo.getNickName());
+                    SelectVO flowRoleResVO = new SelectVO();
+                    flowRoleResVO.setId(Long.valueOf(userId));
+                    flowRoleResVO.setLabel(userInfo.getNickName());
                     approverSelect.add(flowRoleResVO);
                     applicationFlowInfoVO.setApproverSelect(approverSelect);
                 }
@@ -159,11 +178,11 @@ public class ApplicationFlowServiceImpl implements ApplicationFlowService {
         for (ApplicationFlowInfoVO infoVO : list) {
             if (!infoVO.getFlowNodeId().equals(currentNodeId)
                     && !infoVO.getOperation().getValue().equals(OperationState.UN_EXECUTED.value())) {
-                infoVO.setApprover(FlowApproverVO.builder()
+                infoVO.setApprover(NodeApproverVO.builder()
                         .value(infoVO.getApprover().getValue()).readOnly(true).build());
-                infoVO.setOperation(FlowOperationVO.builder()
+                infoVO.setOperation(NodeOperationVO.builder()
                         .value(infoVO.getOperation().getValue()).hidden(true).build());
-                infoVO.setSuggestion(FlowSuggestionVO.builder()
+                infoVO.setSuggestion(NodeSuggestionVO.builder()
                         .value(infoVO.getSuggestion().getValue()).readOnly(true).build());
                 infoVO.setApproverSelect(getApproverSelectList(infoVO.getFlowNodeId(),
                       batchNum));
@@ -177,14 +196,18 @@ public class ApplicationFlowServiceImpl implements ApplicationFlowService {
     /**
      * 查询审批人下拉框值
      */
-    private List<FlowRoleResVO> getApproverSelectList(String flowNodeId, String batchNum) {
-        List<FlowRoleResVO> flowRoleResVOS = applicationFlowMapper
-                .selectNodeByNodeId(flowNodeId, batchNum);
-        for (FlowRoleResVO flowRoleResVO : flowRoleResVOS) {
-            UserInfo userInfoById = sysUserApiExp.getUserInfoById(flowRoleResVO.getUserId());
-            flowRoleResVO.setNickName(userInfoById.getNickName());
-        }
-        return flowRoleResVOS;
+    private List<SelectVO> getApproverSelectList(String flowNodeId, String batchNum) {
+        Integer roleId = applicationFlowMapper
+                .selectNodeByNodeId(flowNodeId,batchNum);
+            // 通过角色id得到用户id
+        List<Integer> userIds = flowRoleUserApiExp.getUserIdByRoleId(Long.valueOf(roleId));
+        Map<Integer, String> userMap = sysUserApiExp.getUserMapById(userIds);
+        return userMap.entrySet().stream().map(item ->
+                SelectVO.builder()
+                        .id(Long.valueOf(item.getKey()))
+                        .label(item.getValue())
+                        .build())
+                .collect(Collectors.toList());
     }
 
     /**
@@ -236,14 +259,19 @@ public class ApplicationFlowServiceImpl implements ApplicationFlowService {
                 operationHidden = true;
                 suggestionReadOnly = true;
         }
-        result.setApprover(FlowApproverVO.builder()
-                .value(flowNode.getApprover()).readOnly(approverReadOnly).build());
-        result.setOperation(FlowOperationVO.builder()
-                .value(flowNode.getOperation()).hidden(operationHidden).build());
-        result.setSuggestion(FlowSuggestionVO.builder()
-                .value(flowNode.getSuggestion()).readOnly(suggestionReadOnly).build());
-        result.setApproverSelect(getApproverSelectList(flowNode.getFlowNodeId(),
-               flowNode.getBatchNum()));
+        result.setApprover(NodeApproverVO.builder()
+                .value(flowNode.getUserId())
+                .readOnly(approverReadOnly)
+                .build());
+        result.setOperation(NodeOperationVO.builder()
+                .value(flowNode.getOperation())
+                .hidden(operationHidden)
+                .build());
+        result.setSuggestion(NodeSuggestionVO.builder()
+                .value(flowNode.getSuggestion())
+                .readOnly(suggestionReadOnly)
+                .build());
+        result.setApproverSelect(getApproverSelectList(flowNode.getFlowNodeId(), flowNode.getBatchNum()));
         result.setApproverRole(flowNode.getRoleDesc());
         return result;
     }

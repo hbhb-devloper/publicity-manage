@@ -176,10 +176,14 @@ public class ApplicationServiceImpl implements ApplicationService {
             map.put(goods.getId(), goods.getUnitId());
         }
         for (int i = 0; i < list.size(); i++) {
+            Long applyAmount = list.get(i).getApplyAmount();
+            if (applyAmount==null||applyAmount==0L){
+                continue;
+            }
             ApplicationDetail applicationDetail = new ApplicationDetail();
             applicationDetail.setApplicationId(applicationRes.getId());
-            applicationDetail.setApplyAmount(list.get(i).getApplyAmount());
-            applicationDetail.setModifyAmount(list.get(i).getApplyAmount());
+            applicationDetail.setApplyAmount(applyAmount);
+            applicationDetail.setModifyAmount(applyAmount);
             applicationDetail.setGoodsId(list.get(i).getGoodsId());
             applicationDetail.setState(0);
             applicationDetail.setApprovedState(10);

@@ -72,7 +72,7 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
     }
 
     @Override
-    public void saveGoods(GoodsReqVO goodsReqVO) {
+    public void  saveGoods(GoodsReqVO goodsReqVO) {
         goodsReqVO.setHallId(null);
         List<Long> applicationIds = getApplicationIds(goodsReqVO);
         applicationMapper.createLambdaQuery()
@@ -151,12 +151,16 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
         if (goodsReqVO.getTime() == null) {
             // 通过时间判断批次
             goodsSetting = goodsSettingService.getSetByDate(DateUtil.dateToString(new Date()));
+            if (goodsSetting == null) {
+                return new ArrayList<>();
+            }
             goodsReqVO.setTime(goodsSetting.getDeadline());
         } else {
             goodsSetting = goodsSettingService.getByCond(goodsReqVO.getTime(), goodsReqVO.getGoodsIndex());
-        }
-        if (goodsSetting == null) {
-            return new ArrayList<>();
+            if (goodsSetting == null) {
+                return new ArrayList<>();
+            }
+            goodsReqVO.setTime(goodsSetting.getDeadline());
         }
         if (goodsReqVO.getGoodsIndex() == null) {
             goodsReqVO.setGoodsIndex(goodsSetting.getGoodsIndex());
@@ -189,13 +193,17 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
         if (goodsReqVO.getTime() == null) {
             // 通过时间判断批次
             goodsSetting = goodsSettingService.getSetByDate(DateUtil.dateToString(new Date()));
+            if (goodsSetting == null) {
+                return new ArrayList<SummaryGoodsVO>();
+            }
             goodsReqVO.setTime(goodsSetting.getDeadline());
         }
         else {
             goodsSetting = goodsSettingService.getByCond(goodsReqVO.getTime(), goodsReqVO.getGoodsIndex());
-        }
-        if (goodsSetting == null) {
-            return new ArrayList<SummaryGoodsVO>();
+            if (goodsSetting == null) {
+                return new ArrayList<SummaryGoodsVO>();
+            }
+            goodsReqVO.setTime(goodsSetting.getDeadline());
         }
         if (goodsReqVO.getGoodsIndex() == null) {
             goodsReqVO.setGoodsIndex(goodsSetting.getGoodsIndex());
@@ -229,18 +237,22 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
         if (goodsReqVO.getTime() == null) {
             // 通过时间判断批次
             goodsSetting = goodsSettingService.getSetByDate(DateUtil.dateToString(new Date()));
+            if (goodsSetting == null || goodsSetting.getDeadline()==null) {
+                return false;
+            }
             goodsReqVO.setTime(goodsSetting.getDeadline());
         }
         else {
             goodsSetting = goodsSettingService.getByCond(goodsReqVO.getTime(), goodsReqVO.getGoodsIndex());
-        }
-        if (goodsSetting == null || goodsSetting.getDeadline()==null) {
-            return false;
+            if (goodsSetting == null || goodsSetting.getDeadline()==null) {
+                return false;
+            }
+            goodsReqVO.setTime(goodsSetting.getDeadline());
         }
         if (goodsReqVO.getGoodsIndex() == null) {
             goodsReqVO.setGoodsIndex(goodsSetting.getGoodsIndex());
         }
-        String batchNum = DateUtil.dateToString(DateUtil.stringToDate(goodsReqVO.getTime()), "yyyyMM") + goodsReqVO.getGoodsIndex();
+        String batchNum = DateUtil.dateToString(DateUtil.stringToDate(goodsSetting.getDeadline()), "yyyyMM") + goodsReqVO.getGoodsIndex();
 
         // 得到第几次，判断此次是否结束。如果结束提交置灰
         if (goodsSetting.getIsEnd() != null
@@ -264,7 +276,6 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
         }
         return false;
     }
-
 
     /**
      * 物料确认状态

@@ -1,9 +1,9 @@
 package com.hbhb.cw.publicity.web.vo;
 
-import com.hbhb.cw.flowcenter.vo.FlowApproverVO;
-import com.hbhb.cw.flowcenter.vo.FlowOperationVO;
-import com.hbhb.cw.flowcenter.vo.FlowRoleResVO;
-import com.hbhb.cw.flowcenter.vo.FlowSuggestionVO;
+import com.hbhb.api.core.bean.SelectVO;
+import com.hbhb.cw.flowcenter.vo.NodeApproverVO;
+import com.hbhb.cw.flowcenter.vo.NodeOperationVO;
+import com.hbhb.cw.flowcenter.vo.NodeSuggestionVO;
 
 import java.io.Serializable;
 import java.util.List;
@@ -43,13 +43,13 @@ public class ApplicationFlowInfoVO implements Serializable {
     private String nickName;
 
     @Schema(description = "审批人")
-    private FlowApproverVO approver;
+    private NodeApproverVO approver;
 
     @Schema(description = "操作按钮（同意/拒绝）")
-    private FlowOperationVO operation;
+    private NodeOperationVO operation;
 
     @Schema(description = "审批意见")
-    private FlowSuggestionVO suggestion;
+    private NodeSuggestionVO suggestion;
 
     @Schema(description = "是否可以填写（0-可填写、1-不可填写）")
     private Boolean input;
@@ -61,7 +61,10 @@ public class ApplicationFlowInfoVO implements Serializable {
     private Boolean isJoin;
 
     @Schema(description = "审批人下拉框选项")
-    private List<FlowRoleResVO> approverSelect;
+    private List<SelectVO> approverSelect;
+
+    @Schema(description = "红字名称nickName")
+    private List<SelectVO> nickNameSelect;
 
     @Schema(description = "更新时间")
     private String updateTime;

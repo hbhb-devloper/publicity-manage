@@ -116,20 +116,28 @@ public class LibraryServiceImpl implements LibraryService {
             if (libraryAddVO.getUnitId() == null || libraryAddVO.getGoodsName() == null) {
                 throw new PublicityException(PublicityErrorCode.NOT_FILLED_IN);
             }
+            // 得到其父类
+            List<Goods> actGoods = goodsMapper.createLambdaQuery()
+                    .andEq(Goods::getId, libraryAddVO.getParentId()).select();
+            // 判断物料所在位置是否为第三层
+            if (actGoods != null && actGoods.size() != 0 && actGoods.get(0).getParentId() != null) {
+                throw new PublicityException(PublicityErrorCode.NOT_ADD_SECONDARY_DIRECTORY);
+            }
         }
         // 如果为产品
         else {
             if (libraryAddVO.getParentId() == null) {
                 throw new PublicityException(PublicityErrorCode.PLEASE_ADD_SECONDARY_DIRECTORY);
             }
-            // 判断物料所在位置是否为第三层
+            // 得到其父类，有且只有一个
             List<Goods> actGoods = goodsMapper.createLambdaQuery()
                     .andEq(Goods::getId, libraryAddVO.getParentId()).select();
+            // 判断物料所在位置是否为第三层
             if (actGoods == null || actGoods.size() == 0 || actGoods.get(0).getParentId() == null) {
                 throw new PublicityException(PublicityErrorCode.PLEASE_ADD_SECONDARY_DIRECTORY);
             }
             // 判断必填项是否添加
-            if (libraryAddVO.getGoodsNum() == null || libraryAddVO.getType() == null
+            if (libraryAddVO.getType() == null
                     || libraryAddVO.getChecker() == null || libraryAddVO.getUnit() == null
                     || libraryAddVO.getSize() == null || libraryAddVO.getPaper() == null) {
                 throw new PublicityException(PublicityErrorCode.NOT_FILLED_IN);
@@ -149,11 +157,27 @@ public class LibraryServiceImpl implements LibraryService {
             if (libraryAddVO.getUnitId() == null || libraryAddVO.getGoodsName() == null) {
                 throw new PublicityException(PublicityErrorCode.NOT_FILLED_IN);
             }
+            // 修改改活动下所有的子类状态
+            goodsMapper.createLambdaQuery()
+                    .andEq(Goods::getParentId,libraryAddVO.getId())
+                    .updateSelective(Goods.builder().state(libraryAddVO.getState()).build());
+            // 获取子类信息得到子类id
+            List<Goods> goodsList = goodsMapper.createLambdaQuery()
+                    .andEq(Goods::getParentId, libraryAddVO.getId())
+                    .select();
+            List<Long> goodsIds = new ArrayList<>();
+            for (Goods goods : goodsList) {
+                goodsIds.add(goods.getId());
+            }
+            // 修改子类下所有状态
+            goodsMapper.createLambdaQuery()
+                    .andIn(Goods::getParentId,goodsIds)
+                    .updateSelective(Goods.builder().state(libraryAddVO.getState()).build());
         }
         // 如果为产品
         else {
             // 判断必填项是否添加
-            if (libraryAddVO.getGoodsName() == null || libraryAddVO.getGoodsNum() == null || libraryAddVO.getType() == null
+            if (libraryAddVO.getGoodsName() == null || libraryAddVO.getType() == null
                     || libraryAddVO.getChecker() == null || libraryAddVO.getUnitId() == null || libraryAddVO.getSize() == null || libraryAddVO.getPaper() == null
                     || libraryAddVO.getUpdateBy() == null || !libraryAddVO.getState()) {
                 throw new PublicityException(PublicityErrorCode.NOT_FILLED_IN);

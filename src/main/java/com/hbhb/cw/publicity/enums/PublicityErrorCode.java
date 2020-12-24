@@ -39,12 +39,14 @@ public enum PublicityErrorCode {
     NOT_FILLED_IN("84003", "not.filled.in"),
     // 相关流程异常
     NOT_RELEVANT_FLOW("84004","not.relevant.flow"),
-    // 请在二级目录添加
+    // 请在二级目录下添加物料
     PLEASE_ADD_SECONDARY_DIRECTORY("84005","please.add.secondary.directory"),
     // 无权发起审批
     NOT_POWER_TO_APPROVER("84006","not.power.to.approver"),
     // 没有流程再改流程类型下
     NOT_HAVE_FLOW("84007","not.have.flow"),
+    // 无法在二级目录下添加活动
+    NOT_ADD_SECONDARY_DIRECTORY("84005","not.add.secondary.directory"),
     ;
 
 

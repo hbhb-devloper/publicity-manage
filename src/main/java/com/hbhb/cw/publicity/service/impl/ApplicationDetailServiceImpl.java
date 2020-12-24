@@ -1,6 +1,5 @@
 package com.hbhb.cw.publicity.service.impl;
 
-import com.hbhb.api.core.bean.SelectVO;
 import com.hbhb.core.utils.DateUtil;
 import com.hbhb.cw.flowcenter.model.Flow;
 import com.hbhb.cw.flowcenter.vo.FlowNodePropVO;
@@ -176,10 +175,10 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
     @Override
     public List<UnitGoodsStateVO> getUnitGoodsStateList(GoodsReqVO goodsReqVO) {
         // 通过流程角色名称得到该角色用户
-        List<SelectVO> userVOList = flowRoleUserApiExp.getUserIdByRoleName("物料审核员");
+        List<Integer> userVOList = flowRoleUserApiExp.getUserIdByRoleName("物料审核员");
         List<Integer> userList = new ArrayList<>();
-        for (SelectVO selectVO : userVOList) {
-            userList.add(Math.toIntExact(selectVO.getId()));
+        for (Integer userId: userVOList) {
+            userList.add(Math.toIntExact(userId));
         }
         List<UserInfo> userInfoList = sysUserApiExp.getUserInfoBatch(userList);
         Map<Integer, String> userMap = userInfoList.stream()
@@ -359,7 +358,6 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void toApprover(GoodsApproveVO goodsApproveVO, Integer userId) {
-        userId = 27;
         GoodsSetting goodsSetting = null;
         if (goodsApproveVO.getTime() != null && goodsApproveVO.getGoodsIndex() == null) {
             return;
@@ -367,10 +365,10 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         if (goodsApproveVO.getTime() == null) {
             // 通过时间判断批次
             goodsSetting = goodsSettingService.getSetByDate(DateUtil.dateToString(new Date()));
-            goodsApproveVO.setTime(goodsSetting.getDeadline());
         }  else {
             goodsSetting = goodsSettingService.getByCond(goodsApproveVO.getTime(), goodsApproveVO.getGoodsIndex());
         }
+        goodsApproveVO.setTime(goodsSetting.getDeadline());
         if (goodsApproveVO.getGoodsIndex() == null) {
             goodsApproveVO.setGoodsIndex(goodsSetting.getGoodsIndex());
         }
@@ -499,7 +497,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         applicationFlowService.updateById(ApplicationFlow.builder()
                 .operation(operation)
                 .suggestion(approveVO.getSuggestion())
-                .updateTime(new Date())
+                .updateTime(DateUtil.dateToString(new Date()))
                 .id(approveVO.getId())
                 .batchNum(batchNum)
                 .build());
@@ -590,7 +588,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
             list.add(ApplicationFlow.builder()
                     .flowNodeId(flowPropVO.getFlowNodeId())
                     .batchNum(batchNum)
-                    .userId(userId)
+                    .userId(flowPropVO.getUserId())
                     .flowRoleId(flowPropVO.getFlowRoleId())
                     .roleDesc(flowPropVO.getRoleDesc())
                     .controlAccess(flowPropVO.getControlAccess())
