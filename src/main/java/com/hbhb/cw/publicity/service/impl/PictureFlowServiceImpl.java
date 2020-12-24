@@ -214,20 +214,20 @@ public class PictureFlowServiceImpl implements PictureFlowService {
 
 
     @Override
-    public FlowWrapperVO getInvoiceNodeList(Long PictureId, Integer userId) {
+    public FlowWrapperVO getInvoiceNodeList(Long pictureId, Integer userId) {
         FlowWrapperVO wrapper = new FlowWrapperVO();
         List<NodeInfoVO> nodes = new ArrayList<>();
         UserInfo userInfo = userApi.getUserInfoById(userId);
 
         // 查询流程的所有节点
-        List<PictureFlowVO> flowNodes = this.getFlowNodes(PictureId);
+        List<PictureFlowVO> flowNodes = this.getFlowNodes(pictureId);
         Map<String, PictureFlowVO> flowNodeMap = flowNodes.stream().collect(
                 Collectors.toMap(PictureFlowVO::getFlowNodeId, Function.identity()));
 
         // 签报流程名称 = 印刷品画面单位名称 + 流程类型名称
         String flowName = flowApi.getNameByNodeId(flowNodes.get(0).getFlowNodeId());
-        Picture Picture = pictureMapper.single(PictureId);
-        wrapper.setName(Picture.getPictureName() + flowName);
+        Picture picture = pictureMapper.single(pictureId);
+        wrapper.setName(picture.getPictureName() + flowName);
 
         // 1.先获取流程流转的当前节点<currentNode>
         // 2.再判断<loginUser>是否为<currentNode>的审批人
@@ -416,13 +416,13 @@ public class PictureFlowServiceImpl implements PictureFlowService {
 
 
     @Override
-    public void deletePictureFlow(Long PictureId) {
-        flowMapper.createLambdaQuery().andEq(PictureFlow::getPictureId, PictureId).delete();
+    public void deletePictureFlow(Long pictureId) {
+        flowMapper.createLambdaQuery().andEq(PictureFlow::getPictureId, pictureId).delete();
     }
 
     @Override
-    public void insertBatch(List<PictureFlow> PictureFlowList) {
-        flowMapper.insertBatch(PictureFlowList);
+    public void insertBatch(List<PictureFlow> pictureFlowList) {
+        flowMapper.insertBatch(pictureFlowList);
     }
 
     @Override

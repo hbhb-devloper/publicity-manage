@@ -1,52 +1,33 @@
 package com.hbhb.cw.publicity.service.impl;
 
+import com.hbhb.api.core.bean.SelectVO;
 import com.hbhb.core.bean.BeanConverter;
-import com.hbhb.cw.flowcenter.vo.FlowApproveInfoVO;
-import com.hbhb.cw.flowcenter.vo.FlowApproveVO;
-import com.hbhb.cw.flowcenter.vo.FlowApproverVO;
-import com.hbhb.cw.flowcenter.vo.FlowOperationVO;
-import com.hbhb.cw.flowcenter.vo.FlowRoleResVO;
-import com.hbhb.cw.flowcenter.vo.FlowSuggestionVO;
-import com.hbhb.cw.publicity.enums.FlowNodeNoticeState;
-import com.hbhb.cw.publicity.enums.NodeState;
-import com.hbhb.cw.publicity.enums.OperationState;
+import com.hbhb.cw.flowcenter.enums.FlowNodeNoticeTemp;
+import com.hbhb.cw.flowcenter.enums.FlowOperationType;
+import com.hbhb.cw.flowcenter.enums.FlowState;
+import com.hbhb.cw.flowcenter.vo.*;
 import com.hbhb.cw.publicity.enums.PublicityErrorCode;
-import com.hbhb.cw.publicity.enums.TemplateContent;
 import com.hbhb.cw.publicity.exception.PublicityException;
 import com.hbhb.cw.publicity.mapper.PrintFlowMapper;
+import com.hbhb.cw.publicity.mapper.PrintMapper;
+import com.hbhb.cw.publicity.mapper.PrintNoticeMapper;
+import com.hbhb.cw.publicity.model.Print;
 import com.hbhb.cw.publicity.model.PrintFlow;
-import com.hbhb.cw.publicity.rpc.FlowApiExp;
-import com.hbhb.cw.publicity.rpc.FlowNoticeApiExp;
-import com.hbhb.cw.publicity.rpc.FlowRoleUserApiExp;
-import com.hbhb.cw.publicity.rpc.FlowTypeApiExp;
-import com.hbhb.cw.publicity.rpc.SysUserApiExp;
+import com.hbhb.cw.publicity.model.PrintNotice;
+import com.hbhb.cw.publicity.rpc.*;
 import com.hbhb.cw.publicity.service.MailService;
 import com.hbhb.cw.publicity.service.PrintFlowService;
-import com.hbhb.cw.publicity.service.PrintNoticeService;
-import com.hbhb.cw.publicity.service.PrintService;
-import com.hbhb.cw.publicity.web.vo.FlowNodeOperationVO;
-import com.hbhb.cw.publicity.web.vo.PrintApproveVO;
 import com.hbhb.cw.publicity.web.vo.PrintFlowVO;
-import com.hbhb.cw.publicity.web.vo.PrintInfoVO;
-import com.hbhb.cw.publicity.web.vo.PrintNoticeVO;
 import com.hbhb.cw.systemcenter.vo.UserInfo;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import javax.annotation.Resource;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import javax.annotation.Resource;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author wangxiaogang
@@ -55,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PrintFlowServiceImpl implements PrintFlowService {
     @Resource
-    private PrintService printService;
+    private PrintMapper printMapper;
     @Resource
     private PrintFlowMapper flowMapper;
     @Resource
@@ -73,7 +54,378 @@ public class PrintFlowServiceImpl implements PrintFlowService {
     @Resource
     private MailService mailService;
     @Resource
-    private PrintNoticeService noticeService;
+    private PrintNoticeMapper noticeMapper;
+    @Resource
+    private FlowRoleApiExp roleApi;
+
+    @Override
+    public void approve(FlowApproveVO approveVO, Integer userId) {
+        // 查询当前节点信息
+        PrintFlow currentNode = flowMapper.single(approveVO.getId());
+        // 校验审批人是否为本人
+        if (!currentNode.getUserId().equals(userId)) {
+            throw new PublicityException(PublicityErrorCode.LOCK_OF_APPROVAL_ROLE);
+        }
+
+        Date now = new Date();
+        UserInfo userInfo = userApi.getUserInfoById(userId);
+        // 当前节点id
+        String currentNodeId = currentNode.getFlowNodeId();
+        // 所有审批人
+        List<NodeApproverReqVO> approvers = approveVO.getApprovers();
+        // 审批人map（节点id <=> 审批人id）
+        Map<String, Integer> approverMap = approvers.stream()
+                .collect(Collectors.toMap(NodeApproverReqVO::getFlowNodeId, NodeApproverReqVO::getUserId));
+        // 所有节点id
+        List<String> nodeIds = approvers.stream()
+                .map(NodeApproverReqVO::getFlowNodeId).collect(Collectors.toList());
+
+        // 印刷品id
+        Long printId = currentNode.getPrintId();
+
+        Print print = printMapper.single(printId);
+        // 流程名称
+        String flowName = flowApi.getNameByNodeId(nodeIds.get(0));
+        // 流程类型
+        Long flowTypeId = typeApi.getTypeIdByNode(nodeIds.get(0));
+        // 提醒标题 = 印刷品名称_编号_流程名称
+        String title = print.getPrintName() + "_" + print.getPrintNum() + "_" + flowName;
+
+        Integer projectState = null;
+        // 节点操作
+        Integer operation = null;
+        // 流程状态
+        Integer flowState = null;
+
+        // 更新当前节点之前的所有节点提醒状态为已读
+        noticeMapper.updateTemplateById(PrintNotice.builder()
+                .id(printId)
+                .state(1)
+                .build());
+
+        // 同意
+        if (FlowOperationType.AGREE.value().equals(approveVO.getOperation())) {
+            operation = FlowOperationType.AGREE.value();
+            // 1.判断当前是否为最后一个节点
+            // 如果是最后一个节点，则需要更新流程状态
+            if (isLastNode(currentNodeId, nodeIds)) {
+                flowState = FlowState.APPROVED.value();
+            }
+            // 如果不是最后一个节点
+            else {
+                // 当前用户的所有流程角色
+                List<Long> flowRoleIds = roleUserApi.getRoleIdByUserId(userId);
+                // 下一个节点的审批人
+                Integer next = approverMap.get(getNextNode(currentNodeId, nodeIds));
+                // 2.判断当前用户是否为分配者
+                // 2-1.如果是分配者
+                if (flowRoleIds.contains(currentNode.getAssigner())) {
+                    // 校验是否所有节点的审批人已指定
+                    if (approvers.stream().anyMatch(vo -> vo.getUserId() == null)) {
+                        throw new PublicityException(PublicityErrorCode.NOT_ALL_APPROVERS_ASSIGNED);
+                    }
+                    // 更新各节点审批人
+                    flowMapper.updateBatchTempById(approvers.stream().map(vo ->
+                            PrintFlow.builder()
+                                    .id(vo.getId())
+                                    .userId(vo.getUserId())
+                                    .build()).collect(Collectors.toList()));
+                }
+                // 2-2.如果不是分配者
+                else {
+                    // 校验下一个节点的审批人是否已指定
+                    if (next == null) {
+                        throw new PublicityException(PublicityErrorCode.NOT_ALL_APPROVERS_ASSIGNED);
+                    }
+                }
+
+                // 3.保存提醒消息
+                // 3-1.提醒下一个节点的审批人
+                String inform = noticeApi.getInform(currentNodeId, com.hbhb.cw.flowcenter.enums.FlowNodeNoticeState.DEFAULT_REMINDER.value());
+                this.saveNotice(printId, next, userId,
+                        inform.replace(FlowNodeNoticeTemp.TITLE.value(), title), flowTypeId, now);
+                // 3-2.邮件推送
+                if (mailEnable) {
+                    UserInfo nextUser = userApi.getUserInfoById(next);
+                    mailService.postMail(nextUser.getEmail(), nextUser.getNickName(), title);
+                }
+            }
+            // 3-3.提醒发起人
+            String inform = noticeApi.getInform(currentNodeId, com.hbhb.cw.flowcenter.enums.FlowNodeNoticeState.COMPLETE_REMINDER.value());
+            String content = inform.replace(FlowNodeNoticeTemp.TITLE.value(), title)
+                    .replace(FlowNodeNoticeTemp.APPROVE.value(), userInfo.getNickName());
+            this.saveNotice(printId, approvers.get(0).getUserId(), userId, content, flowTypeId, now);
+        }
+        // 拒绝
+        else if (approveVO.getOperation().equals(FlowOperationType.REJECT.value())) {
+            operation = FlowOperationType.REJECT.value();
+            flowState = FlowState.APPROVE_REJECTED.value();
+            // 提醒发起人
+            String inform = noticeApi.getInform(currentNodeId, com.hbhb.cw.flowcenter.enums.FlowNodeNoticeState.REJECT_REMINDER.value());
+            String content = inform.replace(FlowNodeNoticeTemp.TITLE.value(), title)
+                    .replace(FlowNodeNoticeTemp.APPROVE.value(), userInfo.getNickName())
+                    .replace(FlowNodeNoticeTemp.CAUSE.value(), approveVO.getSuggestion());
+            this.saveNotice(printId, approvers.get(0).getUserId(), userId, content, flowTypeId, now);
+        }
+
+        // 更新节点信息
+        flowMapper.updateTemplateById(PrintFlow.builder()
+                .operation(operation)
+                .suggestion(approveVO.getSuggestion())
+                .updateTime(now)
+                .id(approveVO.getId())
+                .build());
+
+        // 更新流程状态
+        if (flowState != null) {
+            printMapper.updateTemplateById(
+                    Print.builder().id(printId).state(flowState).build());
+        }
+    }
+
+    private void saveNotice(Long invoiceId, Integer receiver, Integer userId, String content,
+                            Long flowTypeId, Date now) {
+        noticeMapper.insertTemplate(PrintNotice.builder()
+                .printId(invoiceId)
+                .receiver(receiver)
+                .promoter(userId)
+                .content(content)
+                .flowTypeId(flowTypeId)
+                .createTime(now)
+                .build());
+    }
+
+    /**
+     * 判断当前节点是否为流程中的最后一个节点
+     */
+    private boolean isLastNode(String currentNodeId, List<String> nodeIds) {
+        return currentNodeId.equals(nodeIds.get(nodeIds.size() - 1));
+    }
+
+    /**
+     * 获取当前节点的下一个节点
+     */
+    private String getNextNode(String currentNodeId, List<String> nodeIds) {
+        if (!nodeIds.contains(currentNodeId) || isLastNode(currentNodeId, nodeIds)) {
+            return null;
+        }
+        return nodeIds.get(nodeIds.indexOf(currentNodeId) + 1);
+    }
+
+
+    @Override
+    public FlowWrapperVO getInvoiceNodeList(Long printId, Integer userId) {
+        FlowWrapperVO wrapper = new FlowWrapperVO();
+        List<NodeInfoVO> nodes = new ArrayList<>();
+        UserInfo userInfo = userApi.getUserInfoById(userId);
+
+        // 查询流程的所有节点
+        List<PrintFlowVO> flowNodes = this.getFlowNodes(printId);
+        Map<String, PrintFlowVO> flowNodeMap = flowNodes.stream().collect(
+                Collectors.toMap(PrintFlowVO::getFlowNodeId, Function.identity()));
+
+        // 签报流程名称 = 发票单位名称 + 流程类型名称
+        String flowName = flowApi.getNameByNodeId(flowNodes.get(0).getFlowNodeId());
+        Print print = printMapper.single(printId);
+        wrapper.setName(print.getPrintName() + flowName);
+
+        // 1.先获取流程流转的当前节点<currentNode>
+        // 2.再判断<loginUser>是否为<currentNode>的审批人
+        //   2-1.如果不是，则所有节点信息全部为只读
+        //   2-2.如果是，则判断是否为该流程的分配者
+        //      a.如果不是分配者，则只能编辑当前节点的按钮操作<operation>和意见<suggestion>
+        //      b.如果是分配者，则可以编辑以下：
+        //        当前节点的按钮操作<operation>和意见<suggestion>
+        //        其他节点的审批人<approver>
+        //      c.特殊节点
+
+        // 1.先获取流程流转的当前节点
+        List<NodeOperationReqVO> operations = new ArrayList<>();
+        List<String> flowNodeIds = new ArrayList<>();
+        flowNodes.forEach(flowNode -> {
+            operations.add(NodeOperationReqVO.builder()
+                    .flowNodeId(flowNode.getFlowNodeId())
+                    .operation(flowNode.getOperation())
+                    .build());
+            flowNodeIds.add(flowNode.getFlowNodeId());
+        });
+        // 当前节点id
+        String currentNodeId = getCurrentNode(operations);
+        if (!StringUtils.isEmpty(currentNodeId)) {
+            PrintFlowVO currentNode = flowNodeMap.get(currentNodeId);
+            // 2.判断登录用户是否为当前节点的审批人
+            // 2-1.如果不是，则所有节点信息全部为只读
+            if (!userId.equals(currentNode.getApprover())) {
+                flowNodes.forEach(flowNode -> nodes.add(buildFlowNode(flowNode, currentNodeId, 0)));
+            }
+            // 2-2.如果是，则判断是否为该流程的分配者
+            else {
+                // 用户的所有流程角色
+                List<Long> flowRoleIds = roleUserApi.getRoleIdByUserId(userId);
+                // 2-2-c.特殊节点-收账员（最后一个节点为收账员，需填写部分必填业务字段）
+                if (isLastNode(currentNodeId, flowNodeIds)) {
+                    flowNodes.forEach(flowNode -> nodes.add(buildFlowNode(flowNode, currentNodeId, 3)));
+                }
+                // 2-2-a.当前用户是分配者
+                else if (flowRoleIds.contains(currentNode.getAssigner())) {
+                    flowNodes.forEach(flowNode -> nodes.add(buildFlowNode(flowNode, currentNodeId, 2)));
+                }
+                // 2-2-b.当前用户不是分配者
+                else {
+                    flowNodes.forEach(flowNode -> nodes.add(buildFlowNode(flowNode, currentNodeId, 1)));
+                }
+
+            }
+        }
+        // 解决用户被解除流程角色后，审批人下拉框显示id而非姓名的情况
+        for (NodeInfoVO vo : nodes) {
+            // 如果当前用户是审批人，而该用户已被解除该流程角色时，加上该用户姓名
+            if (userId.equals(vo.getApprover().getValue())) {
+                List<Long> userIds = vo.getApproverSelect()
+                        .stream().map(SelectVO::getId).collect(Collectors.toList());
+                if (!userIds.contains(Long.valueOf(userId))) {
+                    vo.getApproverSelect().add(SelectVO.builder()
+                            .id(Long.valueOf(userId))
+                            .label(userInfo.getNickName())
+                            .build());
+                }
+            }
+        }
+        wrapper.setIndex(getCurrentNodeIndex(operations));
+        wrapper.setNodes(nodes);
+        return wrapper;
+    }
+
+    /**
+     * 获取流程的节点列表
+     */
+    private List<PrintFlowVO> getFlowNodes(Long invoiceId) {
+        List<PrintFlow> flows = flowMapper.createLambdaQuery()
+                .andEq(PrintFlow::getPrintId, invoiceId)
+                .select();
+        return Optional.ofNullable(flows)
+                .orElse(new ArrayList<>())
+                .stream()
+                .map(flow -> {
+                    PrintFlowVO vo = BeanConverter.convert(flow, PrintFlowVO.class);
+                    // 此处节点个数有限，循环中使用rpc接口无妨
+                    UserInfo userInfo = userApi.getUserInfoById(flow.getUserId());
+                    vo.setPrintId(flow.getPrintId());
+                    vo.setApproverRole(roleApi.getNameById(flow.getFlowRoleId()));
+                    vo.setNickName(userInfo == null ? null : userInfo.getNickName());
+                    vo.setApprover(flow.getUserId());
+                    return vo;
+                }).collect(Collectors.toList());
+    }
+
+    /**
+     * 获取流程流转的当前节点id
+     *
+     * @param list 已排序
+     * @return 当前节点的id
+     */
+    private String getCurrentNode(List<NodeOperationReqVO> list) {
+        // 通过检查operation状态来确定流程流传到哪个节点
+        for (NodeOperationReqVO vo : list) {
+            if (FlowOperationType.UN_EXECUTED.value().equals(vo.getOperation())) {
+                return vo.getFlowNodeId();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 获取流程流转的当前节点序号
+     */
+    private Integer getCurrentNodeIndex(List<NodeOperationReqVO> list) {
+        for (int i = 0; i < list.size(); i++) {
+            if (FlowOperationType.UN_EXECUTED.value().equals(list.get(i).getOperation())) {
+                return i;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 组装流程节点
+     */
+    private NodeInfoVO buildFlowNode(PrintFlowVO flowNode, String currentNodeId, Integer type) {
+        NodeInfoVO result = new NodeInfoVO();
+        BeanConverter.copyProp(flowNode, result);
+        // 判断是否为当前节点
+        boolean isCurrentNode = currentNodeId.equals(flowNode.getFlowNodeId());
+        // 审批人是否只读
+        boolean approverReadOnly;
+        // 操作按钮是否隐藏
+        boolean operationHidden;
+        // 意见是否只读
+        boolean suggestionReadOnly;
+        // 可编辑字段
+        List<String> filedList = new ArrayList<>();
+        switch (type) {
+            // 审批节点（非分配者）
+            case 1:
+                approverReadOnly = true;
+                operationHidden = !isCurrentNode;
+                suggestionReadOnly = !isCurrentNode;
+                break;
+            // 审批节点（分配者）
+            case 2:
+                approverReadOnly = isCurrentNode;
+                operationHidden = !isCurrentNode;
+                suggestionReadOnly = !isCurrentNode;
+                break;
+            // 默认只读
+            default:
+                approverReadOnly = true;
+                operationHidden = true;
+                suggestionReadOnly = true;
+        }
+        result.setApprover(NodeApproverVO.builder()
+                .value(flowNode.getApprover())
+                .readOnly(approverReadOnly)
+                .build());
+        result.setOperation(NodeOperationVO.builder()
+                .value(flowNode.getOperation())
+                .hidden(operationHidden)
+                .build());
+        result.setSuggestion(NodeSuggestionVO.builder()
+                .value(flowNode.getSuggestion())
+                .readOnly(suggestionReadOnly)
+                .build());
+        result.setApproverSelect(getApproverSelect(flowNode.getFlowNodeId(), flowNode.getPrintId()));
+        result.setApproverRole(flowNode.getRoleDesc());
+        result.setFiledList(filedList);
+        return result;
+    }
+
+    /**
+     * 查询审批人下拉框列表
+     */
+    private List<SelectVO> getApproverSelect(String flowNodeId, Long businessId) {
+        PrintFlow flow = flowMapper.createLambdaQuery()
+                .andEq(PrintFlow::getPrintId, businessId)
+                .andEq(PrintFlow::getFlowNodeId, flowNodeId)
+                .single();
+        // 查询该节点的流程角色所对应的用户
+        List<Integer> userIds = roleUserApi.getUserIdByRoleId(flow.getFlowRoleId());
+        Map<Integer, String> userMap = userApi.getUserMapById(userIds);
+        return userMap.entrySet().stream().map(item ->
+                SelectVO.builder()
+                        .id(Long.valueOf(item.getKey()))
+                        .label(item.getValue())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 提醒信息
+     */
+    @Override
+    public String getInform(String flowNodeId, Integer state) {
+        return noticeApi.getInform(flowNodeId, state);
+    }
+
 
     @Override
     public void deletePrintFlow(Long printId) {
@@ -85,407 +437,4 @@ public class PrintFlowServiceImpl implements PrintFlowService {
         flowMapper.insertBatch(printFlowList);
     }
 
-    @Override
-    public List<FlowApproveInfoVO> getInvoiceNodeList(Long printId, Integer userId) {
-        // 登录用户id
-
-        List<FlowApproveInfoVO> list = new ArrayList<>();
-        // 查询流程的所有节点
-        List<PrintFlow> flowList = flowMapper.createLambdaQuery().andEq(PrintFlow::getPrintId, printId).select();
-        List<PrintFlowVO> flowNodes = BeanConverter.copyBeanList(flowList, PrintFlowVO.class);
-        // 通过节点id得到流程类型名称
-        String flowName = flowApi.getNameByNodeId(flowNodes.get(0).getFlowNodeId());
-        // 通过签报id得到发票单位名称
-        PrintInfoVO print = printService.getPrint(printId);
-        // 签报流程名称 todo
-        String projectFlowName = print.getUnitId() + flowName;
-        // 通过userId得到nickName
-        UserInfo userInfo = userApi.getUserInfoById(userId);
-        // 如果流程已结束，参与流程的角色登入
-        for (int i = 0; i < flowNodes.size(); i++) {
-            if (flowNodes.get(i).getOperation() == null
-                    || !flowNodes.get(flowNodes.size() - 1).getOperation().equals(OperationState.UN_EXECUTED.value())) {
-                for (PrintFlowVO flowNode : flowNodes) {
-                    FlowApproveInfoVO result = new FlowApproveInfoVO();
-                    BeanConverter.copyProp(flowNode, result);
-                    result.setApproverRole(flowNode.getRoleDesc());
-                    result.setApprover(FlowApproverVO.builder()
-                            .value(flowNode.getApprover()).readOnly(true).build());
-                    result.setOperation(FlowOperationVO.builder()
-                            .value(flowNode.getOperation()).hidden(true).build());
-                    result.setSuggestion(FlowSuggestionVO.builder()
-                            .value(flowNode.getSuggestion()).readOnly(true).build());
-                    result.setApproverSelect(getApproverSelectList(flowNode.getFlowNodeId(),
-                            print.getId()));
-                    result.setProjectFlowName(projectFlowName);
-                    list.add(result);
-                }
-                return list;
-            }
-        }
-        Map<String, PrintFlowVO> flowNodeMap = flowNodes.stream().collect(
-                Collectors.toMap(PrintFlowVO::getFlowNodeId, Function.identity()));
-        // 通过userId得到该用户的所有流程角色
-        List<Long> flowRoleIds = roleUserApi.getRoleIdByUserId(userId);
-        // 1.先获取流程流转的当前节点<currentNode>
-        // 2.再判断<loginUser>是否为<currentNode>的审批人
-        //   2-1.如果不是，则所有节点信息全部为只读
-        //   2-2.如果是，则判断是否为该流程的分配者
-        //      a.如果不是分配者，则只能编辑当前节点的按钮操作<operation>和意见<suggestion>
-        //      b.如果是分配者，则可以编辑以下：
-        //        当前节点的按钮操作<operation>和意见<suggestion>
-        //        其他节点的审批人<approver>
-
-        // 1.先获取流程流转的当前节点
-        List<FlowNodeOperationVO> voList = new ArrayList<>();
-        // 当前节点id
-        String currentNodeId = getCurrentNode(voList);
-        if (!StringUtils.isEmpty(currentNodeId)) {
-            PrintFlowVO currentNode = flowNodeMap.get(currentNodeId);
-            // 2.判断登录用户是否为该审批人
-            if (!userId.equals(currentNode.getApprover())) {
-                // 2-1.如果不是，则所有节点信息全部为只读
-                flowNodes.forEach(flowNode -> list.add(buildFlowNode(flowNode, currentNodeId, 0, projectFlowName)));
-            } else {
-                // 2-2-a.如果是审批人，且为分配者
-                if (flowRoleIds.contains(currentNode.getAssigner())) {
-                    flowNodes.forEach(
-                            flowNode -> list.add(buildFlowNode(flowNode, currentNodeId, 2, projectFlowName)));
-                } else {
-                    // 2-2-b.如果是审批人，但不是分配者
-                    flowNodes.forEach(
-                            flowNode -> list.add(buildFlowNode(flowNode, currentNodeId, 1, projectFlowName)));
-                }
-
-            }
-        }
-        // 如果是审批人，但是默认用户下拉框没有该用户的时候，加上该用户
-        for (FlowApproveInfoVO fundInvoiceFlowInfoVO : list) {
-            if (userId.equals(fundInvoiceFlowInfoVO.getApprover().getValue())) {
-                ArrayList<Integer> userIds = new ArrayList<>();
-                List<FlowRoleResVO> approverSelect = fundInvoiceFlowInfoVO.getApproverSelect();
-                for (FlowRoleResVO flowRoleResVO : approverSelect) {
-                    userIds.add(flowRoleResVO.getUserId());
-                }
-                if (!userIds.contains(userId)) {
-                    FlowRoleResVO flowRoleResVO = new FlowRoleResVO();
-                    flowRoleResVO.setUserId(userId);
-                    flowRoleResVO.setNickName(userInfo.getNickName());
-                    approverSelect.add(flowRoleResVO);
-                    fundInvoiceFlowInfoVO.setApproverSelect(approverSelect);
-                }
-            }
-        }
-        // 审批未结束，具有节点审批人权限的人登入
-        for (FlowApproveInfoVO infoVO : list) {
-            if (!infoVO.getFlowNodeId().equals(currentNodeId)
-                    && !infoVO.getOperation().getValue().equals(OperationState.UN_EXECUTED.value())) {
-                infoVO.setApprover(FlowApproverVO.builder()
-                        .value(infoVO.getApprover().getValue()).readOnly(true).build());
-                infoVO.setOperation(FlowOperationVO.builder()
-                        .value(infoVO.getOperation().getValue()).hidden(true).build());
-                infoVO.setSuggestion(FlowSuggestionVO.builder()
-                        .value(infoVO.getSuggestion().getValue()).readOnly(true).build());
-                infoVO.setApproverSelect(getApproverSelectList(infoVO.getFlowNodeId(),
-                        infoVO.getBusinessId()));
-                infoVO.setProjectFlowName(projectFlowName);
-            } else {
-                break;
-            }
-        }
-        return list;
-    }
-
-    /**
-     * 查询审批人下拉框值
-     */
-    private List<FlowRoleResVO> getApproverSelectList(String flowNodeId, Long printId) {
-        List<PrintFlow> select = flowMapper.createLambdaQuery()
-                .andEq(PrintFlow::getFlowNodeId, flowNodeId)
-                .andEq(PrintFlow::getPrintId, printId)
-                .select();
-        return BeanConverter.copyBeanList(select, FlowRoleResVO.class);
-    }
-
-    /**
-     * 获取流程流转的当前节点id
-     *
-     * @param list 已排序
-     * @return 当前节点的id
-     */
-    private String getCurrentNode(List<FlowNodeOperationVO> list) {
-        // 通过检查operation状态来确定流程流传到哪个节点
-        for (FlowNodeOperationVO vo : list) {
-            if (OperationState.UN_EXECUTED.value().equals(vo.getOperation())) {
-                return vo.getFlowNodeId();
-            }
-        }
-        return null;
-    }
-
-    /**
-     * 组装流程节点属性
-     */
-    private FlowApproveInfoVO buildFlowNode(PrintFlowVO flowNode, String currentNodeId,
-                                            Integer type, String projectFlowName) {
-        FlowApproveInfoVO result = new FlowApproveInfoVO();
-        BeanConverter.copyProp(flowNode, result);
-        // 判断是否为当前节点
-        boolean isCurrentNode = currentNodeId.equals(flowNode.getFlowNodeId());
-        boolean approverReadOnly;
-        boolean operationHidden;
-        boolean suggestionReadOnly;
-        boolean inputHidden;
-        switch (type) {
-            // 审批节点
-            case 1:
-                approverReadOnly = true;
-                operationHidden = !isCurrentNode;
-                suggestionReadOnly = !isCurrentNode;
-                inputHidden = !isCurrentNode;
-                break;
-            // 审批节点（分配者）
-            case 2:
-                approverReadOnly = isCurrentNode;
-                operationHidden = !isCurrentNode;
-                suggestionReadOnly = !isCurrentNode;
-                inputHidden = !isCurrentNode;
-                break;
-            // 默认只读
-            default:
-                approverReadOnly = true;
-                operationHidden = true;
-                suggestionReadOnly = true;
-                inputHidden = true;
-
-        }
-        result.setApprover(FlowApproverVO.builder()
-                .value(flowNode.getApprover()).readOnly(approverReadOnly).build());
-        result.setOperation(FlowOperationVO.builder()
-                .value(flowNode.getOperation()).hidden(operationHidden).build());
-        result.setSuggestion(FlowSuggestionVO.builder()
-                .value(flowNode.getSuggestion()).readOnly(suggestionReadOnly).build());
-        result.setApproverSelect(getApproverSelectList(flowNode.getFlowNodeId(), flowNode.getPrintId()));
-        result.setProjectFlowName(projectFlowName);
-        result.setApproverRole(flowNode.getRoleDesc());
-        result.setInput(inputHidden);
-        return result;
-    }
-
-
-    @Override
-    public void approve(PrintApproveVO approveVO, Integer userId) {
-        // 查询当前节点信息
-        PrintFlow currentFlow = flowMapper.single(approveVO.getId());
-        // 校验审批人是否为本人
-        if (!currentFlow.getUserId().equals(userId)) {
-            throw new PublicityException(PublicityErrorCode.LOCK_OF_APPROVAL_ROLE);
-        }
-
-        // 预开发票id
-        Long printId = currentFlow.getPrintId();
-        // 当前节点id
-        String currentFlowNodeId = currentFlow.getFlowNodeId();
-        // 所有审批人
-        List<FlowApproveVO> approvers = approveVO.getApprovers();
-        // 所有节点id
-        List<String> flowNodes = approvers.stream().map(
-                FlowApproveVO::getFlowNodeId).collect(Collectors.toList());
-        // 节点所对应的用户id
-        // flowNodeId => userId
-        Map<String, Integer> approverMap = new HashMap<>();
-        for (FlowApproveVO approver : approvers) {
-            approverMap.put(approver.getFlowNodeId(), approver.getUserId());
-        }
-        Integer operation = null;
-        Integer projectState = null;
-        // 同意
-        if (approveVO.getOperation().equals(OperationState.AGREE.value())) {
-            operation = OperationState.AGREE.value();
-            // 1、判断是否为最后一个节点，如果是，则更新项目流程状态
-
-            if (isLastNode(currentFlowNodeId, flowNodes)) {
-                projectState = NodeState.APPROVED.value();
-
-            } else {
-                // 获取用户的所有流程角色
-                List<Long> flowRoleIds = roleUserApi.getRoleIdByUserId(userId);
-                // 判断当前用户是否为分配者。如果是分配者，则判断是否已指定所有审批人
-                if (flowRoleIds.contains(currentFlow.getAssigner())) {
-                    // 判断是否所有审批人已指定
-                    if (!isAllApproverAssigned(approvers)) {
-                        throw new PublicityException(PublicityErrorCode.NOT_ALL_APPROVERS_ASSIGNED);
-                    }
-                    // 更新各节点审批人
-                    //           flowMapper.createLambdaQuery().andEq(approvers, printId).update();
-                }
-                // 如果不是分配者，则判断是否已指定下一个审批人
-                else {
-                    // 校验下一个节点的审批人是否已指定
-                    Integer nextApprover = approverMap
-                            .get(getNextNode(currentFlowNodeId, flowNodes));
-                    if (nextApprover == null) {
-                        throw new PublicityException(PublicityErrorCode.NOT_ALL_APPROVERS_ASSIGNED);
-                    }
-                }
-            }
-        }
-        // 拒绝
-        else if (approveVO.getOperation().equals(OperationState.REJECT.value())) {
-            operation = OperationState.REJECT.value();
-            projectState = NodeState.APPROVE_REJECTED.value();
-        }
-
-        // 同意或者拒绝后对该发票的代办提醒进行删除
-        noticeService.updateNoticeState(printId);
-        // 推送提醒
-        assert operation != null;
-        toInform(operation, approvers, userId, printId, currentFlowNodeId, flowNodes,
-                approverMap, approveVO.getSuggestion());
-
-        // 更新项目节点信息
-        flowMapper.updateById(PrintFlow.builder()
-                .operation(operation)
-                .suggestion(approveVO.getSuggestion())
-                .updateTime(new Date())
-                .id(approveVO.getId())
-                .build());
-
-        // 更新项目的流程状态
-        if (projectState != null) {
-            printService.updateState(printId, projectState);
-        }
-    }
-
-    /**
-     * 判断当前节点是否为流程中的最后一个节点
-     */
-    private boolean isLastNode(String currentFlowNodeId, List<String> flowNodeIds) {
-        if (CollectionUtils.isEmpty(flowNodeIds)) {
-            return false;
-        }
-        return currentFlowNodeId.equals(flowNodeIds.get(flowNodeIds.size() - 1));
-    }
-
-    /**
-     * 判断是否所有节点的审批人已指定
-     */
-    private boolean isAllApproverAssigned(List<FlowApproveVO> approvers) {
-        for (FlowApproveVO approver : approvers) {
-            if (approver.getUserId() == null) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * 获取当前节点的下一个节点
-     */
-    private String getNextNode(String currentFlowNodeId, List<String> flowNodeIds) {
-        if (!flowNodeIds.contains(currentFlowNodeId) || isLastNode(currentFlowNodeId,
-                flowNodeIds)) {
-            return null;
-        }
-        return flowNodeIds.get(flowNodeIds.indexOf(currentFlowNodeId) + 1);
-    }
-
-
-    /**
-     * 推送提醒人
-     *
-     * @param operation         是否同意（1同意0拒绝）
-     * @param approvers         所有审批人
-     * @param userId            用户id
-     * @param printId           印刷品id
-     * @param currentFlowNodeId 当前的节点id
-     * @param flowNodes         所有的节点id
-     * @param approverMap       flowNodeId => userId
-     * @param suggestion        意见
-     */
-    private void toInform(Integer operation, List<FlowApproveVO> approvers,
-                          Integer userId, Long printId, String currentFlowNodeId, List<String> flowNodes,
-                          Map<String, Integer> approverMap, String suggestion) {
-        // 通过flowNodeId得到流程类型id
-        Long flowTypeId = typeApi.getTypeIdByNode(flowNodes.get(0));
-        PrintInfoVO print = printService.getPrint(printId);
-        String printName = print.getPrintName();
-        // 流程名称
-        String flowName = flowApi.getNameByNodeId(flowNodes.get(0));
-        // 获取用户姓名
-        UserInfo user = userApi.getUserInfoById(userId);
-        // 提醒信息(同意)
-        if (operation.equals(OperationState.AGREE.value())) {
-            // 判断是否为最后一位
-            String inform;
-            // 不是最后一位（提醒发起人和下一位节点）
-            if (!approvers.get(approvers.size() - 1).getUserId().equals(userId)) {
-                inform = getInform(currentFlowNodeId, FlowNodeNoticeState.DEFAULT_REMINDER.value());
-                if (inform == null) {
-                    return;
-                }
-                inform = inform.replace(TemplateContent.TITLE.getValue(), printName + "_" + flowName);
-                // 推送下一位审批者
-                Integer nextApprover = approverMap.get(getNextNode(currentFlowNodeId, flowNodes));
-                noticeService.addPrintNotice(
-                        PrintNoticeVO.builder().printId(printId)
-                                .receiver(nextApprover)
-                                .promoter(userId)
-                                .content(inform)
-                                .flowTypeId(flowTypeId)
-                                .build());
-                // 推送邮件
-                if (mailEnable) {
-                    // 下一节点审批人信息
-                    UserInfo userInfo = userApi.getUserInfoById(nextApprover);
-                    // 推送内容
-                    String info = "_" + flowName;
-//                    mailService.postMail(userInfo.getEmail(), userInfo.getNickName(), info);
-                }
-            }
-
-
-            inform = getInform(currentFlowNodeId,
-                    FlowNodeNoticeState.COMPLETE_REMINDER.value());
-            if (inform == null) {
-                return;
-            }
-            inform = inform.replace(TemplateContent.TITLE.getValue(), "_" + flowName);
-            inform = inform.replace(TemplateContent.APPROVE.getValue(), user.getNickName());
-            // 推送发起人
-            noticeService.addPrintNotice(
-                    PrintNoticeVO.builder().printId(printId)
-                            .receiver(approvers.get(0).getUserId())
-                            .promoter(userId)
-                            .content(inform)
-                            .flowTypeId(flowTypeId)
-                            .build());
-        }
-        // 拒绝
-        else {
-            String inform = getInform(currentFlowNodeId,
-                    FlowNodeNoticeState.REJECT_REMINDER.value());
-            if (inform == null) {
-                return;
-            }
-            String replace = inform.replace(TemplateContent.TITLE.getValue(), "_" + flowName);
-            inform = replace.replace(TemplateContent.APPROVE.getValue(), user.getNickName());
-            inform = inform.replace(TemplateContent.CAUSE.getValue(), suggestion);
-            noticeService.addPrintNotice(
-                    PrintNoticeVO.builder().printId(printId)
-                            .receiver(approvers.get(0).getUserId())
-                            .promoter(userId)
-                            .content(inform)
-                            .flowTypeId(flowTypeId)
-                            .build());
-        }
-    }
-
-    /**
-     * 提醒信息
-     */
-    @Override
-    public String getInform(String flowNodeId, Integer state) {
-        return noticeApi.getInform(flowNodeId, state);
-    }
 }
