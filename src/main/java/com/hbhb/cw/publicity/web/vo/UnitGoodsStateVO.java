@@ -24,4 +24,10 @@ public class UnitGoodsStateVO implements Serializable {
 
     @Schema(description = "分公司提交状态")
     private String state;
+
+    @Schema(description = "物料id")
+    private Long goodsId;
+
+    @Schema(description = "物料名称")
+    private String goodsName;
 }

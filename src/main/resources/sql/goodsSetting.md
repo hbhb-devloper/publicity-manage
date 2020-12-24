@@ -15,12 +15,4 @@ selectSetByDate
     order by deadline limit 1;
 ```
 
-updateByBatchNum
-===
-```sql
-   update goods_setting
-    set is_end = #{dateTime}
-    where goods_index = #{goodsIndex}
-    and deadline = #{deadline}
-```
 

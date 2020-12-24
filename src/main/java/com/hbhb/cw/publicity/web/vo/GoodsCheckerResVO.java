@@ -10,18 +10,16 @@ import lombok.NoArgsConstructor;
 
 /**
  * @author yzc
- * @since 2020-11-26
+ * @since 2020-12-23
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class SummaryUnitGoodsResVO implements Serializable {
-    private static final long serialVersionUID = 8649705922317903666L;
+public class GoodsCheckerResVO implements Serializable {
+    private static final long serialVersionUID = 2435131721347699394L;
 
-    private List<SummaryUnitGoodsVO> list;
+    private List<GoodsCheckerVO> list;
 
-    private Boolean flag;
-
-    @Schema(description = "批次号")
-    private String batchNum;
+    @Schema(description = "审核操作")
+    private Integer detailState;
 }

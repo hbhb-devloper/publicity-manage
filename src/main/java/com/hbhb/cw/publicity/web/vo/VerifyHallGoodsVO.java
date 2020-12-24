@@ -21,10 +21,13 @@ public class VerifyHallGoodsVO implements Serializable {
     private Long applicationDetailId;
 
     @Schema(description = "单位名称")
+    private Integer unitId;
+
+    @Schema(description = "单位名称")
     private String unitName;
 
     @Schema(description = "营业厅id")
-    private Long id;
+    private Long hallId;
 
     @Schema(description = "营业厅")
     private String hallName;
@@ -32,6 +35,6 @@ public class VerifyHallGoodsVO implements Serializable {
     @Schema(description = "物料名称")
     private String goodsName;
 
-    @Schema(description = "s很强数量")
-    private Long applyAmount;
+    @Schema(description = "申请数量")
+    private Long modifyAmount;
 }

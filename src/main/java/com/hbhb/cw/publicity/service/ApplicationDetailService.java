@@ -2,6 +2,8 @@ package com.hbhb.cw.publicity.service;
 
 import com.hbhb.cw.publicity.web.vo.ApplicationApproveVO;
 import com.hbhb.cw.publicity.web.vo.GoodsApproveVO;
+import com.hbhb.cw.publicity.web.vo.GoodsCheckerResVO;
+import com.hbhb.cw.publicity.web.vo.GoodsCheckerVO;
 import com.hbhb.cw.publicity.web.vo.GoodsReqVO;
 import com.hbhb.cw.publicity.web.vo.SummaryByUnitVO;
 import com.hbhb.cw.publicity.web.vo.SummaryUnitGoodsResVO;
@@ -30,7 +32,7 @@ public interface ApplicationDetailService {
      * @return 营业厅产品申请信息
      *
      */
-    SummaryByUnitVO getUnitList(GoodsReqVO goodsReqVO);
+    SummaryByUnitVO getInfoList(GoodsReqVO goodsReqVO);
 
 
     /**
@@ -38,6 +40,27 @@ public interface ApplicationDetailService {
      * @return 分公司提交状态
      */
     List<UnitGoodsStateVO> getUnitGoodsStateList(GoodsReqVO goodsReqVO);
+
+    /**
+     * 获取市场部或政企的汇总
+     */
+    List<SummaryUnitGoodsVO> getUnitSummaryList(GoodsReqVO goodsReqVO, Integer type);
+
+    /**
+     * 物料员审核列表（单位）
+     */
+    List<VerifyGoodsVO> getList(Integer userId);
+
+    /**
+     * 物料员审核列表（营业厅）
+     */
+    List<VerifyHallGoodsVO> getHallList(GoodsCheckerVO goodsCheckerVO);
+
+
+    /**
+     * 物料审核员审核
+     */
+    void approveUnitGoods(GoodsCheckerResVO goodsCheckerVO);
 
     /**
      * 发起发票审批
@@ -48,26 +71,4 @@ public interface ApplicationDetailService {
      * 审批节点
      */
     void approve(ApplicationApproveVO approveVO, Integer userId);
-
-    /**
-     * 物料员审核列表（单位）
-     */
-    List<VerifyGoodsVO> getVerifyList(Integer userId);
-
-    /**
-     * 物料员审核列表（营业厅）
-     */
-    List<VerifyHallGoodsVO> getInfoList(Integer unitId, Long goodsId);
-
-
-    /**
-     * 物料审核员审核
-     */
-    void approveUnitGoods(Integer unitId, Long goodsId);
-
-
-    /**
-     * 获取市场部或政企的汇总
-     */
-   List<SummaryUnitGoodsVO> getUnitSummaryList(GoodsReqVO goodsReqVO, Integer type);
 }

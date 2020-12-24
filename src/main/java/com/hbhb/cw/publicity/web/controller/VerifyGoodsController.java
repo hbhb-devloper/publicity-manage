@@ -1,10 +1,11 @@
 package com.hbhb.cw.publicity.web.controller;
 
-import com.hbhb.core.utils.DateUtil;
+import com.hbhb.core.utils.ExcelUtil;
 import com.hbhb.cw.publicity.service.VerifyGoodsService;
 import com.hbhb.cw.publicity.web.vo.GoodsChangerVO;
 import com.hbhb.cw.publicity.web.vo.GoodsReqVO;
 import com.hbhb.cw.publicity.web.vo.SummaryGoodsResVO;
+import com.hbhb.cw.publicity.web.vo.VerifyGoodsExportVO;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,10 +14,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Date;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -38,9 +41,6 @@ public class VerifyGoodsController {
     @GetMapping("/list")
     @Operation(summary = "营业厅物料宣传单页分公司汇总(审核)")
     public SummaryGoodsResVO getAuditGoods(GoodsReqVO goodsReqVO) {
-        if (goodsReqVO.getTime() == null) {
-            goodsReqVO.setTime(DateUtil.dateToString(new Date()));
-        }
         return verifyGoodsService.getAuditList(goodsReqVO);
     }
 
@@ -64,7 +64,16 @@ public class VerifyGoodsController {
 
     @PostMapping("/export")
     @Operation(summary = "分公司提交物料导出")
-    public void summaryExport(GoodsReqVO goodsReqVO) {
-        verifyGoodsService.getExportList(goodsReqVO);
+    public void summaryExport(HttpServletRequest request, HttpServletResponse response,@RequestBody GoodsReqVO goodsReqVO) {
+        List<List<VerifyGoodsExportVO>> list = verifyGoodsService.getExportList(goodsReqVO);
+        List<List> exportList = new ArrayList<>();
+        for (List<VerifyGoodsExportVO> verifyGoods : list) {
+            exportList.add(verifyGoods);
+        }
+        List<String> nameList = new ArrayList<>();
+        nameList.add("业务单式");
+        nameList.add("宣传单页");
+        String fileName = ExcelUtil.encodingFileName(request, "分公司汇总表");
+        ExcelUtil.exportManySheetWeb(response, fileName, nameList, VerifyGoodsExportVO.class, exportList);
     }
 }

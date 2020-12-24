@@ -36,4 +36,12 @@ public class ApplicationDetail implements java.io.Serializable {
      * 审核状态（0-待审核、1-已通过、2-被拒绝）
      */
     private Integer state;
+    /**
+     * 审批状态
+     */
+    private Integer approvedState;
+    /**
+     * 归属单位
+     */
+    private Integer underUnitId;
 }

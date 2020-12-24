@@ -33,6 +33,8 @@ public class ApplicationNoticeServiceImpl implements ApplicationNoticeService {
 
     @Override
     public void updateByBatchNum(String batchNum) {
-        applicationNoticeMapper.updateByBatchNum(batchNum);
+        applicationNoticeMapper.createLambdaQuery()
+                .andEq(ApplicationNotice::getBatchNum,batchNum)
+                .updateSelective(ApplicationNotice.builder().state(1).build());
     }
 }

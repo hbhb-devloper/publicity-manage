@@ -70,11 +70,8 @@ from application a
                -- @if(isNotEmpty(unitId)){
                     and a.unit_id = #{unitId}
                -- @}
-               -- @if(isNotEmpty(time)){
-                    and a.create_time = #{time}
-               -- @}
-               -- @if(isNotEmpty(goodsIndex)){
-                    and a.goods_index = #{goodsIndex}
+               -- @if(isNotEmpty(batchNum)){
+                    and a.batch_num = #{batchNum}
                -- @}
            -- @}
 group by a.unit_id, ad.goods_id, ad.state, g.checker

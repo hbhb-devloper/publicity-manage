@@ -1,5 +1,6 @@
 package com.hbhb.cw.publicity.service.impl;
 
+import com.hbhb.core.bean.BeanConverter;
 import com.hbhb.core.utils.DateUtil;
 import com.hbhb.cw.publicity.enums.GoodsType;
 import com.hbhb.cw.publicity.enums.PublicityErrorCode;
@@ -18,6 +19,7 @@ import com.hbhb.cw.publicity.web.vo.GoodsReqVO;
 import com.hbhb.cw.publicity.web.vo.SummaryCondVO;
 import com.hbhb.cw.publicity.web.vo.SummaryGoodsResVO;
 import com.hbhb.cw.publicity.web.vo.SummaryGoodsVO;
+import com.hbhb.cw.publicity.web.vo.VerifyGoodsExportVO;
 
 import org.springframework.stereotype.Service;
 
@@ -56,17 +58,17 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
         Map<Integer, String> unitMap = unitApiExp.getUnitMapById();
         List<SummaryGoodsVO> simList = getSummaryList(goodsReqVO, GoodsType.BUSINESS_SIMPLEX.getValue());
         for (int i = 0; i < simList.size(); i++) {
-            simList.get(i).setLineNum(i+1L);
+            simList.get(i).setLineNum(i + 1L);
             simList.get(i).setUnitName(unitMap.get(simList.get(i).getUnitId()));
             simList.get(i).setHallName(simList.get(i).getHallId().toString());
         }
         List<SummaryGoodsVO> singList = getSummaryList(goodsReqVO, GoodsType.FLYER_PAGE.getValue());
         for (int i = 0; i < singList.size(); i++) {
-            singList.get(i).setLineNum(i+1L);
+            singList.get(i).setLineNum(i + 1L);
             singList.get(i).setUnitName(unitMap.get(singList.get(i).getUnitId()));
             singList.get(i).setHallName(singList.get(i).getHallId().toString());
         }
-        return new SummaryGoodsResVO(simList, singList, getFlag(goodsReqVO),getCheckerState(goodsReqVO));
+        return new SummaryGoodsResVO(simList, singList, getFlag(goodsReqVO), getCheckerState(goodsReqVO));
     }
 
     @Override
@@ -91,22 +93,18 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
         for (ApplicationDetail applicationDetail : applicationDetailList) {
             detailIds.add(applicationDetail.getId());
         }
+        List<Integer> stateList = new ArrayList<>();
+        stateList.add(0);
+        stateList.add(3);
         // 判断为第一次提交还是，被拒绝后提交
-        if (!goodsReqVO.getFlag()){
-            applicationDetailMapper.createLambdaQuery()
-                    .andEq(ApplicationDetail::getState,3)
-                    .andIn(ApplicationDetail::getId,detailIds)
-                    .updateSelective(ApplicationDetail.builder().state(1).build());
-        }else {
-            // 提交
-            applicationMapper.createLambdaQuery()
-                    .andIn(Application::getId, applicationIds)
-                    .updateSelective(Application.builder().submit(true).editable(true).build());
-            applicationDetailMapper.createLambdaQuery()
-                    .andIn(ApplicationDetail::getId,detailIds)
-                    .updateSelective(ApplicationDetail.builder().state(1).build());
-
-        }
+        // 提交
+        applicationMapper.createLambdaQuery()
+                .andIn(Application::getId, applicationIds)
+                .updateSelective(Application.builder().submit(true).editable(true).build());
+        applicationDetailMapper.createLambdaQuery()
+                .andIn(ApplicationDetail::getId, detailIds)
+                .andIn(ApplicationDetail::getState, stateList)
+                .updateSelective(ApplicationDetail.builder().state(1).build());
         // 判断工作台有没有 ，没有则发送工作台
 
     }
@@ -114,10 +112,11 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
     @Override
     public void changerModifyAmount(List<GoodsChangerVO> list) {
         List<Long> applicationDetailIds = new ArrayList<>();
+        // id => modifyAmount id => 申请数量
         Map<Long, Long> amountMap = new HashMap<>();
         for (GoodsChangerVO goodsChangerVO : list) {
             applicationDetailIds.add(goodsChangerVO.getId());
-            amountMap.put(goodsChangerVO.getId(),goodsChangerVO.getModifyAmount());
+            amountMap.put(goodsChangerVO.getId(), goodsChangerVO.getModifyAmount());
         }
         List<ApplicationDetail> applicationDetailList = applicationDetailMapper
                 .createLambdaQuery().andIn(ApplicationDetail::getId, applicationDetailIds).select();
@@ -129,28 +128,42 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
     }
 
     @Override
-    public List<SummaryGoodsVO> getExportList(GoodsReqVO goodsReqVO) {
-        return getSummaryList(goodsReqVO, null);
+    public List<List<VerifyGoodsExportVO>> getExportList(GoodsReqVO goodsReqVO) {
+        SummaryGoodsResVO auditList = getAuditList(goodsReqVO);
+        // 得到业务单式
+        List<SummaryGoodsVO> simplexList = auditList.getSimplexList();
+        // 得到宣传单页
+        List<SummaryGoodsVO> singleList = auditList.getSingleList();
+        List<List<VerifyGoodsExportVO>> list = new ArrayList<>();
+        list.add(BeanConverter.copyBeanList(simplexList, VerifyGoodsExportVO.class));
+        list.add(BeanConverter.copyBeanList(singleList, VerifyGoodsExportVO.class));
+        return list;
     }
 
     /**
      * 获取需要修改的申领id
      */
-    private List<Long> getApplicationIds(GoodsReqVO goodsReqVO){
-        if (goodsReqVO.getTime() == null) {
-            goodsReqVO.setTime(DateUtil.dateToString(new Date()));
+    private List<Long> getApplicationIds(GoodsReqVO goodsReqVO) {
+        GoodsSetting goodsSetting = null;
+        if (goodsReqVO.getTime() != null && goodsReqVO.getGoodsIndex() == null) {
+            return new ArrayList<>();
         }
-        // 通过此刻时间与截止时间对比，判断为第几月第几次
-        GoodsSetting setting = goodsSettingService.getSetByDate(goodsReqVO.getTime());
-        if (setting == null) {
+        if (goodsReqVO.getTime() == null) {
+            // 通过时间判断批次
+            goodsSetting = goodsSettingService.getSetByDate(DateUtil.dateToString(new Date()));
+            goodsReqVO.setTime(goodsSetting.getDeadline());
+        } else {
+            goodsSetting = goodsSettingService.getByCond(goodsReqVO.getTime(), goodsReqVO.getGoodsIndex());
+        }
+        if (goodsSetting == null) {
             return new ArrayList<>();
         }
         if (goodsReqVO.getGoodsIndex() == null) {
-            goodsReqVO.setGoodsIndex(setting.getGoodsIndex());
+            goodsReqVO.setGoodsIndex(goodsSetting.getGoodsIndex());
         }
         // 得到第几次，判断此次是否结束。
-        if (setting.getIsEnd() != null
-                || DateUtil.stringToDate(setting.getDeadline()).getTime() < DateUtil.stringToDate(goodsReqVO.getTime()).getTime()) {
+        if (goodsSetting.getIsEnd() != null
+                || DateUtil.stringToDate(goodsSetting.getDeadline()).getTime() < DateUtil.stringToDate(goodsReqVO.getTime()).getTime()) {
             // 报异常
             throw new PublicityException(PublicityErrorCode.ALREADY_CLOSE);
         }
@@ -165,16 +178,22 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
     }
 
 
-
     /**
      * 获取分公司汇总（审核）
      */
     private List<SummaryGoodsVO> getSummaryList(GoodsReqVO goodsReqVO, Integer type) {
-        if (goodsReqVO.getTime() == null) {
-            goodsReqVO.setTime(DateUtil.dateToString(new Date()));
+        GoodsSetting goodsSetting = null;
+        if (goodsReqVO.getTime() != null && goodsReqVO.getGoodsIndex() == null) {
+            return new ArrayList<>();
         }
-        // 通过此刻时间与截止时间对比，判断为第几月第几次
-        GoodsSetting goodsSetting = goodsSettingService.getSetByDate(goodsReqVO.getTime());
+        if (goodsReqVO.getTime() == null) {
+            // 通过时间判断批次
+            goodsSetting = goodsSettingService.getSetByDate(DateUtil.dateToString(new Date()));
+            goodsReqVO.setTime(goodsSetting.getDeadline());
+        }
+        else {
+            goodsSetting = goodsSettingService.getByCond(goodsReqVO.getTime(), goodsReqVO.getGoodsIndex());
+        }
         if (goodsSetting == null) {
             return new ArrayList<SummaryGoodsVO>();
         }
@@ -203,12 +222,19 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
      * 判断是否提交
      */
     private Boolean getFlag(GoodsReqVO goodsReqVO) {
-        if (goodsReqVO.getTime() == null) {
-            goodsReqVO.setTime(DateUtil.dateToString(new Date()));
+        GoodsSetting goodsSetting = null;
+        if (goodsReqVO.getTime() != null && goodsReqVO.getGoodsIndex() == null) {
+            return false;
         }
-        // 通过此刻时间与截止时间对比，判断为第几月第几次
-        GoodsSetting goodsSetting = goodsSettingService.getSetByDate(goodsReqVO.getTime());
-        if (goodsSetting == null) {
+        if (goodsReqVO.getTime() == null) {
+            // 通过时间判断批次
+            goodsSetting = goodsSettingService.getSetByDate(DateUtil.dateToString(new Date()));
+            goodsReqVO.setTime(goodsSetting.getDeadline());
+        }
+        else {
+            goodsSetting = goodsSettingService.getByCond(goodsReqVO.getTime(), goodsReqVO.getGoodsIndex());
+        }
+        if (goodsSetting == null || goodsSetting.getDeadline()==null) {
             return false;
         }
         if (goodsReqVO.getGoodsIndex() == null) {
@@ -232,7 +258,7 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
         // 判断此次是否有过提交,如果已提交，提交置灰
         // 通过单位和时间次序得到所有该次该单位下所有申请表
         for (SummaryGoodsVO summary : summaries) {
-            if (summary.getState()==0||summary.getState()==3){
+            if (summary.getState() == 0 || summary.getState() == 3) {
                 return true;
             }
         }
@@ -243,13 +269,20 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
     /**
      * 物料确认状态
      */
-    private String getCheckerState(GoodsReqVO goodsReqVO){
+    private String getCheckerState(GoodsReqVO goodsReqVO) {
         String checkerState = "已审核";
-        if (goodsReqVO.getTime() == null) {
-            goodsReqVO.setTime(DateUtil.dateToString(new Date()));
+        GoodsSetting goodsSetting = null;
+        if (goodsReqVO.getTime() != null && goodsReqVO.getGoodsIndex() == null) {
+            return new String();
         }
-        // 通过此刻时间与截止时间对比，判断为第几月第几次
-        GoodsSetting goodsSetting = goodsSettingService.getSetByDate(goodsReqVO.getTime());
+        if (goodsReqVO.getTime() == null) {
+            // 通过时间判断批次
+            goodsSetting = goodsSettingService.getSetByDate(DateUtil.dateToString(new Date()));
+            goodsReqVO.setTime(goodsSetting.getDeadline());
+        }
+        else {
+            goodsSetting = goodsSettingService.getByCond(goodsReqVO.getTime(), goodsReqVO.getGoodsIndex());
+        }
         if (goodsSetting == null) {
             return checkerState;
         }
@@ -269,15 +302,13 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
         for (SummaryGoodsVO summary : summaries) {
             states.add(summary.getState());
         }
-        if (states.contains(3)){
+        if (states.contains(3)) {
             return "归属部门审核未通过，请分公司修改";
-        }
-        else if (states.contains(0)){
+        } else if (states.contains(0)) {
             return "分公司没有提交，请分公司提交";
-        }
-        else if (states.contains(1)){
+        } else if (states.contains(1)) {
             return "分公司已提交等待归属部门审核";
-        }else {
+        } else {
             return "归属部门已确认";
         }
     }

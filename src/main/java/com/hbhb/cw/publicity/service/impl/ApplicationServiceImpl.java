@@ -6,6 +6,7 @@ import com.hbhb.cw.publicity.mapper.ApplicationMapper;
 import com.hbhb.cw.publicity.mapper.GoodsMapper;
 import com.hbhb.cw.publicity.model.Application;
 import com.hbhb.cw.publicity.model.ApplicationDetail;
+import com.hbhb.cw.publicity.model.Goods;
 import com.hbhb.cw.publicity.model.GoodsSetting;
 import com.hbhb.cw.publicity.service.ApplicationService;
 import com.hbhb.cw.publicity.service.GoodsSettingService;
@@ -51,17 +52,23 @@ public class ApplicationServiceImpl implements ApplicationService {
 //            // 报异常
 //            throw new GoodsException(GoodsErrorCode.NOT_SERVICE_HALL);
 //        }
+        GoodsSetting goodsSetting = null;
+        if (goodsCondVO.getTime() != null && goodsCondVO.getGoodsIndex() == null) {
+            return new GoodsResVO();
+        }
         if (goodsCondVO.getTime() == null) {
             goodsCondVO.setTime(DateUtil.dateToString(new Date()));
+            // 通过时间判断批次
+            goodsSetting = goodsSettingService.getSetByDate(DateUtil.dateToString(new Date()));
+        }  else {
+            goodsSetting = goodsSettingService.getByCond(goodsCondVO.getTime(), goodsCondVO.getGoodsIndex());
         }
-        // 几月的第几次
-        GoodsSetting goodsSetting = goodsSettingService.getSetByDate(goodsCondVO.getTime());
         if (goodsCondVO.getGoodsIndex() == null) {
             goodsCondVO.setGoodsIndex(goodsSetting.getGoodsIndex());
         }
         if (goodsCondVO.getBatchNum() == null) {
             goodsCondVO.setBatchNum(
-                    DateUtil.dateToString(DateUtil.stringToDate(goodsCondVO.getTime()), "yyyyMM")
+                    DateUtil.dateToString(DateUtil.stringToDate(goodsSetting.getDeadline()), "yyyyMM")
                             + goodsCondVO.getGoodsIndex());
         }
         // 通过营业厅得到该营业厅下该时间的申请详情
@@ -105,23 +112,26 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void applyGoods(GoodsCondAppVO goodsCondAppVO) {
+        GoodsSetting goodsSetting = null;
+        if (goodsCondAppVO.getTime() != null && goodsCondAppVO.getGoodsIndex() == null) {
+            return;
+        }
         // 判断是否有时间如果没有则默认当前时间
         if (goodsCondAppVO.getTime() == null) {
-            goodsCondAppVO.setTime(DateUtil.dateToString(new Date()));
+            // 通过时间判断批次
+            goodsSetting = goodsSettingService.getSetByDate(DateUtil.dateToString(new Date()));
+            goodsCondAppVO.setTime(goodsSetting.getDeadline());
         }
-        // 通过时间判断批次
-        GoodsSetting goodsSetting = goodsSettingService.getSetByDate(DateUtil.dateToString(new Date()));
+        else {
+            goodsSetting = goodsSettingService.getByCond(goodsCondAppVO.getTime(), goodsCondAppVO.getGoodsIndex());
+        }
         // 如果没有次序且时间与截止时间一样则为该次截止时间
-        if (goodsCondAppVO.getGoodsIndex()==null && goodsCondAppVO.getTime().equals(goodsSetting.getDeadline())) {
+        if (goodsCondAppVO.getGoodsIndex() == null && goodsCondAppVO.getTime().equals(goodsSetting.getDeadline())) {
             goodsCondAppVO.setGoodsIndex(goodsSetting.getGoodsIndex());
         }
-        // 如果没有次序且时间与该次截止时间不一样则为该次截止时间 （本月第一次）
-        else if (goodsCondAppVO.getGoodsIndex()==null && !goodsCondAppVO.getTime().equals(goodsSetting.getDeadline())){
-            goodsCondAppVO.setGoodsIndex(1);
-        }
         // 得到批次号
-        String batchNum = DateUtil
-                .dateToString(DateUtil.stringToDate(goodsCondAppVO.getTime()), "yyyyMM") + goodsCondAppVO.getGoodsIndex();
+        String batchNum = DateUtil.dateToString(DateUtil.stringToDate(goodsSetting.getDeadline()), "yyyyMM")
+                + goodsSetting.getGoodsIndex();
         // 得到改营业厅申领单号
         List<Application> applications = applicationMapper.createLambdaQuery()
                 .andEq(Application::getBatchNum, batchNum)
@@ -132,7 +142,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             applicationIds.add(application.getId());
         }
         // 删除申领详情
-        if (applicationIds.size()!=0) {
+        if (applicationIds.size() != 0) {
             applicationDetailMapper.createLambdaQuery()
                     .andIn(ApplicationDetail::getApplicationId, applicationIds)
                     .delete();
@@ -141,7 +151,6 @@ public class ApplicationServiceImpl implements ApplicationService {
         // 新增产品（如果该营业厅该产品已有则修改）
         Date date = new Date();
         Application application = new Application();
-        application.setBatchNum(DateUtil.dateToString(date, "yyyyMM") + goodsSetting.getGoodsIndex());
         application.setCreateTime(date);
         application.setUnitId(goodsCondAppVO.getUnitId());
         application.setHallId(goodsCondAppVO.getHallId());
@@ -149,10 +158,10 @@ public class ApplicationServiceImpl implements ApplicationService {
         application.setSubmit(false);
         application.setBatchNum(batchNum);
         // 如果存在则修改不存在则删除
-        if (applicationIds.size()!=0) {
+        if (applicationIds.size() != 0) {
             application.setId(applicationIds.get(0));
             applicationMapper.updateById(application);
-        }else {
+        } else {
             applicationMapper.insert(application);
         }
         List<ApplicationDetail> applicationDetails = new ArrayList<>();
@@ -160,11 +169,21 @@ public class ApplicationServiceImpl implements ApplicationService {
         Application applicationRes = applicationMapper.selectByHall(goodsCondAppVO.getUnitId(),
                 application.getBatchNum(),
                 goodsCondAppVO.getHallId());
+        List<Goods> goodsList = goodsMapper.createLambdaQuery().select();
+        // goodsId => underUnitId
+        Map<Long, Integer> map = new HashMap<>();
+        for (Goods goods : goodsList) {
+            map.put(goods.getId(), goods.getUnitId());
+        }
         for (int i = 0; i < list.size(); i++) {
             ApplicationDetail applicationDetail = new ApplicationDetail();
             applicationDetail.setApplicationId(applicationRes.getId());
             applicationDetail.setApplyAmount(list.get(i).getApplyAmount());
+            applicationDetail.setModifyAmount(list.get(i).getApplyAmount());
             applicationDetail.setGoodsId(list.get(i).getGoodsId());
+            applicationDetail.setState(0);
+            applicationDetail.setApprovedState(10);
+            applicationDetail.setUnderUnitId(map.get(list.get(i).getGoodsId()));
             applicationDetails.add(applicationDetail);
         }
         applicationDetailMapper.insertBatch(applicationDetails);

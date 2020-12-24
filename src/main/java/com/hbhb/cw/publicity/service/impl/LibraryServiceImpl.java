@@ -129,9 +129,9 @@ public class LibraryServiceImpl implements LibraryService {
                 throw new PublicityException(PublicityErrorCode.PLEASE_ADD_SECONDARY_DIRECTORY);
             }
             // 判断必填项是否添加
-            if (libraryAddVO.getGoodsName() == null || libraryAddVO.getGoodsNum() == null || libraryAddVO.getType() == null
-                    || libraryAddVO.getChecker() == null || libraryAddVO.getUnit() == null || libraryAddVO.getSize() == null || libraryAddVO.getPaper() == null
-                    || !libraryAddVO.getState()) {
+            if (libraryAddVO.getGoodsNum() == null || libraryAddVO.getType() == null
+                    || libraryAddVO.getChecker() == null || libraryAddVO.getUnit() == null
+                    || libraryAddVO.getSize() == null || libraryAddVO.getPaper() == null) {
                 throw new PublicityException(PublicityErrorCode.NOT_FILLED_IN);
             }
             // 添加产品
@@ -161,6 +161,7 @@ public class LibraryServiceImpl implements LibraryService {
         }
         // 修改
         libraryAddVO.setUpdateTime(new Date());
+        // todo 如果类别修改则删除所有下面的物料
         goodsMapper.createLambdaQuery().andEq(Goods::getId, libraryAddVO.getId()).updateSelective(libraryAddVO);
     }
 

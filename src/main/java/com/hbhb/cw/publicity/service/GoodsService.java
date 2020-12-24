@@ -3,6 +3,8 @@ package com.hbhb.cw.publicity.service;
 import com.hbhb.cw.publicity.web.vo.GoodsReqVO;
 import com.hbhb.cw.publicity.web.vo.PurchaseGoodsResVO;
 
+import org.beetl.sql.core.page.PageResult;
+
 import java.util.List;
 
 /**
@@ -15,7 +17,7 @@ public interface GoodsService {
      * 物料采购汇总
      * @return 物料采购汇总
      */
-    List<PurchaseGoodsResVO> getPurchaseGoodsList(GoodsReqVO goodsReqVO);
+    PageResult<PurchaseGoodsResVO> getPurchaseGoodsList(GoodsReqVO goodsReqVO, Integer pageNum, Integer pageSize);
 
     List<List<String>> getPurchaseGoodsExport(GoodsReqVO cond);
 

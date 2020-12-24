@@ -3,7 +3,7 @@ package com.hbhb.cw.publicity.service;
 import com.hbhb.cw.publicity.web.vo.GoodsChangerVO;
 import com.hbhb.cw.publicity.web.vo.GoodsReqVO;
 import com.hbhb.cw.publicity.web.vo.SummaryGoodsResVO;
-import com.hbhb.cw.publicity.web.vo.SummaryGoodsVO;
+import com.hbhb.cw.publicity.web.vo.VerifyGoodsExportVO;
 
 import java.util.List;
 
@@ -39,5 +39,5 @@ public interface VerifyGoodsService {
     /**
      * 导出列表
      */
-    List<SummaryGoodsVO> getExportList(GoodsReqVO goodsReqVO);
+    List<List<VerifyGoodsExportVO>>  getExportList(GoodsReqVO goodsReqVO);
 }

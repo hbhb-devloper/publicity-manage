@@ -3,6 +3,8 @@ package com.hbhb.cw.publicity.web.controller;
 import com.hbhb.cw.publicity.service.ApplicationDetailService;
 import com.hbhb.cw.publicity.web.vo.ApplicationApproveVO;
 import com.hbhb.cw.publicity.web.vo.GoodsApproveVO;
+import com.hbhb.cw.publicity.web.vo.GoodsCheckerResVO;
+import com.hbhb.cw.publicity.web.vo.GoodsCheckerVO;
 import com.hbhb.cw.publicity.web.vo.GoodsReqVO;
 import com.hbhb.cw.publicity.web.vo.SummaryByUnitVO;
 import com.hbhb.cw.publicity.web.vo.SummaryUnitGoodsResVO;
@@ -42,21 +44,45 @@ public class ApplicationDetailController {
     private ApplicationDetailService applicationDetailService;
 
     @GetMapping("/goods")
-    @Operation(summary = "营业厅物料分公司汇总（政企/市场部）")
+    @Operation(summary = "营业厅物料分公司汇总（政企/市场部）（页面）")
     public SummaryUnitGoodsResVO getUnitGoods(GoodsReqVO goodsReqVO) {
         return applicationDetailService.getUnitGoodsList(goodsReqVO);
     }
 
     @GetMapping("/info/list")
-    @Operation(summary = "营业厅物料业务单式分公司汇总（政企/市场部）")
+    @Operation(summary = "营业厅物料业务单式分公司汇总（政企/市场部）（页面）")
     public SummaryByUnitVO getInfoList(GoodsReqVO goodsReqVO) {
-        return applicationDetailService.getUnitList(goodsReqVO);
+        return applicationDetailService.getInfoList(goodsReqVO);
     }
 
     @GetMapping("/state")
-    @Operation(summary = "营业厅物料宣传单页分公司汇总状态（政企/市场部）")
+    @Operation(summary = "营业厅物料宣传单页分公司汇总状态（政企/市场部）（页面）")
     public List<UnitGoodsStateVO> getUnitGoodsState(GoodsReqVO goodsReqVO) {
         return applicationDetailService.getUnitGoodsStateList(goodsReqVO);
+    }
+
+    @GetMapping("summary/list")
+    @Operation(summary = "获取市场部或政企的汇总")
+    public List<SummaryUnitGoodsVO> getSummary(GoodsReqVO goodsReqVO, Integer type){
+        return applicationDetailService.getUnitSummaryList(goodsReqVO,type);
+    }
+
+    @GetMapping("/list")
+    @Operation(summary = "审核申请列表（工作台）")
+    public List<VerifyGoodsVO> getList(@Parameter(hidden = true) @UserId Integer userId) {
+        return applicationDetailService.getList(userId);
+    }
+
+    @GetMapping("/hall/list")
+    @Operation(summary = "审核申请列表详情（工作台）")
+    public List<VerifyHallGoodsVO> getUnitInfo(GoodsCheckerVO goodsCheckerVO) {
+        return applicationDetailService.getHallList(goodsCheckerVO);
+    }
+
+    @PutMapping("")
+    @Operation(summary = "审核 通过/拒接 保存（工作台）")
+    public void approveGoods(@RequestBody GoodsCheckerResVO goodsCheckerResVO) {
+        applicationDetailService.approveUnitGoods(goodsCheckerResVO);
     }
 
     @Operation(summary = "发起审批")
@@ -70,29 +96,5 @@ public class ApplicationDetailController {
     public void approve(@RequestBody ApplicationApproveVO approveVO,
                         @Parameter(hidden = true) @UserId Integer userId) {
         applicationDetailService.approve(approveVO, userId);
-    }
-
-    @GetMapping("/list")
-    @Operation(summary = "审核申请列表")
-    public List<VerifyGoodsVO> getList(@Parameter(hidden = true) @UserId Integer userId) {
-        return applicationDetailService.getVerifyList(userId);
-    }
-
-    @GetMapping("/hall/list")
-    @Operation(summary = "审核申请列表详情")
-    public List<VerifyHallGoodsVO> getUnitInfo(Integer unitId, Long goodsId) {
-        return applicationDetailService.getInfoList(unitId, goodsId);
-    }
-
-    @PutMapping("")
-    @Operation(summary = "审核 通过/拒接 保存")
-    public void approveGoods(Integer unitId, Long goodsId) {
-        applicationDetailService.approveUnitGoods(unitId, goodsId);
-    }
-
-    @GetMapping("summary/list")
-    @Operation(summary = "获取市场部或政企的汇总")
-    public List<SummaryUnitGoodsVO> getSummary(GoodsReqVO goodsReqVO, Integer type){
-        return applicationDetailService.getUnitSummaryList(goodsReqVO,type);
     }
 }

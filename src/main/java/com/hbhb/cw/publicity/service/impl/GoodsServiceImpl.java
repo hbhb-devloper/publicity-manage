@@ -1,11 +1,15 @@
 package com.hbhb.cw.publicity.service.impl;
 
 import com.hbhb.cw.publicity.mapper.GoodsMapper;
+import com.hbhb.cw.publicity.rpc.UnitApiExp;
 import com.hbhb.cw.publicity.service.GoodsService;
 import com.hbhb.cw.publicity.web.vo.GoodsReqVO;
 import com.hbhb.cw.publicity.web.vo.PurchaseGoodsResVO;
 import com.hbhb.cw.publicity.web.vo.PurchaseGoodsVO;
 
+import org.beetl.sql.core.page.DefaultPageRequest;
+import org.beetl.sql.core.page.PageRequest;
+import org.beetl.sql.core.page.PageResult;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -24,14 +28,23 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Service
 @Slf4j
+@SuppressWarnings(value = {"unchecked"})
 public class GoodsServiceImpl implements GoodsService {
 
     @Resource
     private GoodsMapper goodsMapper;
+    @Resource
+    private UnitApiExp unitApiExp;
 
     @Override
-    public List<PurchaseGoodsResVO> getPurchaseGoodsList(GoodsReqVO goodsReqVO) {
-        return goodsMapper.selectPurchaseGoods(goodsReqVO);
+    public PageResult<PurchaseGoodsResVO> getPurchaseGoodsList(GoodsReqVO goodsReqVO, Integer pageNum, Integer pageSize) {
+        PageRequest<PurchaseGoodsResVO> request = DefaultPageRequest.of(pageNum, pageSize);
+        PageResult<PurchaseGoodsResVO> list = goodsMapper.selectPurchaseGoods( request,goodsReqVO);
+        Map<Integer, String> unitMap = unitApiExp.getUnitMapById();
+        for (PurchaseGoodsResVO cond : list.getList()) {
+            cond.setUnitName(unitMap.get(cond.getUnitId()));
+        }
+        return list;
     }
 
     @Override
@@ -40,12 +53,12 @@ public class GoodsServiceImpl implements GoodsService {
         List<List<String>> exports = new ArrayList<>();
         // goodsId => PurchaseGoodsVO
         Map<Long, List<PurchaseGoodsVO>> goodsIdMap = new HashMap<>();
-        // hallId => amount(数量)
+        // hallId => amount(申请数量)
         Map<Long, String> headMouldMap = new HashMap<>();
         for (PurchaseGoodsVO purchaseGoodsVO : list) {
             // 得到headMap
             headMouldMap.put(purchaseGoodsVO.getHallId(),"");
-            // 判断改物料横坐标下是否有值
+            // 判断该物料横坐标下是否有值
             if (goodsIdMap.get(purchaseGoodsVO.getGoodsId())==null){
                 ArrayList<PurchaseGoodsVO> conds = new ArrayList<>();
                 conds.add(purchaseGoodsVO);
@@ -56,6 +69,7 @@ public class GoodsServiceImpl implements GoodsService {
                 conds.add(purchaseGoodsVO);
             }
         }
+
         Set<Long> hallIdList = headMouldMap.keySet();
         Set<Long> goodsIdList = goodsIdMap.keySet();
         for (Long goodsId : goodsIdList) {

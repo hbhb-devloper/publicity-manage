@@ -42,8 +42,4 @@ public class Application implements java.io.Serializable {
      * 是否提交
      */
     private Boolean submit;
-    /**
-     * 审批状态
-     */
-    private Integer approvedState;
 }

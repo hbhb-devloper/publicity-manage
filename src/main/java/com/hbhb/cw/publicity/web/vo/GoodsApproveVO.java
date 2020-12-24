@@ -27,4 +27,7 @@ public class GoodsApproveVO implements Serializable {
 
     @Schema(description = "流程类型id")
     private Long flowTypeId;
+
+    @Schema(description = "归属单位")
+    private Integer underUnitId;
 }

@@ -38,4 +38,8 @@ public interface GoodsSettingService {
      */
     void updateByBatchNum(String batchNum);
 
+    /**
+     * 通过条件查找第几次
+     */
+    GoodsSetting getByCond(String time,Integer goodsIndex);
 }

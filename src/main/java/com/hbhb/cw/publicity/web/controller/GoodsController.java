@@ -5,15 +5,23 @@ import com.hbhb.cw.publicity.service.GoodsService;
 import com.hbhb.cw.publicity.web.vo.GoodsReqVO;
 import com.hbhb.cw.publicity.web.vo.PurchaseGoodsResVO;
 import com.hbhb.web.annotation.UserId;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.*;
+
+import org.beetl.sql.core.page.PageResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.List;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author yzc
@@ -30,8 +38,10 @@ public class GoodsController {
 
     @GetMapping("/purchase")
     @Operation(summary = "营业厅物料采购需求汇总")
-    public List<PurchaseGoodsResVO> getPurchaseGoods(GoodsReqVO goodsReqVO) {
-        return goodsService.getPurchaseGoodsList(goodsReqVO);
+    public PageResult<PurchaseGoodsResVO> getPurchaseGoods(GoodsReqVO goodsReqVO, Integer pageNum, Integer pageSize) {
+        pageNum = pageNum == null ? 1 : pageNum;
+        pageSize = pageSize == null ? 10 : pageSize;
+        return goodsService.getPurchaseGoodsList(goodsReqVO, pageNum, pageSize);
     }
 
 
@@ -43,6 +53,6 @@ public class GoodsController {
         List<List<String>> list = goodsService.getPurchaseGoodsExport(cond);
         List<List<String>> head = goodsService.getHead(cond);
         String fileName = ExcelUtil.encodingFileName(request, "采购需求");
-//        ExcelUtil.export2WebWithHead(response, fileName, fileName, head, list);
+        ExcelUtil.export2WebWithHead(response, fileName, fileName, head, list);
     }
 }

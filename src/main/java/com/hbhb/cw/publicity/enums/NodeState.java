@@ -21,19 +21,7 @@ public enum NodeState {
     /**
      * 审批通过
      */
-    APPROVED(31),
-    /**
-     * 调整审批通过
-     */
-    ADJUST_APPROVED(32),
-    /**
-     * 调整中
-     */
-    IN_ADJUST(40),
-    /**
-     * 审批调整中
-     */
-    APPROVED_ADJUST(50);
+    APPROVED(31);
 
     private final Integer value;
 

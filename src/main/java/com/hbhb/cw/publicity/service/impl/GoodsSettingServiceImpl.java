@@ -44,12 +44,12 @@ public class GoodsSettingServiceImpl implements GoodsSettingService {
         List<String> deadlineList = goodsSettingVO.getDeadlineList();
         for (int i = 0; i < deadlineList.size(); i++) {
             goodsSettings.add(GoodsSetting.builder()
-                    .goodsIndex(i+1)
+                    .goodsIndex(i + 1)
                     .deadline(deadlineList.get(i))
                     .contents(goodsSettingVO.getContents()).build());
         }
         goodsSettingMapper.createLambdaQuery()
-                .andLike(GoodsSetting::getDeadline,"%"+DateUtil.dateToString(new Date(),"yyyy-MM")+"%")
+                .andLike(GoodsSetting::getDeadline, "%" + DateUtil.dateToString(new Date(), "yyyy-MM") + "%")
                 .delete();
         // 批量新增物料库相关设定
         goodsSettingMapper.insertBatch(goodsSettings);
@@ -58,19 +58,26 @@ public class GoodsSettingServiceImpl implements GoodsSettingService {
 
     @Override
     public GoodsSettingResVO getGoodsSetting(String time) {
+        // 当前时间
         Date date = new Date();
+        // 次序
         List<Integer> goodsIndexList = new ArrayList<>();
+        // 得到该月的所有相关设定
         List<GoodsSetting> goodsSettings = goodsSettingMapper
                 .createLambdaQuery().andLike(GoodsSetting::getDeadline, time + "%").select();
         for (GoodsSetting goodsSetting : goodsSettings) {
             goodsIndexList.add(goodsSetting.getGoodsIndex());
         }
-        if (DateUtil.dateToString(date).equals(time)){
-            GoodsSetting goodsSetting = goodsSettingMapper.selectSetByDate(time);
+        //
+        if (DateUtil.dateToString(date,"yyyy-MM").equals(time)) {
+            GoodsSetting goodsSetting = goodsSettingMapper.selectSetByDate(DateUtil.dateToString(new Date()));
             return GoodsSettingResVO.builder().goodsIndexList(goodsIndexList)
                     .goodsIndex(goodsSetting.getGoodsIndex()).build();
         } else {
-            return GoodsSettingResVO.builder().goodsIndexList(goodsIndexList).build();
+            if (goodsIndexList.size()==0){
+                return new GoodsSettingResVO();
+            }
+            return GoodsSettingResVO.builder().goodsIndexList(goodsIndexList).goodsIndex(1).build();
         }
     }
 
@@ -83,8 +90,30 @@ public class GoodsSettingServiceImpl implements GoodsSettingService {
 
     @Override
     public void updateByBatchNum(String batchNum) {
-        String time = batchNum.substring(0, 4);
-        String goodsIndex = batchNum.substring(4);
-        goodsSettingMapper.updateByBatchNum(time, Integer.valueOf(goodsIndex), new Date());
+        String year = batchNum.substring(0, 4);
+        String month = batchNum.substring(5, 6);
+        String time = year + "-" + month;
+        String goodsIndex = batchNum.substring(6);
+        goodsSettingMapper.createLambdaQuery()
+                .andLike(GoodsSetting::getDeadline, time)
+                .andEq(GoodsSetting::getGoodsIndex, goodsIndex)
+                .updateSelective(GoodsSetting
+                        .builder()
+                        .isEnd(DateUtil.dateToString(new Date()))
+                        .build());
+    }
+
+    @Override
+    public GoodsSetting getByCond(String time, Integer goodsIndex) {
+        List<GoodsSetting> goodsSetting = goodsSettingMapper.createLambdaQuery()
+                .andLike(GoodsSetting::getDeadline, DateUtil.dateToString(DateUtil.stringToDate(time),"yyyy-MM")+"%")
+                .andEq(GoodsSetting::getGoodsIndex, goodsIndex)
+                .select();
+        if (goodsSetting!=null&&goodsSetting.size()!=0){
+            return goodsSetting.get(0);
+        }
+        else {
+            return new GoodsSetting();
+        }
     }
 }

@@ -38,6 +38,9 @@ public class PurchaseGoodsResVO implements Serializable {
     @Schema(description = "纸张")
     private String paper;
 
+    @Schema(description = "单位id")
+    private Integer unitId;
+
     @Schema(description = "物料归属单位")
     private String unitName;
 

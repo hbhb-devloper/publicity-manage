@@ -67,13 +67,12 @@ public class ApplicationFlowServiceImpl implements ApplicationFlowService {
 
     @Override
     public void updateById(ApplicationFlow applicationFlow) {
-        applicationFlowMapper.updateById(applicationFlow);
+        applicationFlowMapper.updateTemplateById(applicationFlow);
     }
 
     @Override
     public List<ApplicationFlowInfoVO> getInfoByBatchNum(String batchNum, Integer userId) {
         List<ApplicationFlowInfoVO> list = new ArrayList<>();
-        String flowName = null;
         // 查询流程的所有节点
         List<ApplicationFlow> applicationFlows= applicationFlowMapper.createLambdaQuery().andEq(ApplicationFlow::getBatchNum, batchNum).select();
         List<ApplicationFlowVO> flowNodes = BeanConverter.copyBeanList(applicationFlows, ApplicationFlowVO.class);
@@ -179,8 +178,13 @@ public class ApplicationFlowServiceImpl implements ApplicationFlowService {
      * 查询审批人下拉框值
      */
     private List<FlowRoleResVO> getApproverSelectList(String flowNodeId, String batchNum) {
-        return applicationFlowMapper
+        List<FlowRoleResVO> flowRoleResVOS = applicationFlowMapper
                 .selectNodeByNodeId(flowNodeId, batchNum);
+        for (FlowRoleResVO flowRoleResVO : flowRoleResVOS) {
+            UserInfo userInfoById = sysUserApiExp.getUserInfoById(flowRoleResVO.getUserId());
+            flowRoleResVO.setNickName(userInfoById.getNickName());
+        }
+        return flowRoleResVOS;
     }
 
     /**

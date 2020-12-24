@@ -31,4 +31,7 @@ public class ApplicationApproveVO implements Serializable {
 
     @Schema(description = "审批者列表")
     private List<ApplicationFlowNodeVO> approvers;
+
+    @Schema(description = "归属单位")
+    private Integer underUnitId;
 }

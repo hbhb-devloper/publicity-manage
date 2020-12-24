@@ -15,6 +15,9 @@ import com.hbhb.cw.publicity.web.vo.VerifyGoodsVO;
 import com.hbhb.cw.publicity.web.vo.VerifyHallGoodsReqVO;
 import com.hbhb.cw.publicity.web.vo.VerifyHallGoodsVO;
 
+import org.beetl.sql.core.page.PageRequest;
+import org.beetl.sql.core.page.PageResult;
+
 import java.util.List;
 
 /**
@@ -36,7 +39,7 @@ public interface GoodsMapper extends BaseMapper<Goods> {
 
     List<Long> selectIdsByCond(SummaryCondVO cond);
 
-    List<PurchaseGoodsResVO> selectPurchaseGoods(GoodsReqVO goodsReqVO);
+    PageResult<PurchaseGoodsResVO> selectPurchaseGoods( PageRequest<PurchaseGoodsResVO> request,GoodsReqVO goodsReqVO);
 
     List<PurchaseGoodsVO> selectGoodsByHallId(GoodsReqVO goodsReqVO);
 

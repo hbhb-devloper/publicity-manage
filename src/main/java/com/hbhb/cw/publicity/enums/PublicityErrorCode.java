@@ -40,7 +40,12 @@ public enum PublicityErrorCode {
     // 相关流程异常
     NOT_RELEVANT_FLOW("84004","not.relevant.flow"),
     // 请在二级目录添加
-    PLEASE_ADD_SECONDARY_DIRECTORY("84005","please.add.secondary.directory"),;
+    PLEASE_ADD_SECONDARY_DIRECTORY("84005","please.add.secondary.directory"),
+    // 无权发起审批
+    NOT_POWER_TO_APPROVER("84006","not.power.to.approver"),
+    // 没有流程再改流程类型下
+    NOT_HAVE_FLOW("84007","not.have.flow"),
+    ;
 
 
     private String code;

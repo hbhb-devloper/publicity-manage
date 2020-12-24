@@ -34,6 +34,6 @@ public class GoodsReqVO implements Serializable {
     @Schema(description = "申请状态")
     private Integer detailState;
 
-    @Schema(description = "提交是否置会")
+    @Schema(description = "提交是否置灰")
     private Boolean flag;
 }
