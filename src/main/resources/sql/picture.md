@@ -43,7 +43,7 @@ from picture p
 selectPictureNumCountByUnitId
 ===
 ```sql
-select max(right(print_num, 4))
+select IFNULL(max(right(print_num, 4)),0)
 from picture
 where year(create_time) = #{createTime}
   and delete_flag = 1

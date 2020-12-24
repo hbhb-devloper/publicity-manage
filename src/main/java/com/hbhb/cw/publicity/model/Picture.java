@@ -31,6 +31,10 @@ public class Picture implements Serializable {
      */
     private String pictureName;
     /**
+     * 申请单编号
+     */
+    private String pictureNum;
+    /**
      * 用户id
      */
     private Integer userId;
@@ -77,9 +81,14 @@ public class Picture implements Serializable {
     /**
      * 流程状态
      */
-    private Integer flowState;
+    private Integer state;
     /**
      * 画面文件id
      */
     private Integer fileId;
+
+    /**
+     * 删除状态
+     */
+    private Boolean deleteFlag;
 }

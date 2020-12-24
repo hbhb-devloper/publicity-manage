@@ -1,6 +1,6 @@
 package com.hbhb.cw.publicity.web.controller;
 
-import com.hbhb.cw.flowcenter.vo.FlowApproveInfoVO;
+import com.hbhb.cw.flowcenter.vo.FlowWrapperVO;
 import com.hbhb.cw.publicity.service.PrintFlowService;
 import com.hbhb.web.annotation.UserId;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
-import java.util.List;
 
 /**
  * @author wangxiaogang
@@ -28,7 +27,9 @@ public class PrintFlowController {
 
     @Operation(summary = "获取宣传印刷用品流程详情")
     @GetMapping("/list/{printId}")
-    public List<FlowApproveInfoVO> getPrintFlow(@PathVariable Long printId, @Parameter(hidden = true) @UserId Integer userId) {
+    public FlowWrapperVO getPrintFlow(@PathVariable Long printId,
+                                      @Parameter(hidden = true)
+                                      @UserId Integer userId) {
         return printFlowService.getInvoiceNodeList(printId, userId);
     }
 

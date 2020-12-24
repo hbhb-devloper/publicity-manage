@@ -152,5 +152,6 @@ public class PrintController {
     List<PrintMaterials> getMaterialsList(@Parameter(description = "id") String uuid) {
         return printService.getPrintMaterialsList(uuid);
     }
+
 }
 

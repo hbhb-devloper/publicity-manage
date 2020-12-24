@@ -3,10 +3,7 @@ package com.hbhb.cw.publicity.service.impl;
 import com.hbhb.core.utils.DateUtil;
 import com.hbhb.cw.flowcenter.model.Flow;
 import com.hbhb.cw.flowcenter.vo.FlowNodePropVO;
-import com.hbhb.cw.publicity.enums.FlowNodeNoticeState;
-import com.hbhb.cw.publicity.enums.NodeState;
-import com.hbhb.cw.publicity.enums.OperationState;
-import com.hbhb.cw.publicity.enums.PublicityErrorCode;
+import com.hbhb.cw.publicity.enums.*;
 import com.hbhb.cw.publicity.exception.PublicityException;
 import com.hbhb.cw.publicity.mapper.PictureFileMapper;
 import com.hbhb.cw.publicity.mapper.PictureMapper;
@@ -21,6 +18,7 @@ import com.hbhb.cw.publicity.service.PictureService;
 import com.hbhb.cw.publicity.web.vo.*;
 import com.hbhb.cw.systemcenter.enums.UnitEnum;
 import com.hbhb.cw.systemcenter.model.SysFile;
+import com.hbhb.cw.systemcenter.model.Unit;
 import com.hbhb.cw.systemcenter.vo.UserInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.beetl.sql.core.page.DefaultPageRequest;
@@ -123,7 +121,23 @@ public class PictureServiceImpl implements PictureService {
     public void addPicture(PictureInfoVO infoVO, Integer userId) {
         //获取用户姓名
         Picture picture = new Picture();
+        UserInfo user = userApi.getUserInfoById(userId);
+        Unit unit = unitApi.getUnitInfo(user.getUnitId());
         BeanUtils.copyProperties(infoVO, picture);
+        // 印刷单号 = ”HM +单位简称+四位年份+ 自增序号“
+        // 获取增长序号
+        Integer count = pictureMapper.selectPictureNumCountByUnitId(new Date(), infoVO.getUnitId());
+        String num = String.format("%0" + 4 + "d", (count + 1));
+        picture.setPictureNum("HM" + unit.getAbbr() + DateUtil.dateToStringY(new Date()) + num);
+        // 印刷单名称 = 单位名称+临时申请+时间（yyyy/mm/dd）
+        picture.setPictureName(unit.getUnitName() + "画面申请" + DateUtil.dateToStringYmd(new Date()));
+        picture.setUnitId(user.getUnitId());
+        picture.setUserId(userId);
+        picture.setApplyTime(new Date());
+        picture.setCreateTime(new Date());
+        picture.setUpdateTime(new Date());
+        picture.setState(NodeState.NOT_APPROVED.value());
+        picture.setDeleteFlag(true);
         pictureMapper.insert(picture);
         // 保存附件
         if (!isEmpty(infoVO.getFiles())) {
@@ -140,7 +154,7 @@ public class PictureServiceImpl implements PictureService {
         Picture picture = new Picture();
         BeanUtils.copyProperties(picture, infoVO);
         pictureMapper.updateById(picture);
-        // 修改保存附件 todo 附件为毕传，若附件未传抛出业务异常
+        // 修改保存附件
         if (infoVO.getFiles().size() != 0) {
             List<PictureFileVO> fileVOList = infoVO.getFiles();
             List<PictureFileVO> files = new ArrayList<>();
@@ -189,7 +203,7 @@ public class PictureServiceImpl implements PictureService {
             throw new PublicityException(PublicityErrorCode.LOCK_OF_APPROVAL_ROLE);
         }
         //  2.获取流程id
-        Long flowId = getRelatedFlow(initVO.getFlowTypeId(), picture.getUserId());
+        Long flowId = getRelatedFlow(initVO.getFlowTypeId());
         // 通过流程id得到流程节点属性
         List<FlowNodePropVO> flowProps = propApi.getNodeProps(flowId);
         //  3.校验用户发起审批权限
@@ -200,16 +214,13 @@ public class PictureServiceImpl implements PictureService {
         //  4.同步节点属性
         syncPrintFlow(flowProps, picture.getId(), initVO.getUserId());
         // 得到推送模板
-        String inform = flowService.getInform(flowProps.get(0).getFlowNodeId()
-                , FlowNodeNoticeState.DEFAULT_REMINDER.value());
-        if (inform == null) {
-            return;
-        }
+        String inform = flowService.getInform(flowProps.get(0).getFlowNodeId(),
+                FlowNodeNoticeState.DEFAULT_REMINDER.value());
+
         // 跟据流程id获取流程名称
         Flow flow = flowApi.getFlowById(flowId);
-        // todo 修改推送模板
-        inform = inform.replace(""
-                , picture.getPictureName() + "_" + "_" + flow.getFlowName());
+        inform = inform.replace(TemplateContent.TITLE.getValue()
+                , picture.getPictureName() + picture.getPictureNum() + "_" + flow.getFlowName());
         // 推送提醒给发起人
         noticeService.addPictureNotice(
                 PictureNotice.builder()
@@ -219,11 +230,9 @@ public class PictureServiceImpl implements PictureService {
                         .content(inform)
                         .flowTypeId(initVO.getFlowTypeId())
                         .build());
-
-
         //  6.更改印刷品流程状态
         picture.setId(initVO.getPictureId());
-        picture.setFlowState(NodeState.APPROVING.value());
+        picture.setState(NodeState.APPROVING.value());
         picture.setUpdateBy(initVO.getUserId());
 
     }
@@ -238,20 +247,17 @@ public class PictureServiceImpl implements PictureService {
         // 如果设定了默认用户，且为当前登录用户，则有发起权限
         if (firstNodeProp.getUserId() != null) {
             return firstNodeProp.getUserId().equals(userId);
-        }
-        // 如果没有设定默认用户，则通过流程角色判断
-        else {
+        } else {
+            // 如果没有设定默认用户，则通过流程角色判断
             // 如果角色范围为全杭州
             if (UnitEnum.HANGZHOU.value().equals(firstNodeProp.getUnitId()) || firstNodeProp.getUnitId().equals(0)) {
                 return flowRoleIds.contains(firstNodeProp.getFlowRoleId());
-            }
-            // 如果角色范围为本部
-            else if (UnitEnum.BENBU.value().equals(firstNodeProp.getUnitId())) {
+                // 如果角色范围为本部
+            } else if (UnitEnum.BENBU.value().equals(firstNodeProp.getUnitId())) {
                 List<Integer> unitIds = unitApi.getSubUnit(UnitEnum.BENBU.value());
                 return unitIds.contains(unitId) && flowRoleIds.contains(firstNodeProp.getFlowRoleId());
-            }
-            // 如果为确定某个单位
-            else {
+                // 如果为确定某个单位
+            } else {
                 // 必须单位和流程角色都匹配，才可判定为有发起权限
                 return unitId.equals(firstNodeProp.getUnitId()) && flowRoleIds.contains(firstNodeProp.getFlowRoleId());
             }
@@ -290,14 +296,14 @@ public class PictureServiceImpl implements PictureService {
         flowService.insertBatch(pictureFlowList);
     }
 
-    private Long getRelatedFlow(Long flowTypeId, Integer userId) {
+    private Long getRelatedFlow(Long flowTypeId) {
         // 流程节点数量 => 流程id
-        Map<Long, Long> flowMap = new HashMap<>();
+        Map<Long, Long> flowMap = new HashMap<>(5);
         List<Flow> flowList = flowApi.getFlowsByTypeId(flowTypeId);
         // 流程有效性校验（发票预开流程存在两条）
         if (flowList.size() == 0) {
             throw new PublicityException(PublicityErrorCode.NOT_EXIST_FLOW);
-        } else if (flowList.size() > 2) {
+        } else if (flowList.size() > 1) {
             throw new PublicityException(PublicityErrorCode.EXCEED_LIMIT_FLOW);
         }
         flowList.forEach(flow -> flowMap.put(nodeApi.getNodeNum(flow.getId()), flow.getId()));
@@ -309,14 +315,13 @@ public class PictureServiceImpl implements PictureService {
         }
         // 校验流程是否匹配，如果没有匹配的流程，则抛出提示
         return flowId;
-
     }
 
     @Override
     public void updateState(Long printId, Integer projectState) {
         pictureMapper.updateById(Picture.builder()
                 .id(printId)
-                .flowState(projectState)
+                .state(projectState)
                 .build());
     }
 

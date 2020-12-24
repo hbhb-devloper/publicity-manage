@@ -3,10 +3,7 @@ package com.hbhb.cw.publicity.service.impl;
 import com.hbhb.core.utils.DateUtil;
 import com.hbhb.cw.flowcenter.model.Flow;
 import com.hbhb.cw.flowcenter.vo.FlowNodePropVO;
-import com.hbhb.cw.publicity.enums.FlowNodeNoticeState;
-import com.hbhb.cw.publicity.enums.NodeState;
-import com.hbhb.cw.publicity.enums.OperationState;
-import com.hbhb.cw.publicity.enums.PublicityErrorCode;
+import com.hbhb.cw.publicity.enums.*;
 import com.hbhb.cw.publicity.exception.PublicityException;
 import com.hbhb.cw.publicity.mapper.PrintFileMapper;
 import com.hbhb.cw.publicity.mapper.PrintMapper;
@@ -134,14 +131,10 @@ public class PrintServiceImpl implements PrintService {
         Print print = new Print();
         UserInfo user = userApi.getUserInfoById(userId);
         Unit unit = unitApi.getUnitInfo(user.getUnitId());
-
         BeanUtils.copyProperties(infoVO, print);
         // 印刷单号 = ”YS +单位简称+四位年份+ 自增序号“
         // 获取增长序号
         Integer count = printMapper.selectPrintNumCountByUnitId(new Date(), unit.getId());
-        if (count == null) {
-            count = 0;
-        }
         String num = String.format("%0" + 4 + "d", (count + 1));
         print.setPrintNum("YS" + unit.getAbbr() + DateUtil.dateToStringY(new Date()) + num);
         // 印刷单名称 = 单位名称+临时申请+时间（yyyy/mm/dd）
@@ -257,12 +250,9 @@ public class PrintServiceImpl implements PrintService {
         // 得到推送模板
         String inform = flowService.getInform(flowProps.get(0).getFlowNodeId()
                 , FlowNodeNoticeState.DEFAULT_REMINDER.value());
-        if (inform == null) {
-            return;
-        }
         // 跟据流程id获取流程名称
         Flow flow = flowApi.getFlowById(flowId);
-        inform = inform.replace(""
+        inform = inform.replace(TemplateContent.TITLE.getValue()
                 , print.getPrintNum() + "_" + print.getPrintName() + "_" + flow.getFlowName());
         //  推送消息给发起人
         noticeService.addPrintNotice(
@@ -366,7 +356,7 @@ public class PrintServiceImpl implements PrintService {
 
     @Override
     public void updateState(Long printId, Integer projectState) {
-        printMapper.updateById(Print.builder()
+        printMapper.updateTemplateById(Print.builder()
                 .id(printId)
                 .state(projectState)
                 .build());

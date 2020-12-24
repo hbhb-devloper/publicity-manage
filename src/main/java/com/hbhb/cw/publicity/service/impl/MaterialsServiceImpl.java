@@ -19,6 +19,7 @@ import com.hbhb.cw.systemcenter.enums.DictCode;
 import com.hbhb.cw.systemcenter.enums.TypeCode;
 import com.hbhb.cw.systemcenter.enums.UnitEnum;
 import com.hbhb.cw.systemcenter.model.SysFile;
+import com.hbhb.cw.systemcenter.model.Unit;
 import com.hbhb.cw.systemcenter.vo.DictVO;
 import com.hbhb.cw.systemcenter.vo.UserInfo;
 import lombok.extern.slf4j.Slf4j;
@@ -80,12 +81,14 @@ public class MaterialsServiceImpl implements MaterialsService {
     private MaterialsBudgetMapper budgetMapper;
     private StringBuffer id = new StringBuffer();
 
+
     @Override
     public PageResult<MaterialsResVO> getMaterialsList(MaterialsReqVO reqVO, Integer pageNum, Integer pageSize) {
         PageRequest<MaterialsResVO> request = DefaultPageRequest.of(pageNum, pageSize);
-        Map<Integer, String> unitMapById = unitApi.getUnitMapById();
         PageResult<MaterialsResVO> materialsList = materialsMapper.selectMaterialsListByCond(request, request);
+        // 组装单位名称，用户名称
         List<Integer> userIds = new ArrayList<>();
+        Map<Integer, String> unitMapById = unitApi.getUnitMapById();
         materialsList.getList().forEach(item -> userIds.add(item.getUserId()));
         Map<Integer, String> userMapById = userApi.getUserMapById(userIds);
         materialsList.getList().forEach(item -> {
@@ -123,8 +126,6 @@ public class MaterialsServiceImpl implements MaterialsService {
                     .collect(Collectors.toList());
             info.setFiles(fileVo);
         }
-
-
         return info;
     }
 
@@ -133,6 +134,7 @@ public class MaterialsServiceImpl implements MaterialsService {
     public void addMaterials(MaterialsInfoVO infoVO, Integer userId) {
         // 判断该用户所属单位下物料制作费用是否充足
         UserInfo user = userApi.getUserInfoById(userId);
+        Unit unit = unitApi.getUnitInfo(user.getUnitId());
         MaterialsBudgetVO materialsBudget = getMaterialsBudget(user.getUnitId());
         int i = materialsBudget.getBalance().compareTo(infoVO.getPredictAmount());
         if (i < 0) {
@@ -140,15 +142,31 @@ public class MaterialsServiceImpl implements MaterialsService {
         }
         Materials materials = new Materials();
         BeanUtils.copyProperties(infoVO, materials);
-        materials.setApplyTime(DateUtil.string2DateYMD(infoVO.getApplyTime()));
+        // 印刷单号 = ”WL +单位简称+四位年份+ 自增序号“
+        // 获取增长序号
+        Integer count = materialsMapper.selectPictureNumCountByUnitId(new Date(), infoVO.getUnitId());
+        String num = String.format("%0" + 4 + "d", (count + 1));
+        materials.setMaterialsNum("WL" + unit.getAbbr() + DateUtil.dateToStringY(new Date()) + num);
+        // 印刷单名称 = 单位名称+临时申请+时间（yyyy/mm/dd）
+        materials.setMaterialsName((unit.getUnitName() + "物料申请" + DateUtil.dateToStringYmd(new Date())));
+        materials.setUnitId(user.getUnitId());
+        materials.setUserId(userId);
+        materials.setApplyTime(new Date());
         materials.setCreateTime(new Date());
         materials.setUpdateTime(new Date());
         materials.setState(NodeState.NOT_APPROVED.value());
+        materials.setDeleteFlag(true);
+
         // 新增印刷用品
         materialsMapper.insert(materials);
         if (infoVO.getFiles() != null) {
             List<MaterialsFile> fileList = setMaterialsFile(infoVO.getFiles(), userId);
             fileMapper.insertBatch(fileList);
+        }
+        // 新增印刷用品导入业务单式或宣传单页数据
+        if (!isEmpty(infoVO.getImportDateId())) {
+            List<MaterialsInfo> materialsList = getMaterialsInfoList(infoVO.getImportDateId());
+            materialsInfoMapper.insertBatch(materialsList);
         }
     }
 
@@ -198,21 +216,6 @@ public class MaterialsServiceImpl implements MaterialsService {
         materialsInfoMapper.insertBatch(materialsList);
     }
 
-    private List<MaterialsFile> setMaterialsFile(List<MaterialsFileVO> fileVOList, Integer userId) {
-        //获取用户姓名
-        UserInfo user = userApi.getUserInfoById(userId);
-        List<MaterialsFile> fileList = new ArrayList<>();
-        if (fileVOList != null && !fileVOList.isEmpty()) {
-            fileVOList.forEach(item -> fileList.add(MaterialsFile.builder()
-                    .createBy(user.getNickName())
-                    .createTime(new Date())
-                    .fileId(item.getFileId())
-                    .materialsId(item.getMaterialsId())
-                    .build()));
-        }
-        return fileList;
-    }
-
     @Override
     public void deleteFile(Long fileId) {
         fileMapper.deleteById(fileId);
@@ -228,8 +231,6 @@ public class MaterialsServiceImpl implements MaterialsService {
         if (!user.getNickName().equals(userInfo.getNickName())) {
             throw new PublicityException(PublicityErrorCode.LOCK_OF_APPROVAL_ROLE);
         }
-
-
         //  3.获取流程id
         Long flowId = getRelatedFlow(initVO.getFlowTypeId());
         // 通过流程id得到流程节点属性
@@ -268,6 +269,58 @@ public class MaterialsServiceImpl implements MaterialsService {
 
     }
 
+    @Override
+    public void updateState(Long materialsId, Integer projectState) {
+        materialsMapper.updateById(Materials.builder()
+                .id(materialsId)
+                .state(projectState)
+                .build());
+    }
+
+    @Override
+    public void updateBudget(List<MaterialsBudget> budget) {
+        budgetMapper.updateBatchTempById(budget);
+    }
+
+    @Override
+    public List<MaterialsBudgetResVO> getMaterialsBudgetList() {
+        return budgetMapper.selectBudgetList();
+    }
+
+    @Override
+    public MaterialsBudgetVO getMaterialsBudget(Integer unitId) {
+        return materialsMapper.selectMaterialsBudgetByUnitId(unitId);
+    }
+
+    @Override
+    public List<MaterialsInfo> getMaterialsInfoList(String uuId) {
+        Query query = new Query(Criteria.where("id").is(uuId));
+        MaterialsInfoImportDataVO data = mongoTemplate.findOne(query, MaterialsInfoImportDataVO.class);
+        if (data != null) {
+            return data.getMaterialsInfo();
+        }
+        return null;
+    }
+
+    @Override
+    public String getImportDataId() {
+        return String.valueOf(this.id);
+    }
+
+    private List<MaterialsFile> setMaterialsFile(List<MaterialsFileVO> fileVOList, Integer userId) {
+        //获取用户姓名
+        UserInfo user = userApi.getUserInfoById(userId);
+        List<MaterialsFile> fileList = new ArrayList<>();
+        if (fileVOList != null && !fileVOList.isEmpty()) {
+            fileVOList.forEach(item -> fileList.add(MaterialsFile.builder()
+                    .createBy(user.getNickName())
+                    .createTime(new Date())
+                    .fileId(item.getFileId())
+                    .materialsId(item.getMaterialsId())
+                    .build()));
+        }
+        return fileList;
+    }
 
     private boolean hasAccess2Approve(List<FlowNodePropVO> flowProps, Integer unitId, Integer userId) {
         List<Long> flowRoleIds = roleUserApi.getRoleIdByUserId(userId);
@@ -366,35 +419,10 @@ public class MaterialsServiceImpl implements MaterialsService {
 
     }
 
-    @Override
-    public void updateState(Long materialsId, Integer projectState) {
-        materialsMapper.updateById(Materials.builder()
-                .id(materialsId)
-                .state(projectState)
-                .build());
-    }
-
-    @Override
-    public void updateBudget(List<MaterialsBudget> budget) {
-        budgetMapper.updateBatchTempById(budget);
-    }
-
-    @Override
-    public List<MaterialsBudgetResVO> getMaterialsBudgetList() {
-        return budgetMapper.selectBudgetList();
-    }
-
-    @Override
-    public MaterialsBudgetVO getMaterialsBudget(Integer unitId) {
-        return materialsMapper.selectMaterialsBudgetByUnitId(unitId);
-    }
-
-
     private Map<String, String> enableCondMap() {
         List<DictVO> dict = dictApi.getDict(TypeCode.FLOW.value(), DictCode.FLOW_NODE_PROP_ENABLE_COND.value());
         return dict.stream().collect(Collectors.toMap(DictVO::getValue, DictVO::getLabel));
     }
-
 
     private boolean isEnableCond(BigDecimal amount, FlowNodePropVO propVO) {
         Map<String, String> enableMap = enableCondMap();
@@ -429,18 +457,4 @@ public class MaterialsServiceImpl implements MaterialsService {
     }
 
 
-    @Override
-    public List<PrintMaterials> getPrintMaterialsList(String uuId) {
-        Query query = new Query(Criteria.where("id").is(uuId));
-        PrintMaterialsImportDataVO data = mongoTemplate.findOne(query, PrintMaterialsImportDataVO.class);
-        if (data != null) {
-            return data.getMaterials();
-        }
-        return null;
-    }
-
-    @Override
-    public String getImportDataId() {
-        return String.valueOf(this.id);
-    }
 }

@@ -1,6 +1,6 @@
 package com.hbhb.cw.publicity.web.controller;
 
-import com.hbhb.cw.flowcenter.vo.FlowApproveInfoVO;
+import com.hbhb.cw.flowcenter.vo.FlowWrapperVO;
 import com.hbhb.cw.publicity.service.MaterialsFlowService;
 import com.hbhb.web.annotation.UserId;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
-import java.util.List;
 
 /**
  * @author wangxiaogang
@@ -28,14 +27,8 @@ public class MaterialsFlowController {
 
     @Operation(summary = "获取宣传物料设计流程详情")
     @GetMapping("/list/{materialsId}")
-    public List<FlowApproveInfoVO> getMaterialsFlow(@PathVariable Long materialsId,
-                                                    @Parameter(hidden = true) @UserId Integer userId) {
-        return flowService.getInvoiceNodeList(materialsId, userId);
-    }
-
-    @Operation(summary = "节点提醒")
-    @GetMapping("/node")
-    public String getNotice(@Parameter(description = "节点id") String flowNode, @Parameter(description = "状态") Integer state) {
-        return flowService.getInform(flowNode, state);
+    public FlowWrapperVO getMaterialsFlow(@PathVariable Long materialsId,
+                                          @Parameter(hidden = true) @UserId Integer userId) {
+        return flowService.getMaterialsNodeList(materialsId, userId);
     }
 }

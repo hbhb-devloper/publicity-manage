@@ -1,8 +1,8 @@
 package com.hbhb.cw.publicity.service;
 
-import com.hbhb.cw.flowcenter.vo.FlowApproveInfoVO;
+import com.hbhb.cw.flowcenter.vo.FlowApproveVO;
+import com.hbhb.cw.flowcenter.vo.FlowWrapperVO;
 import com.hbhb.cw.publicity.model.MaterialsFlow;
-import com.hbhb.cw.publicity.web.vo.MaterialsApproveVO;
 
 import java.util.List;
 
@@ -33,7 +33,7 @@ public interface MaterialsFlowService {
      * @param userId    用户id
      * @return 流程列表
      */
-    List<FlowApproveInfoVO> getInvoiceNodeList(Long pictureId, Integer userId);
+    FlowWrapperVO getMaterialsNodeList(Long pictureId, Integer userId);
 
     /**
      * 审批发票
@@ -41,7 +41,7 @@ public interface MaterialsFlowService {
      * @param vo     条件
      * @param userId id
      */
-    void approve(MaterialsApproveVO vo, Integer userId);
+    void approve(FlowApproveVO vo, Integer userId);
 
     /**
      * 删除流程

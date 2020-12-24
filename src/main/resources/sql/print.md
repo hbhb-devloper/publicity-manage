@@ -50,7 +50,7 @@ where p.id = #{id}
 selectPrintNumCountByUnitId
 ===
 ```sql
-select max(right(print_num, 4))
+select IFNULL(max(right(print_num, 4)),0)
 from print
 where year(create_time) = #{createTime}
   and delete_flag = 1

@@ -1,7 +1,7 @@
 package com.hbhb.cw.publicity.service;
 
 import com.hbhb.cw.publicity.model.MaterialsBudget;
-import com.hbhb.cw.publicity.model.PrintMaterials;
+import com.hbhb.cw.publicity.model.MaterialsInfo;
 import com.hbhb.cw.publicity.web.vo.*;
 import org.beetl.sql.core.page.PageResult;
 
@@ -112,7 +112,7 @@ public interface MaterialsService {
      * @param uuId id
      * @return 列表
      */
-    List<PrintMaterials> getPrintMaterialsList(String uuId);
+    List<MaterialsInfo> getMaterialsInfoList(String uuId);
 
     /**
      * 获取导入id

@@ -72,7 +72,7 @@ where unitId = #{unitId}
 selectMaterialsNumCountByUnitId
 ===
 ```sql
-select max(right(print_num, 4))
+select IFNULL(max(right(print_num, 4)),0)
 from materials
 where year(create_time) = #{createTime}
   and delete_flag = 1

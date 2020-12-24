@@ -75,4 +75,8 @@ public class Materials implements Serializable {
      * 流程状态
      */
     private Integer state;
+    /**
+     * 删除状态
+     */
+    private Boolean deleteFlag;
 }

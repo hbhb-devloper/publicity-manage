@@ -17,14 +17,6 @@ public class PrintNoticeServiceImpl implements PrintNoticeService {
     @Resource
     private PrintNoticeMapper noticeMapper;
 
-    @Override
-    public void updateNoticeState(Long printId) {
-        PrintNotice notice = new PrintNotice();
-        notice.setPrintId(printId);
-        notice.setState(1);
-        noticeMapper.updateById(notice);
-
-    }
 
     @Override
     public void addPrintNotice(PrintNoticeVO build) {

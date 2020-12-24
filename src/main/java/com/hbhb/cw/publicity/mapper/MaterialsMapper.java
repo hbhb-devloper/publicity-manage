@@ -7,6 +7,8 @@ import com.hbhb.cw.publicity.web.vo.MaterialsResVO;
 import org.beetl.sql.core.page.PageRequest;
 import org.beetl.sql.core.page.PageResult;
 
+import java.util.Date;
+
 /**
  * @author wangxiaogang
  */
@@ -27,4 +29,13 @@ public interface MaterialsMapper extends BaseMapper<Materials> {
      * @return 统计信息
      */
     MaterialsBudgetVO selectMaterialsBudgetByUnitId(Integer unitId);
+
+    /**
+     * 获取单位下今年最大编号
+     *
+     * @param date   时间
+     * @param unitId 单位
+     * @return 最大编号
+     */
+    Integer selectPictureNumCountByUnitId(Date date, Integer unitId);
 }

@@ -1,8 +1,8 @@
 package com.hbhb.cw.publicity.service;
 
-import com.hbhb.cw.flowcenter.vo.FlowApproveInfoVO;
+import com.hbhb.cw.flowcenter.vo.FlowApproveVO;
+import com.hbhb.cw.flowcenter.vo.FlowWrapperVO;
 import com.hbhb.cw.publicity.model.PictureFlow;
-import com.hbhb.cw.publicity.web.vo.PictureApproveVO;
 
 import java.util.List;
 
@@ -40,7 +40,7 @@ public interface PictureFlowService {
      * @param userId    用户id
      * @return 流程列表
      */
-    List<FlowApproveInfoVO> getInvoiceNodeList(Long pictureId, Integer userId);
+    FlowWrapperVO getInvoiceNodeList(Long pictureId, Integer userId);
 
     /**
      * 审批发票
@@ -48,7 +48,7 @@ public interface PictureFlowService {
      * @param vo     条件
      * @param userId id
      */
-    void approve(PictureApproveVO vo, Integer userId);
+    void approve(FlowApproveVO vo, Integer userId);
 
     /**
      * 删除流程
