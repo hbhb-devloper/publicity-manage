@@ -48,7 +48,11 @@ public enum PublicityErrorCode {
     // 没有流程再改流程类型下
     NOT_HAVE_FLOW("84007","not.have.flow"),
     // 无法在二级目录下添加活动
-    NOT_ADD_SECONDARY_DIRECTORY("84005","not.add.secondary.directory"),
+    NOT_ADD_SECONDARY_DIRECTORY("84008","not.add.secondary.directory"),
+    // 本月已无审批次数
+    NOT_NUMBER_IN_MONTH("84009","not.number.in.month"),
+    // 无法在禁用的类别中操作
+    DO_NOT_OPERATE("84010","do.mot.operate")
     ;
 
 
