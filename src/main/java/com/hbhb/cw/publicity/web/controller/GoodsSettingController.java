@@ -43,6 +43,7 @@ public class GoodsSettingController implements PublicitySettingApi {
     @Operation(summary = "新增物料设定")
     public void addGoodsSetting(@RequestBody GoodsSettingVO goodsSettingVO) {
         goodsSettingService.addGoodsSetting(goodsSettingVO);
+
     }
 
     @GetMapping("/time")
