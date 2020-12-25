@@ -37,6 +37,7 @@ public class GoodsSettingController implements PublicitySettingApi {
     @Operation(summary = "物料活动产品列表")
     public List<GoodsSetting> getGoodsSetting() {
         return goodsSettingService.getList();
+
     }
 
     @PostMapping("/add")
