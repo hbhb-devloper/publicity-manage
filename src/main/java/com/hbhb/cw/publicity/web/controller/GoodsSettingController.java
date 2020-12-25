@@ -1,5 +1,6 @@
 package com.hbhb.cw.publicity.web.controller;
 
+import com.hbhb.cw.publicity.api.PublicitySettingApi;
 import com.hbhb.cw.publicity.model.GoodsSetting;
 import com.hbhb.cw.publicity.service.GoodsSettingService;
 import com.hbhb.cw.publicity.web.vo.GoodsSettingResVO;
@@ -27,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequestMapping("/goods/setting")
 @Slf4j
-public class GoodsSettingController {
+public class GoodsSettingController implements PublicitySettingApi {
 
     @Resource
     private GoodsSettingService goodsSettingService;
@@ -48,5 +49,10 @@ public class GoodsSettingController {
     @Operation(summary = "通过时间得到第几月的有几次")
     public GoodsSettingResVO getUserGoods(String time) {
         return goodsSettingService.getGoodsSetting(time);
+    }
+
+    @Override
+    public void addGoodsSetting() {
+        goodsSettingService.addNextMonthSetting();
     }
 }

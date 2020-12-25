@@ -2,8 +2,8 @@ package com.hbhb.cw.publicity.web.controller;
 
 import com.hbhb.core.utils.ExcelUtil;
 import com.hbhb.cw.publicity.service.VerifyGoodsService;
-import com.hbhb.cw.publicity.web.vo.GoodsChangerVO;
 import com.hbhb.cw.publicity.web.vo.GoodsReqVO;
+import com.hbhb.cw.publicity.web.vo.GoodsSaveGoodsVO;
 import com.hbhb.cw.publicity.web.vo.SummaryGoodsResVO;
 import com.hbhb.cw.publicity.web.vo.VerifyGoodsExportVO;
 
@@ -46,20 +46,14 @@ public class VerifyGoodsController {
 
     @PutMapping("/save")
     @Operation(summary = "分公司保存物料")
-    public void saveGoods(@RequestBody GoodsReqVO goodsReqVO) {
-        verifyGoodsService.saveGoods(goodsReqVO);
+    public void saveGoods(@RequestBody GoodsSaveGoodsVO goodsSaveGoodsVO) {
+        verifyGoodsService.saveGoods(goodsSaveGoodsVO);
     }
 
     @PutMapping("/submit")
     @Operation(summary = "分公司提交物料")
-    public void submitGoods(@RequestBody GoodsReqVO goodsReqVO) {
-        verifyGoodsService.submitGoods(goodsReqVO);
-    }
-
-    @PutMapping("/changer")
-    @Operation(summary = "分公司修改修改后申请数量")
-    public void changerModifyAmount(@RequestBody List<GoodsChangerVO> list) {
-        verifyGoodsService.changerModifyAmount(list);
+    public void submitGoods(@RequestBody GoodsSaveGoodsVO goodsSaveGoodsVO) {
+        verifyGoodsService.submitGoods(goodsSaveGoodsVO);
     }
 
     @PostMapping("/export")

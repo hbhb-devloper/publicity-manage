@@ -16,6 +16,7 @@ import com.hbhb.cw.publicity.service.GoodsSettingService;
 import com.hbhb.cw.publicity.service.VerifyGoodsService;
 import com.hbhb.cw.publicity.web.vo.GoodsChangerVO;
 import com.hbhb.cw.publicity.web.vo.GoodsReqVO;
+import com.hbhb.cw.publicity.web.vo.GoodsSaveGoodsVO;
 import com.hbhb.cw.publicity.web.vo.SummaryCondVO;
 import com.hbhb.cw.publicity.web.vo.SummaryGoodsResVO;
 import com.hbhb.cw.publicity.web.vo.SummaryGoodsVO;
@@ -72,7 +73,12 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
     }
 
     @Override
-    public void  saveGoods(GoodsReqVO goodsReqVO) {
+    public void saveGoods(GoodsSaveGoodsVO goodsSaveGoodsVO) {
+        // 修改审批数量
+        List<GoodsChangerVO> list = goodsSaveGoodsVO.getList();
+        changerModifyAmount(list);
+        // 保存
+        GoodsReqVO goodsReqVO = goodsSaveGoodsVO.getGoodsReqVO();
         goodsReqVO.setHallId(null);
         List<Long> applicationIds = getApplicationIds(goodsReqVO);
         applicationMapper.createLambdaQuery()
@@ -81,7 +87,12 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
     }
 
     @Override
-    public void submitGoods(GoodsReqVO goodsReqVO) {
+    public void submitGoods(GoodsSaveGoodsVO goodsSaveGoodsVO) {
+        // 修改审批数量
+        List<GoodsChangerVO> list = goodsSaveGoodsVO.getList();
+        changerModifyAmount(list);
+        // 保存
+        GoodsReqVO goodsReqVO = goodsSaveGoodsVO.getGoodsReqVO();
         goodsReqVO.setHallId(null);
         // 当提交时提交为整个分公司
         List<Long> applicationIds = getApplicationIds(goodsReqVO);
@@ -109,8 +120,11 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
 
     }
 
-    @Override
-    public void changerModifyAmount(List<GoodsChangerVO> list) {
+
+    private void changerModifyAmount(List<GoodsChangerVO> list) {
+        if (list == null || list.size() == 0) {
+            return;
+        }
         List<Long> applicationDetailIds = new ArrayList<>();
         // id => modifyAmount id => 申请数量
         Map<Long, Long> amountMap = new HashMap<>();
@@ -197,8 +211,7 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
                 return new ArrayList<SummaryGoodsVO>();
             }
             goodsReqVO.setTime(goodsSetting.getDeadline());
-        }
-        else {
+        } else {
             goodsSetting = goodsSettingService.getByCond(goodsReqVO.getTime(), goodsReqVO.getGoodsIndex());
             if (goodsSetting == null) {
                 return new ArrayList<SummaryGoodsVO>();
@@ -237,14 +250,13 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
         if (goodsReqVO.getTime() == null) {
             // 通过时间判断批次
             goodsSetting = goodsSettingService.getSetByDate(DateUtil.dateToString(new Date()));
-            if (goodsSetting == null || goodsSetting.getDeadline()==null) {
+            if (goodsSetting == null || goodsSetting.getDeadline() == null) {
                 return false;
             }
             goodsReqVO.setTime(goodsSetting.getDeadline());
-        }
-        else {
+        } else {
             goodsSetting = goodsSettingService.getByCond(goodsReqVO.getTime(), goodsReqVO.getGoodsIndex());
-            if (goodsSetting == null || goodsSetting.getDeadline()==null) {
+            if (goodsSetting == null || goodsSetting.getDeadline() == null) {
                 return false;
             }
             goodsReqVO.setTime(goodsSetting.getDeadline());
@@ -290,8 +302,7 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
             // 通过时间判断批次
             goodsSetting = goodsSettingService.getSetByDate(DateUtil.dateToString(new Date()));
             goodsReqVO.setTime(goodsSetting.getDeadline());
-        }
-        else {
+        } else {
             goodsSetting = goodsSettingService.getByCond(goodsReqVO.getTime(), goodsReqVO.getGoodsIndex());
         }
         if (goodsSetting == null) {

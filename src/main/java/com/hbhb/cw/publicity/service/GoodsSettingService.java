@@ -42,4 +42,9 @@ public interface GoodsSettingService {
      * 通过条件查找第几次
      */
     GoodsSetting getByCond(String time,Integer goodsIndex);
+
+    /**
+     * 每个月月初创建相关设定
+     */
+    void addNextMonthSetting();
 }

@@ -1,6 +1,8 @@
 package com.hbhb.cw.publicity.service.impl;
 
 import com.hbhb.core.utils.DateUtil;
+import com.hbhb.cw.publicity.enums.PublicityErrorCode;
+import com.hbhb.cw.publicity.exception.PublicityException;
 import com.hbhb.cw.publicity.mapper.GoodsSettingMapper;
 import com.hbhb.cw.publicity.model.GoodsSetting;
 import com.hbhb.cw.publicity.service.GoodsSettingService;
@@ -10,7 +12,9 @@ import com.hbhb.cw.publicity.web.vo.GoodsSettingVO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -105,6 +109,9 @@ public class GoodsSettingServiceImpl implements GoodsSettingService {
 
     @Override
     public GoodsSetting getByCond(String time, Integer goodsIndex) {
+        if (goodsIndex==null){
+            throw new PublicityException(PublicityErrorCode.NOT_NUMBER_IN_MONTH);
+        }
         List<GoodsSetting> goodsSetting = goodsSettingMapper.createLambdaQuery()
                 .andLike(GoodsSetting::getDeadline, DateUtil.dateToString(DateUtil.stringToDate(time),"yyyy-MM")+"%")
                 .andEq(GoodsSetting::getGoodsIndex, goodsIndex)
@@ -115,5 +122,32 @@ public class GoodsSettingServiceImpl implements GoodsSettingService {
         else {
             return new GoodsSetting();
         }
+    }
+
+    @Override
+    public void addNextMonthSetting() {
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM");
+        Date date1 = new Date();
+        Calendar calendar = Calendar.getInstance();
+        // 设置为当前时间
+        calendar.setTime(date1);
+        // 设置为上一个月
+        calendar.set(Calendar.MONTH, calendar.get(Calendar.MONTH) - 1);
+        date1 = calendar.getTime();
+        String lastMonth = format.format(date1);
+        List<GoodsSetting> goodsSettings = goodsSettingMapper.selectByDate(lastMonth);
+        for (GoodsSetting goodsSetting : goodsSettings) {
+            goodsSetting.setId(null);
+            String deadline = goodsSetting.getDeadline();
+            Date date2 = DateUtil.stringToDate(deadline);
+            Calendar calendar2 = Calendar.getInstance();
+            // 设置为当前时间
+            calendar2.setTime(date2);
+            // 设置为下一个月
+            calendar2.set(Calendar.MONTH, calendar.get(Calendar.MONTH) + 1);
+            date2 = calendar2.getTime();
+            goodsSetting.setDeadline(DateUtil.dateToString(date2));
+        }
+        goodsSettingMapper.insertBatch(goodsSettings);
     }
 }
