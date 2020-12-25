@@ -27,6 +27,8 @@ public enum PublicityErrorCode {
     BUDGET_INSUFFICIENT("80011", "budget.insufficient"),
     // 导入失败
     INPUT_DATA_ERROR("80012", "input.data.error"),
+    // 导入类型错误
+    IMPORT_DATA_TYPE_ERROR("80013", "import.data.type.error"),
 
 
     // 无营业厅!

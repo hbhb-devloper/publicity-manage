@@ -42,7 +42,8 @@ public class PictureController {
     public PageResult<PictureResVO> getPictureList(
             @Parameter(description = "页码，默认为1") @RequestParam(required = false) Integer pageNum,
             @Parameter(description = "每页数量，默认为10") @RequestParam(required = false) Integer pageSize,
-            @Parameter(description = "查询参数") PictureReqVO reqVO, @Parameter(hidden = false) @UserId Integer userId) {
+            @Parameter(description = "查询参数") PictureReqVO reqVO,
+            @Parameter(hidden = false) @UserId Integer userId) {
         pageNum = pageNum == null ? 1 : pageNum;
         pageSize = pageSize == null ? 10 : pageSize;
         return pictureService.getPictureList(reqVO, pageNum, pageSize);
@@ -76,14 +77,14 @@ public class PictureController {
 
     @Operation(summary = "宣传画面模板导入")
     @PostMapping(value = "/import", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public void pictureImport(@RequestPart(required = false, value = "file") MultipartFile file, Long printId) {
-
+    public FileVO pictureImport(@RequestPart(required = false, value = "file") MultipartFile file) {
+        return fileApi.upload(file, 64);
     }
 
     @Operation(summary = "上传附件")
     @PostMapping(value = "/upload", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public FileVO uploadPictureFile(@RequestPart(required = false, value = "file") MultipartFile file) {
-        // todo 更改文件类型
+
         return fileApi.upload(file, FileType.PUBLICITY_PICTURE_FILE.value());
     }
 

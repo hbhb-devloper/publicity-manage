@@ -21,7 +21,7 @@ public class PrintNoticeServiceImpl implements PrintNoticeService {
     @Override
     public void addPrintNotice(PrintNoticeVO build) {
         PrintNotice notice = new PrintNotice();
-        BeanUtils.copyProperties(notice, build);
+        BeanUtils.copyProperties(build, notice);
         noticeMapper.insert(notice);
     }
 }

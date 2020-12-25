@@ -1,6 +1,7 @@
 package com.hbhb.cw.publicity.service.impl;
 
 import com.hbhb.core.utils.DateUtil;
+import com.hbhb.cw.flowcenter.enums.FlowNodeNoticeTemp;
 import com.hbhb.cw.flowcenter.model.Flow;
 import com.hbhb.cw.flowcenter.vo.FlowNodePropVO;
 import com.hbhb.cw.publicity.enums.*;
@@ -36,7 +37,6 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -166,13 +166,17 @@ public class MaterialsServiceImpl implements MaterialsService {
         // 新增印刷用品导入业务单式或宣传单页数据
         if (!isEmpty(infoVO.getImportDateId())) {
             List<MaterialsInfo> materialsList = getMaterialsInfoList(infoVO.getImportDateId());
+            materialsList.forEach(item -> item.setMaterialsId(materials.getId()));
             materialsInfoMapper.insertBatch(materialsList);
         }
     }
 
     @Override
     public void deleteMaterials(Long id) {
-        materialsMapper.deleteById(id);
+        Materials materials = new Materials();
+        materials.setId(id);
+        materials.setDeleteFlag(false);
+        materialsMapper.updateTemplateById(materials);
     }
 
     @Override
@@ -194,7 +198,7 @@ public class MaterialsServiceImpl implements MaterialsService {
     }
 
     @Override
-    public void saveMaterials(List<MaterialsImportVO> dataList, Map<Integer, String> importHeadMap, AtomicLong materialsId) {
+    public void saveMaterials(List<MaterialsImportVO> dataList) {
         //导入
         List<MaterialsInfo> materialsList = new ArrayList<>();
         Map<String, Integer> unitNameMap = unitApi.getUnitMapByUnitName();
@@ -204,7 +208,6 @@ public class MaterialsServiceImpl implements MaterialsService {
             materials.setUnitId(unitNameMap.get(importVo.getUnitName()));
             materials.setDeliveryDate(DateUtil.string3DateYMD(importVo.getDeliveryDate()));
             materialsList.add(materials);
-            materials.setMaterialsId(materialsId.get());
         }
         // 将读取到的数据存放入mongodb中
         String uuId = UUID.randomUUID().toString();
@@ -250,8 +253,7 @@ public class MaterialsServiceImpl implements MaterialsService {
         }
         // 跟据流程id获取流程名称
         Flow flow = flowApi.getFlowById(flowId);
-        // todo 修改推送模板
-        inform = inform.replace(""
+        inform = inform.replace(FlowNodeNoticeTemp.TITLE.value()
                 , materials.getMaterialsName() + "_" + "_" + flow.getFlowName());
         noticeService.addMaterialsNotice(
                 MaterialsNotice.builder()
@@ -305,6 +307,11 @@ public class MaterialsServiceImpl implements MaterialsService {
     @Override
     public String getImportDataId() {
         return String.valueOf(this.id);
+    }
+
+    @Override
+    public void deleteMaterialsInfo(Long materialsId) {
+
     }
 
     private List<MaterialsFile> setMaterialsFile(List<MaterialsFileVO> fileVOList, Integer userId) {

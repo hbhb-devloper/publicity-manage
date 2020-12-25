@@ -7,6 +7,7 @@ import com.hbhb.cw.flowcenter.enums.FlowOperationType;
 import com.hbhb.cw.flowcenter.enums.FlowState;
 import com.hbhb.cw.flowcenter.vo.*;
 import com.hbhb.cw.publicity.enums.PublicityErrorCode;
+import com.hbhb.cw.publicity.enums.Suggestion;
 import com.hbhb.cw.publicity.exception.PublicityException;
 import com.hbhb.cw.publicity.mapper.PictureFlowMapper;
 import com.hbhb.cw.publicity.mapper.PictureMapper;
@@ -151,6 +152,9 @@ public class PictureFlowServiceImpl implements PictureFlowService {
             }
             // 3-3.提醒发起人
             String inform = noticeApi.getInform(currentNodeId, com.hbhb.cw.flowcenter.enums.FlowNodeNoticeState.COMPLETE_REMINDER.value());
+            if (inform == null) {
+                inform = Suggestion.AGREE.value();
+            }
             String content = inform.replace(FlowNodeNoticeTemp.TITLE.value(), title)
                     .replace(FlowNodeNoticeTemp.APPROVE.value(), userInfo.getNickName());
             this.saveNotice(pictureId, approvers.get(0).getUserId(), userId, content, flowTypeId, now);
@@ -161,6 +165,9 @@ public class PictureFlowServiceImpl implements PictureFlowService {
             flowState = FlowState.APPROVE_REJECTED.value();
             // 提醒发起人
             String inform = noticeApi.getInform(currentNodeId, com.hbhb.cw.flowcenter.enums.FlowNodeNoticeState.REJECT_REMINDER.value());
+            if (inform == null) {
+                inform = Suggestion.REFUSE.value();
+            }
             String content = inform.replace(FlowNodeNoticeTemp.TITLE.value(), title)
                     .replace(FlowNodeNoticeTemp.APPROVE.value(), userInfo.getNickName())
                     .replace(FlowNodeNoticeTemp.CAUSE.value(), approveVO.getSuggestion());

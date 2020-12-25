@@ -6,8 +6,6 @@ import com.hbhb.cw.publicity.web.vo.*;
 import org.beetl.sql.core.page.PageResult;
 
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author wangxiaogang
@@ -57,10 +55,9 @@ public interface MaterialsService {
     /**
      * 批量导入
      *
-     * @param dataList      导入列表
-     * @param importHeadMap 表头
+     * @param dataList 导入列表
      */
-    void saveMaterials(List<MaterialsImportVO> dataList, Map<Integer, String> importHeadMap, AtomicLong printId);
+    void saveMaterials(List<MaterialsImportVO> dataList);
 
     /**
      * 删除附件
@@ -121,4 +118,10 @@ public interface MaterialsService {
      */
     String getImportDataId();
 
+    /**
+     * 删除导入物料详情
+     *
+     * @param materialsId
+     */
+    void deleteMaterialsInfo(Long materialsId);
 }
