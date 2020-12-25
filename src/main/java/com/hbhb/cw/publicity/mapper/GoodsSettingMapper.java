@@ -12,6 +12,4 @@ public interface GoodsSettingMapper extends BaseMapper<com.hbhb.cw.publicity.mod
     List<GoodsSetting> selectByDate(String time);
 
     GoodsSetting selectSetByDate(String time);
-
-    void updateByBatchNum(String deadline, Integer goodsIndex, String dateTime);
 }
