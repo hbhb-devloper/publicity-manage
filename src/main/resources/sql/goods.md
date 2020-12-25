@@ -108,8 +108,6 @@ selectSummaryByState
             ifnull(sum(ad.apply_amount),0) as `applyAmount`,
             ifnull(sum(ad.modify_amount),0) as `modifyAmount`,
             g.type as `type`,
-
-
             ad.state as `state`,
             a.create_time as `time` 
     from goods g

@@ -119,6 +119,10 @@ public class LibraryServiceImpl implements LibraryService {
             // 得到其父类
             List<Goods> actGoods = goodsMapper.createLambdaQuery()
                     .andEq(Goods::getId, libraryAddVO.getParentId()).select();
+            // 判断父类是否禁用
+            if (actGoods != null && actGoods.size() != 0 && !actGoods.get(0).getState()) {
+                throw new PublicityException(PublicityErrorCode.DO_NOT_OPERATE);
+            }
             // 判断物料所在位置是否为第三层
             if (actGoods != null && actGoods.size() != 0 && actGoods.get(0).getParentId() != null) {
                 throw new PublicityException(PublicityErrorCode.NOT_ADD_SECONDARY_DIRECTORY);
@@ -132,6 +136,9 @@ public class LibraryServiceImpl implements LibraryService {
             // 得到其父类，有且只有一个
             List<Goods> actGoods = goodsMapper.createLambdaQuery()
                     .andEq(Goods::getId, libraryAddVO.getParentId()).select();
+            if (actGoods != null && actGoods.size() != 0 && !actGoods.get(0).getState()) {
+                throw new PublicityException(PublicityErrorCode.DO_NOT_OPERATE);
+            }
             // 判断物料所在位置是否为第三层
             if (actGoods == null || actGoods.size() == 0 || actGoods.get(0).getParentId() == null) {
                 throw new PublicityException(PublicityErrorCode.PLEASE_ADD_SECONDARY_DIRECTORY);
@@ -157,9 +164,16 @@ public class LibraryServiceImpl implements LibraryService {
             if (libraryAddVO.getUnitId() == null || libraryAddVO.getGoodsName() == null) {
                 throw new PublicityException(PublicityErrorCode.NOT_FILLED_IN);
             }
+            // 得到其父类
+            List<Goods> actGoods = goodsMapper.createLambdaQuery()
+                    .andEq(Goods::getId, libraryAddVO.getParentId()).select();
+            // 判断父类是否禁用
+            if (actGoods != null && actGoods.size() != 0 && !actGoods.get(0).getState()) {
+                throw new PublicityException(PublicityErrorCode.DO_NOT_OPERATE);
+            }
             // 修改改活动下所有的子类状态
             goodsMapper.createLambdaQuery()
-                    .andEq(Goods::getParentId,libraryAddVO.getId())
+                    .andEq(Goods::getParentId, libraryAddVO.getId())
                     .updateSelective(Goods.builder().state(libraryAddVO.getState()).build());
             // 获取子类信息得到子类id
             List<Goods> goodsList = goodsMapper.createLambdaQuery()
@@ -171,11 +185,18 @@ public class LibraryServiceImpl implements LibraryService {
             }
             // 修改子类下所有状态
             goodsMapper.createLambdaQuery()
-                    .andIn(Goods::getParentId,goodsIds)
+                    .andIn(Goods::getParentId, goodsIds)
                     .updateSelective(Goods.builder().state(libraryAddVO.getState()).build());
         }
         // 如果为产品
         else {
+            // 得到其父类
+            List<Goods> actGoods = goodsMapper.createLambdaQuery()
+                    .andEq(Goods::getId, libraryAddVO.getParentId()).select();
+            // 判断父类是否禁用
+            if (actGoods != null && actGoods.size() != 0 && !actGoods.get(0).getState()) {
+                throw new PublicityException(PublicityErrorCode.DO_NOT_OPERATE);
+            }
             // 判断必填项是否添加
             if (libraryAddVO.getGoodsName() == null || libraryAddVO.getType() == null
                     || libraryAddVO.getChecker() == null || libraryAddVO.getUnitId() == null || libraryAddVO.getSize() == null || libraryAddVO.getPaper() == null
@@ -185,7 +206,6 @@ public class LibraryServiceImpl implements LibraryService {
         }
         // 修改
         libraryAddVO.setUpdateTime(new Date());
-        // todo 如果类别修改则删除所有下面的物料
         goodsMapper.createLambdaQuery().andEq(Goods::getId, libraryAddVO.getId()).updateSelective(libraryAddVO);
     }
 
