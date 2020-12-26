@@ -2,6 +2,7 @@ package com.hbhb.cw.publicity.service.impl;
 
 import com.hbhb.api.core.bean.SelectVO;
 import com.hbhb.core.bean.BeanConverter;
+import com.hbhb.cw.flowcenter.enums.FlowNodeNoticeState;
 import com.hbhb.cw.flowcenter.enums.FlowNodeNoticeTemp;
 import com.hbhb.cw.flowcenter.enums.FlowOperationType;
 import com.hbhb.cw.flowcenter.enums.FlowState;
@@ -29,6 +30,8 @@ import javax.annotation.Resource;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static org.apache.commons.lang.StringUtils.isEmpty;
 
 /**
  * @author wangxiaogang
@@ -142,9 +145,11 @@ class MaterialsFlowServiceImpl implements MaterialsFlowService {
 
                 // 3.保存提醒消息
                 // 3-1.提醒下一个节点的审批人
-                String inform = noticeApi.getInform(currentNodeId, com.hbhb.cw.flowcenter.enums.FlowNodeNoticeState.DEFAULT_REMINDER.value());
-                this.saveNotice(materialsId, next, userId,
-                        inform.replace(FlowNodeNoticeTemp.TITLE.value(), title), flowTypeId, now);
+                String inform = noticeApi.getInform(currentNodeId, FlowNodeNoticeState.DEFAULT_REMINDER.value());
+                if (!isEmpty(inform)) {
+                    this.saveNotice(materialsId, next, userId,
+                            inform.replace(FlowNodeNoticeTemp.TITLE.value(), title), flowTypeId, now);
+                }
                 // 3-2.邮件推送
                 if (mailEnable) {
                     UserInfo nextUser = userApi.getUserInfoById(next);
@@ -152,7 +157,7 @@ class MaterialsFlowServiceImpl implements MaterialsFlowService {
                 }
             }
             // 3-3.提醒发起人
-            String inform = noticeApi.getInform(currentNodeId, com.hbhb.cw.flowcenter.enums.FlowNodeNoticeState.COMPLETE_REMINDER.value());
+            String inform = noticeApi.getInform(currentNodeId, FlowNodeNoticeState.COMPLETE_REMINDER.value());
             if (inform == null) {
                 inform = Suggestion.AGREE.value();
             }
@@ -165,7 +170,7 @@ class MaterialsFlowServiceImpl implements MaterialsFlowService {
             operation = FlowOperationType.REJECT.value();
             flowState = FlowState.APPROVE_REJECTED.value();
             // 提醒发起人
-            String inform = noticeApi.getInform(currentNodeId, com.hbhb.cw.flowcenter.enums.FlowNodeNoticeState.REJECT_REMINDER.value());
+            String inform = noticeApi.getInform(currentNodeId, FlowNodeNoticeState.REJECT_REMINDER.value());
             if (inform == null) {
                 inform = Suggestion.REFUSE.value();
             }
