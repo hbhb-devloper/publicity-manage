@@ -78,6 +78,9 @@ public class GoodsSettingServiceImpl implements GoodsSettingService {
         //
         if (DateUtil.dateToString(date,"yyyy-MM").equals(time)) {
             GoodsSetting goodsSetting = goodsSettingMapper.selectSetByDate(DateUtil.dateToString(new Date()));
+            if (goodsSetting==null){
+                throw new PublicityException(PublicityErrorCode.NOT_NUMBER_IN_MONTH);
+            }
             return GoodsSettingResVO.builder().goodsIndexList(goodsIndexList)
                     .goodsIndex(goodsSetting.getGoodsIndex()).build();
         } else {
