@@ -168,7 +168,7 @@ public class LibraryServiceImpl implements LibraryService {
             List<Goods> actGoods = goodsMapper.createLambdaQuery()
                     .andEq(Goods::getId, libraryAddVO.getParentId()).select();
             // 判断父类是否禁用
-            if (actGoods != null && actGoods.size() != 0 && !actGoods.get(0).getState()) {
+            if (actGoods != null && actGoods.size() != 0 && !actGoods.get(0).getState() && libraryAddVO.getState()) {
                 throw new PublicityException(PublicityErrorCode.DO_NOT_OPERATE);
             }
             // 修改改活动下所有的子类状态
@@ -194,7 +194,7 @@ public class LibraryServiceImpl implements LibraryService {
             List<Goods> actGoods = goodsMapper.createLambdaQuery()
                     .andEq(Goods::getId, libraryAddVO.getParentId()).select();
             // 判断父类是否禁用
-            if (actGoods != null && actGoods.size() != 0 && !actGoods.get(0).getState()) {
+            if (actGoods != null && actGoods.size() != 0 && !actGoods.get(0).getState() && libraryAddVO.getState()) {
                 throw new PublicityException(PublicityErrorCode.DO_NOT_OPERATE);
             }
             // 判断必填项是否添加

@@ -69,12 +69,18 @@ public class GoodsSettingServiceImpl implements GoodsSettingService {
         // 得到该月的所有相关设定
         List<GoodsSetting> goodsSettings = goodsSettingMapper
                 .createLambdaQuery().andLike(GoodsSetting::getDeadline, time + "%").select();
+        if (goodsSettings==null||goodsSettings.size()==0){
+            throw new PublicityException(PublicityErrorCode.NOT_NUMBER_IN_MONTH);
+        }
         for (GoodsSetting goodsSetting : goodsSettings) {
             goodsIndexList.add(goodsSetting.getGoodsIndex());
         }
         //
         if (DateUtil.dateToString(date,"yyyy-MM").equals(time)) {
             GoodsSetting goodsSetting = goodsSettingMapper.selectSetByDate(DateUtil.dateToString(new Date()));
+            if (goodsSetting==null){
+                throw new PublicityException(PublicityErrorCode.NOT_NUMBER_IN_MONTH);
+            }
             return GoodsSettingResVO.builder().goodsIndexList(goodsIndexList)
                     .goodsIndex(goodsSetting.getGoodsIndex()).build();
         } else {
