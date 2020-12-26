@@ -53,9 +53,9 @@ public class ApplicationServiceImpl implements ApplicationService {
 //            throw new GoodsException(GoodsErrorCode.NOT_SERVICE_HALL);
 //        }
         GoodsSetting goodsSetting = null;
-//        if (goodsCondVO.getTime() != null && goodsCondVO.getGoodsIndex() == null) {
-//            return new GoodsResVO();
-//        }
+        if (goodsCondVO.getTime() != null && goodsCondVO.getGoodsIndex() == null) {
+            return new GoodsResVO();
+        }
         if (goodsCondVO.getTime() == null) {
             goodsCondVO.setTime(DateUtil.dateToString(new Date()));
             // 通过时间判断批次
