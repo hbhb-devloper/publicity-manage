@@ -106,6 +106,10 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
 
     @Override
     public SummaryUnitGoodsResVO getUnitGoodsList(GoodsReqVO goodsReqVO) {
+        Integer hangzhou = UnitEnum.HANGZHOU.value();
+        if (hangzhou.equals(goodsReqVO.getUnitId())) {
+            goodsReqVO.setUnitId(null);
+        }
         GoodsSetting goodsSetting = null;
         if (goodsReqVO.getTime() != null && goodsReqVO.getGoodsIndex() == null) {
             return new SummaryUnitGoodsResVO();
@@ -193,11 +197,18 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         List<DictVO> dict = sysDictApiExp.getDict(TypeCode.PUBLICITY.value(),
                 DictCode.PUBLICITY_APPLICATION_DETAIL_STATE.value());
         Map<String, String> dictMap = dict.stream().collect(Collectors.toMap(DictVO::getValue, DictVO::getLabel));
-        if (goodsReqVO.getTime() == null) {
-            goodsReqVO.setTime(DateUtil.dateToString(new Date()));
+        GoodsSetting goodsSetting = null;
+        if (goodsReqVO.getTime() != null && goodsReqVO.getGoodsIndex() == null) {
+            return new ArrayList<>();
         }
-        // 通过此刻时间与截止时间对比，判断为第几月第几次
-        GoodsSetting goodsSetting = goodsSettingService.getSetByDate(goodsReqVO.getTime());
+        if (goodsReqVO.getTime() == null) {
+            // 通过时间判断批次
+            goodsSetting = goodsSettingService.getSetByDate(DateUtil.dateToString(new Date()));
+            goodsReqVO.setTime(goodsSetting.getDeadline());
+            goodsReqVO.setGoodsIndex(goodsSetting.getGoodsIndex());
+        } else {
+            goodsSetting = goodsSettingService.getByCond(goodsReqVO.getTime(), goodsReqVO.getGoodsIndex());
+        }
         if (goodsSetting == null) {
             return new ArrayList<>();
         }
