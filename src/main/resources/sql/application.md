@@ -68,7 +68,7 @@ from application a
          left join goods g on ad.goods_id = g.id
  -- @where(){
                -- @if(isNotEmpty(unitId)){
-                    and a.unit_id = #{unitId}
+                    and g.unit_id = #{unitId}
                -- @}
                -- @if(isNotEmpty(batchNum)){
                     and a.batch_num = #{batchNum}

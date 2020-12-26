@@ -2,6 +2,7 @@
 package com.hbhb.cw.publicity.web.controller;
 
 import com.alibaba.excel.EasyExcel;
+import com.hbhb.api.core.bean.SelectVO;
 import com.hbhb.core.utils.ExcelUtil;
 import com.hbhb.cw.publicity.enums.PublicityErrorCode;
 import com.hbhb.cw.publicity.exception.PublicityException;
@@ -30,7 +31,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
+
+import static com.alibaba.excel.util.StringUtils.isEmpty;
 
 
 /**
@@ -102,17 +104,16 @@ public class PrintController {
     @Operation(summary = "导入")
     @PostMapping(value = "/import", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public String printImport(@RequestPart(required = false, value = "file") MultipartFile file,
-                              @Parameter(description = "id") Long printId,
                               @Parameter(description = "类型") Integer type) {
-
-        AtomicLong printIds = new AtomicLong();
-        printIds.set(printId);
+        if (isEmpty(type)) {
+            throw new PublicityException(PublicityErrorCode.IMPORT_DATA_TYPE_ERROR);
+        }
         AtomicInteger types = new AtomicInteger();
         types.set(type);
         long begin = System.currentTimeMillis();
         try {
             EasyExcel.read(file.getInputStream(), PrintImportVO.class,
-                    new PrintListener(printService, printIds, types)).sheet().doRead();
+                    new PrintListener(printService, types)).sheet().doRead();
         } catch (IOException | NumberFormatException | NullPointerException e) {
             log.error(e.getMessage(), e);
             throw new PublicityException(PublicityErrorCode.INPUT_DATA_ERROR);
@@ -131,8 +132,8 @@ public class PrintController {
     @PostMapping("/to-approve")
     public void toApprove(@RequestBody PrintInitVO initVO,
                           @Parameter(hidden = true) @UserId Integer userId) {
-        initVO.setUserId(userId);
-        printService.toApprove(initVO);
+
+        printService.toApprove(initVO, userId);
     }
 
     @Operation(summary = "删除附件")
@@ -153,5 +154,16 @@ public class PrintController {
         return printService.getPrintMaterialsList(uuid);
     }
 
+    @Operation(summary = "删除导入数据")
+    @DeleteMapping("/materials")
+    public void deleteMaterials(Long printId) {
+        printService.deletePrintMaterials(printId);
+    }
+
+    @Operation(summary = "获取市场部审核员下拉列表")
+    @GetMapping("/role-user")
+    List<SelectVO> getAssessorList() {
+        return printService.getAssessor();
+    }
 }
 

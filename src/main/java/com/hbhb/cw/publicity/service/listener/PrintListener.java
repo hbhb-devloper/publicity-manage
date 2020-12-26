@@ -7,11 +7,8 @@ import com.hbhb.cw.publicity.web.vo.PrintImportVO;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author wangxiaogang
@@ -24,20 +21,16 @@ public class PrintListener extends AnalysisEventListener {
      */
     private static final int BATCH_COUNT = 5000;
 
-    private final Map<Integer, String> importHeadMap = new HashMap<>();
-
     /**
      * 数据行
      */
     private final List<PrintImportVO> dataList = new ArrayList<>();
 
     private final PrintService printService;
-    private final AtomicLong printId;
     private final AtomicInteger type;
 
 
-    public PrintListener(PrintService printService, AtomicLong printId, AtomicInteger type) {
-        this.printId = printId;
+    public PrintListener(PrintService printService, AtomicInteger type) {
         this.type = type;
         this.printService = printService;
     }
@@ -68,20 +61,7 @@ public class PrintListener extends AnalysisEventListener {
      * 保存预算数据
      */
     private void saveData() {
-
-        printService.savePrint(dataList, importHeadMap, printId, type);
-
-    }
-
-    /**
-     * 获取表头
-     */
-    @Override
-    public void invokeHeadMap(Map headMap, AnalysisContext context) {
-        if (headMap != null) {
-            importHeadMap.putAll(headMap);
-        }
-        // 根据自己的情况去做表头的判断即可
+        printService.savePrint(dataList, type);
     }
 
 }

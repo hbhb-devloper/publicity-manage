@@ -1,9 +1,13 @@
 package com.hbhb.cw.publicity.service.impl;
 
 import com.hbhb.core.utils.DateUtil;
+import com.hbhb.cw.flowcenter.enums.FlowNodeNoticeTemp;
 import com.hbhb.cw.flowcenter.model.Flow;
 import com.hbhb.cw.flowcenter.vo.FlowNodePropVO;
-import com.hbhb.cw.publicity.enums.*;
+import com.hbhb.cw.publicity.enums.FlowNodeNoticeState;
+import com.hbhb.cw.publicity.enums.NodeState;
+import com.hbhb.cw.publicity.enums.OperationState;
+import com.hbhb.cw.publicity.enums.PublicityErrorCode;
 import com.hbhb.cw.publicity.exception.PublicityException;
 import com.hbhb.cw.publicity.mapper.PictureFileMapper;
 import com.hbhb.cw.publicity.mapper.PictureMapper;
@@ -170,6 +174,9 @@ public class PictureServiceImpl implements PictureService {
 
     @Override
     public void deletePicture(Long id) {
+        Picture picture = new Picture();
+        picture.setId(id);
+        picture.setDeleteFlag(false);
         pictureMapper.deleteById(id);
     }
 
@@ -219,7 +226,7 @@ public class PictureServiceImpl implements PictureService {
 
         // 跟据流程id获取流程名称
         Flow flow = flowApi.getFlowById(flowId);
-        inform = inform.replace(TemplateContent.TITLE.getValue()
+        inform = inform.replace(FlowNodeNoticeTemp.TITLE.value()
                 , picture.getPictureName() + picture.getPictureNum() + "_" + flow.getFlowName());
         // 推送提醒给发起人
         noticeService.addPictureNotice(

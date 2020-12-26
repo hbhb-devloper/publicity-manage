@@ -106,6 +106,10 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
 
     @Override
     public SummaryUnitGoodsResVO getUnitGoodsList(GoodsReqVO goodsReqVO) {
+        Integer hangzhou = UnitEnum.HANGZHOU.value();
+        if (hangzhou.equals(goodsReqVO.getUnitId())) {
+            goodsReqVO.setUnitId(null);
+        }
         GoodsSetting goodsSetting = null;
         if (goodsReqVO.getTime() != null && goodsReqVO.getGoodsIndex() == null) {
             return new SummaryUnitGoodsResVO();
@@ -128,9 +132,13 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         // 通过goodsId得到unitName
         Map<String, SummaryUnitGoodsVO> map = new HashMap<>();
         for (SummaryUnitGoodsVO summaryUnitGoodsVO : simSummaryList) {
+            // 业务单式下宣传单页因都为0
+            summaryUnitGoodsVO.setSingleAmount(0L);
             map.put(summaryUnitGoodsVO.getGoodsId() + summaryUnitGoodsVO.getUnitName(), summaryUnitGoodsVO);
         }
         for (SummaryUnitGoodsVO cond : singSummaryList) {
+            // 宣传单页下业务单式因都为0
+            cond.setSimplexAmount(0L);
             if (map.get(cond.getGoodsId() + cond.getUnitName()) == null) {
                 simSummaryList.add(cond);
             } else {
@@ -161,11 +169,13 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         Map<Integer, String> unitMap = unitApiExp.getUnitMapById();
         List<SummaryUnitGoodsVO> singList = getUnitSummaryList(goodsReqVO, GoodsType.FLYER_PAGE.getValue());
         for (int i = 0; i < singList.size(); i++) {
+            singList.get(i).setSingleAmount(0L);
             singList.get(i).setLineNum(i + 1L);
             singList.get(i).setUnitName(unitMap.get(singList.get(i).getUnitId()));
         }
         List<SummaryUnitGoodsVO> simList = getUnitSummaryList(goodsReqVO, GoodsType.BUSINESS_SIMPLEX.getValue());
         for (int i = 0; i < simList.size(); i++) {
+            simList.get(i).setSingleAmount(0L);
             simList.get(i).setLineNum(i + 1L);
             simList.get(i).setUnitName(unitMap.get(simList.get(i).getUnitId()));
         }
@@ -187,11 +197,18 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         List<DictVO> dict = sysDictApiExp.getDict(TypeCode.PUBLICITY.value(),
                 DictCode.PUBLICITY_APPLICATION_DETAIL_STATE.value());
         Map<String, String> dictMap = dict.stream().collect(Collectors.toMap(DictVO::getValue, DictVO::getLabel));
-        if (goodsReqVO.getTime() == null) {
-            goodsReqVO.setTime(DateUtil.dateToString(new Date()));
+        GoodsSetting goodsSetting = null;
+        if (goodsReqVO.getTime() != null && goodsReqVO.getGoodsIndex() == null) {
+            return new ArrayList<>();
         }
-        // 通过此刻时间与截止时间对比，判断为第几月第几次
-        GoodsSetting goodsSetting = goodsSettingService.getSetByDate(goodsReqVO.getTime());
+        if (goodsReqVO.getTime() == null) {
+            // 通过时间判断批次
+            goodsSetting = goodsSettingService.getSetByDate(DateUtil.dateToString(new Date()));
+            goodsReqVO.setTime(goodsSetting.getDeadline());
+            goodsReqVO.setGoodsIndex(goodsSetting.getGoodsIndex());
+        } else {
+            goodsSetting = goodsSettingService.getByCond(goodsReqVO.getTime(), goodsReqVO.getGoodsIndex());
+        }
         if (goodsSetting == null) {
             return new ArrayList<>();
         }

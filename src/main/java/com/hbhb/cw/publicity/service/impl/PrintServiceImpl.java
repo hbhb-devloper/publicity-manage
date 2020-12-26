@@ -1,9 +1,14 @@
 package com.hbhb.cw.publicity.service.impl;
 
+import com.hbhb.api.core.bean.SelectVO;
 import com.hbhb.core.utils.DateUtil;
+import com.hbhb.cw.flowcenter.enums.FlowNodeNoticeTemp;
 import com.hbhb.cw.flowcenter.model.Flow;
 import com.hbhb.cw.flowcenter.vo.FlowNodePropVO;
-import com.hbhb.cw.publicity.enums.*;
+import com.hbhb.cw.publicity.enums.FlowNodeNoticeState;
+import com.hbhb.cw.publicity.enums.NodeState;
+import com.hbhb.cw.publicity.enums.OperationState;
+import com.hbhb.cw.publicity.enums.PublicityErrorCode;
 import com.hbhb.cw.publicity.exception.PublicityException;
 import com.hbhb.cw.publicity.mapper.PrintFileMapper;
 import com.hbhb.cw.publicity.mapper.PrintMapper;
@@ -35,7 +40,6 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -80,7 +84,8 @@ public class PrintServiceImpl implements PrintService {
 
 
     @Override
-    public PageResult<PrintResVO> getPrintList(PrintReqVO reqVO, Integer pageNum, Integer pageSize) {
+    public PageResult<PrintResVO> getPrintList(PrintReqVO reqVO, Integer pageNum,
+                                               Integer pageSize) {
         PageRequest<PrintResVO> request = DefaultPageRequest.of(pageNum, pageSize);
         PageResult<PrintResVO> list = printMapper.selectPrintByCond(reqVO, request);
         List<Integer> userIds = new ArrayList<>();
@@ -122,6 +127,10 @@ public class PrintServiceImpl implements PrintService {
                     .collect(Collectors.toList());
             info.setFiles(fileVo);
         }
+        List<PrintMaterials> materialsList = printMaterialsMapper.createLambdaQuery()
+                .andEq(PrintMaterials::getPrintId, id)
+                .select();
+        info.setPrintMaterials(materialsList);
         return info;
     }
 
@@ -155,6 +164,7 @@ public class PrintServiceImpl implements PrintService {
         // 新增印刷用品导入业务单式或宣传单页数据
         if (!isEmpty(infoVO.getImportDateId())) {
             List<PrintMaterials> materialsList = getPrintMaterialsList(infoVO.getImportDateId());
+            materialsList.forEach(item -> item.setPrintId(print.getId()));
             printMaterialsMapper.insertBatch(materialsList);
         }
     }
@@ -164,7 +174,7 @@ public class PrintServiceImpl implements PrintService {
         Print print = new Print();
         print.setDeleteFlag(false);
         print.setId(id);
-        printMapper.updateById(print);
+        printMapper.updateTemplateById(print);
     }
 
     @Override
@@ -185,21 +195,8 @@ public class PrintServiceImpl implements PrintService {
         fileMapper.insertBatch(fileList);
     }
 
-    private List<PrintFile> setPrintFile(List<PrintFileVO> fileVOList, Integer userId, Long printId) {
-        //获取用户姓名
-        UserInfo user = userApi.getUserInfoById(userId);
-        List<PrintFile> fileList = new ArrayList<>();
-        fileVOList.forEach(item -> fileList.add(PrintFile.builder()
-                .createBy(user.getNickName())
-                .createTime(new Date())
-                .fileId(item.getFileId())
-                .printId(printId)
-                .build()));
-        return fileList;
-    }
-
     @Override
-    public void savePrint(List<PrintImportVO> dataList, Map<Integer, String> importHeadMap, AtomicLong printId, AtomicInteger type) {
+    public void savePrint(List<PrintImportVO> dataList, AtomicInteger type) {
         //导入
         List<PrintMaterials> materialsList = new ArrayList<>();
         Map<String, Integer> unitNameMap = unitApi.getUnitMapByUnitName();
@@ -209,7 +206,6 @@ public class PrintServiceImpl implements PrintService {
             materials.setUnitId(unitNameMap.get(importVo.getUnitName()));
             materials.setDeliveryDate(DateUtil.string3DateYMD(importVo.getDeliveryDate()));
             materials.setType(type.get());
-            materials.setPrintId(printId.get());
             materialsList.add(materials);
         }
         // 将读取到的数据存放入mongodb中
@@ -228,7 +224,7 @@ public class PrintServiceImpl implements PrintService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void toApprove(PrintInitVO initVO) {
+    public void toApprove(PrintInitVO initVO, Integer userId) {
         Print print = printMapper.single(initVO.getPrintId());
         //  1.判断登录用户是否与申请人一致
         UserInfo user = userApi.getUserInfoById(initVO.getUserId());
@@ -246,13 +242,13 @@ public class PrintServiceImpl implements PrintService {
             throw new PublicityException(PublicityErrorCode.LOCK_OF_APPROVAL_ROLE);
         }
         //  4.同步节点属性
-        syncPrintFlow(flowProps, print.getId(), initVO.getUserId());
+        syncPrintFlow(flowProps, print.getId(), userId);
         // 得到推送模板
         String inform = flowService.getInform(flowProps.get(0).getFlowNodeId()
                 , FlowNodeNoticeState.DEFAULT_REMINDER.value());
         // 跟据流程id获取流程名称
         Flow flow = flowApi.getFlowById(flowId);
-        inform = inform.replace(TemplateContent.TITLE.getValue()
+        inform = inform.replace(FlowNodeNoticeTemp.TITLE.value()
                 , print.getPrintNum() + "_" + print.getPrintName() + "_" + flow.getFlowName());
         //  推送消息给发起人
         noticeService.addPrintNotice(
@@ -260,6 +256,7 @@ public class PrintServiceImpl implements PrintService {
                         .printId(print.getId())
                         .receiver(initVO.getUserId())
                         .promoter(initVO.getUserId())
+                        .priority(0)
                         .content(inform)
                         .flowTypeId(initVO.getFlowTypeId())
                         .build()
@@ -272,8 +269,64 @@ public class PrintServiceImpl implements PrintService {
 
     }
 
+    @Override
+    public void updateState(Long printId, Integer projectState) {
+        printMapper.updateTemplateById(Print.builder()
+                .id(printId)
+                .state(projectState)
+                .build());
+    }
 
-    private boolean hasAccess2Approve(List<FlowNodePropVO> flowProps, Integer unitId, Integer userId) {
+    @Override
+    public List<PrintMaterials> getPrintMaterialsList(String uuId) {
+        Query query = new Query(Criteria.where("id").is(uuId));
+        PrintMaterialsImportDataVO data = mongoTemplate.findOne(query, PrintMaterialsImportDataVO.class);
+        if (data != null) {
+            return data.getMaterials();
+        }
+        return null;
+    }
+
+    @Override
+    public String getImportDataId() {
+        return String.valueOf(this.id);
+    }
+
+    @Override
+    public List<SelectVO> getAssessor() {
+        List<Integer> assessors = roleUserApi.getUserIdByRoleName("市场部审核员");
+        List<UserInfo> userList = userApi.getUserInfoBatch(assessors);
+        List<SelectVO> list = new ArrayList<>();
+        userList.forEach(item -> list.add(SelectVO.builder()
+                .id(Long.valueOf(item.getId()))
+                .label(item.getNickName())
+                .build()));
+        return list;
+    }
+
+    @Override
+    public void deletePrintMaterials(Long printId) {
+        printMaterialsMapper.createLambdaQuery().
+                andEq(PrintMaterials::getPrintId, printId)
+                .delete();
+    }
+
+    private List<PrintFile> setPrintFile(List<PrintFileVO> fileVOList, Integer userId,
+                                         Long printId) {
+        //获取用户姓名
+        UserInfo user = userApi.getUserInfoById(userId);
+        List<PrintFile> fileList = new ArrayList<>();
+        fileVOList.forEach(item -> fileList.add(PrintFile.builder()
+                .createBy(user.getNickName())
+                .createTime(new Date())
+                .fileId(item.getFileId())
+                .printId(printId)
+                .build()));
+        return fileList;
+    }
+
+    private boolean hasAccess2Approve(List<FlowNodePropVO> flowProps, Integer unitId,
+                                      Integer userId) {
         // 获取用户所有角色
         List<Long> flowRoleIds = roleUserApi.getRoleIdByUserId(userId);
         // 第一个节点属性
@@ -328,6 +381,7 @@ public class PrintServiceImpl implements PrintService {
                     .isJoin(flowPropVO.getIsJoin())
                     .assigner(flowPropVO.getAssigner())
                     .operation(OperationState.UN_EXECUTED.value())
+                    .createTime(new Date())
                     .build());
         }
         flowService.insertBatch(printFlowList);
@@ -346,34 +400,11 @@ public class PrintServiceImpl implements PrintService {
         flowList.forEach(flow -> flowMap.put(nodeApi.getNodeNum(flow.getId()), flow.getId()));
         // 印刷品流程默认为4个节点流程
         Long flowId;
-        flowId = flowMap.get(3L);
+        flowId = flowMap.get(4L);
         if (flowId == null) {
             throw new PublicityException(PublicityErrorCode.LACK_OF_FLOW);
         }
         // 校验流程是否匹配，如果没有匹配的流程，则抛出提示
         return flowId;
-    }
-
-    @Override
-    public void updateState(Long printId, Integer projectState) {
-        printMapper.updateTemplateById(Print.builder()
-                .id(printId)
-                .state(projectState)
-                .build());
-    }
-
-    @Override
-    public List<PrintMaterials> getPrintMaterialsList(String uuId) {
-        Query query = new Query(Criteria.where("id").is(uuId));
-        PrintMaterialsImportDataVO data = mongoTemplate.findOne(query, PrintMaterialsImportDataVO.class);
-        if (data != null) {
-            return data.getMaterials();
-        }
-        return null;
-    }
-
-    @Override
-    public String getImportDataId() {
-        return String.valueOf(this.id);
     }
 }

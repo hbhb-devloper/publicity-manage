@@ -5,14 +5,8 @@ import com.hbhb.core.bean.BeanConverter;
 import com.hbhb.cw.flowcenter.enums.FlowNodeNoticeTemp;
 import com.hbhb.cw.flowcenter.enums.FlowOperationType;
 import com.hbhb.cw.flowcenter.enums.FlowState;
-import com.hbhb.cw.flowcenter.vo.FlowApproveVO;
-import com.hbhb.cw.flowcenter.vo.FlowWrapperVO;
-import com.hbhb.cw.flowcenter.vo.NodeApproverReqVO;
-import com.hbhb.cw.flowcenter.vo.NodeApproverVO;
-import com.hbhb.cw.flowcenter.vo.NodeInfoVO;
-import com.hbhb.cw.flowcenter.vo.NodeOperationReqVO;
-import com.hbhb.cw.flowcenter.vo.NodeOperationVO;
-import com.hbhb.cw.flowcenter.vo.NodeSuggestionVO;
+import com.hbhb.cw.flowcenter.vo.*;
+import com.hbhb.cw.publicity.enums.FlowNodeNoticeState;
 import com.hbhb.cw.publicity.enums.PublicityErrorCode;
 import com.hbhb.cw.publicity.exception.PublicityException;
 import com.hbhb.cw.publicity.mapper.PrintFlowMapper;
@@ -21,32 +15,22 @@ import com.hbhb.cw.publicity.mapper.PrintNoticeMapper;
 import com.hbhb.cw.publicity.model.Print;
 import com.hbhb.cw.publicity.model.PrintFlow;
 import com.hbhb.cw.publicity.model.PrintNotice;
-import com.hbhb.cw.publicity.rpc.FlowApiExp;
-import com.hbhb.cw.publicity.rpc.FlowNoticeApiExp;
-import com.hbhb.cw.publicity.rpc.FlowRoleApiExp;
-import com.hbhb.cw.publicity.rpc.FlowRoleUserApiExp;
-import com.hbhb.cw.publicity.rpc.FlowTypeApiExp;
-import com.hbhb.cw.publicity.rpc.SysUserApiExp;
+import com.hbhb.cw.publicity.rpc.*;
 import com.hbhb.cw.publicity.service.MailService;
 import com.hbhb.cw.publicity.service.PrintFlowService;
 import com.hbhb.cw.publicity.web.vo.PrintFlowVO;
 import com.hbhb.cw.systemcenter.vo.UserInfo;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import javax.annotation.Resource;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import javax.annotation.Resource;
-
-import lombok.extern.slf4j.Slf4j;
+import static org.apache.commons.lang.StringUtils.isEmpty;
 
 /**
  * @author wangxiaogang
@@ -160,9 +144,11 @@ public class PrintFlowServiceImpl implements PrintFlowService {
 
                 // 3.保存提醒消息
                 // 3-1.提醒下一个节点的审批人
-                String inform = noticeApi.getInform(currentNodeId, com.hbhb.cw.flowcenter.enums.FlowNodeNoticeState.DEFAULT_REMINDER.value());
-                this.saveNotice(printId, next, userId,
-                        inform.replace(FlowNodeNoticeTemp.TITLE.value(), title), flowTypeId, now);
+                String inform = noticeApi.getInform(currentNodeId, FlowNodeNoticeState.DEFAULT_REMINDER.value());
+                if (!isEmpty(inform)) {
+                    this.saveNotice(printId, next, userId,
+                            inform.replace(FlowNodeNoticeTemp.TITLE.value(), title), flowTypeId, now);
+                }
                 // 3-2.邮件推送
                 if (mailEnable) {
                     UserInfo nextUser = userApi.getUserInfoById(next);
@@ -170,7 +156,7 @@ public class PrintFlowServiceImpl implements PrintFlowService {
                 }
             }
             // 3-3.提醒发起人
-            String inform = noticeApi.getInform(currentNodeId, com.hbhb.cw.flowcenter.enums.FlowNodeNoticeState.COMPLETE_REMINDER.value());
+            String inform = noticeApi.getInform(currentNodeId, FlowNodeNoticeState.COMPLETE_REMINDER.value());
             String content = inform.replace(FlowNodeNoticeTemp.TITLE.value(), title)
                     .replace(FlowNodeNoticeTemp.APPROVE.value(), userInfo.getNickName());
             this.saveNotice(printId, approvers.get(0).getUserId(), userId, content, flowTypeId, now);
@@ -180,7 +166,7 @@ public class PrintFlowServiceImpl implements PrintFlowService {
             operation = FlowOperationType.REJECT.value();
             flowState = FlowState.APPROVE_REJECTED.value();
             // 提醒发起人
-            String inform = noticeApi.getInform(currentNodeId, com.hbhb.cw.flowcenter.enums.FlowNodeNoticeState.REJECT_REMINDER.value());
+            String inform = noticeApi.getInform(currentNodeId, FlowNodeNoticeState.REJECT_REMINDER.value());
             String content = inform.replace(FlowNodeNoticeTemp.TITLE.value(), title)
                     .replace(FlowNodeNoticeTemp.APPROVE.value(), userInfo.getNickName())
                     .replace(FlowNodeNoticeTemp.CAUSE.value(), approveVO.getSuggestion());
@@ -260,15 +246,6 @@ public class PrintFlowServiceImpl implements PrintFlowService {
 
         // 1.先获取流程流转的当前节点
         List<NodeOperationReqVO> operations = new ArrayList<>();
-        List<String> flowNodeIds = new ArrayList<>();
-        flowNodes.forEach(flowNode -> {
-            operations.add(NodeOperationReqVO.builder()
-                    .flowNodeId(flowNode.getFlowNodeId())
-                    .operation(flowNode.getOperation())
-                    .build());
-            flowNodeIds.add(flowNode.getFlowNodeId());
-        });
-
         // 当前节点id
         String currentNodeId = getCurrentNode(operations);
         if (!StringUtils.isEmpty(currentNodeId)) {
@@ -282,12 +259,8 @@ public class PrintFlowServiceImpl implements PrintFlowService {
             else {
                 // 用户的所有流程角色
                 List<Long> flowRoleIds = roleUserApi.getRoleIdByUserId(userId);
-                // 2-2-c.特殊节点-收账员（最后一个节点为收账员，需填写部分必填业务字段）
-                if (isLastNode(currentNodeId, flowNodeIds)) {
-                    flowNodes.forEach(flowNode -> nodes.add(buildFlowNode(flowNode, currentNodeId, 3)));
-                }
                 // 2-2-a.当前用户是分配者
-                else if (flowRoleIds.contains(currentNode.getAssigner())) {
+                if (flowRoleIds.contains(currentNode.getAssigner())) {
                     flowNodes.forEach(flowNode -> nodes.add(buildFlowNode(flowNode, currentNodeId, 2)));
                 }
                 // 2-2-b.当前用户不是分配者

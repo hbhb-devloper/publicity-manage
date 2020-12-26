@@ -39,7 +39,7 @@ public class GoodsServiceImpl implements GoodsService {
     @Override
     public PageResult<PurchaseGoodsResVO> getPurchaseGoodsList(GoodsReqVO goodsReqVO, Integer pageNum, Integer pageSize) {
         PageRequest<PurchaseGoodsResVO> request = DefaultPageRequest.of(pageNum, pageSize);
-        PageResult<PurchaseGoodsResVO> list = goodsMapper.selectPurchaseGoods( request,goodsReqVO);
+        PageResult<PurchaseGoodsResVO> list = goodsMapper.selectPurchaseGoods(request,goodsReqVO);
         Map<Integer, String> unitMap = unitApiExp.getUnitMapById();
         for (PurchaseGoodsResVO cond : list.getList()) {
             cond.setUnitName(unitMap.get(cond.getUnitId()));

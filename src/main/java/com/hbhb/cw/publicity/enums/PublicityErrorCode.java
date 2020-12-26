@@ -27,6 +27,8 @@ public enum PublicityErrorCode {
     BUDGET_INSUFFICIENT("80011", "budget.insufficient"),
     // 导入失败
     INPUT_DATA_ERROR("80012", "input.data.error"),
+    // 导入类型错误
+    IMPORT_DATA_TYPE_ERROR("80013", "import.data.type.error"),
 
 
     // 无营业厅!
@@ -49,6 +51,8 @@ public enum PublicityErrorCode {
     NOT_ADD_SECONDARY_DIRECTORY("84008","not.add.secondary.directory"),
     // 本月已无审批次数
     NOT_NUMBER_IN_MONTH("84009","not.number.in.month"),
+    // 无法在禁用的类别中操作
+    DO_NOT_OPERATE("84010","do.mot.operate")
     ;
 
 

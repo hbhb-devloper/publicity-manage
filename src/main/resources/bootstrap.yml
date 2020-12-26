@@ -1,5 +1,5 @@
 server:
-  port: 8889
+  port: 8890
 
 spring:
   profiles:
@@ -47,11 +47,11 @@ host:
 
 port:
   default: 10080
-  dev: 10030
-  dev-proxy: 10016
-  test: 10031
-  test-proxy: 10017
-  prd: 10030
+  dev: 10035
+  dev-proxy: 10015
+  test: 10036
+  test-proxy: 10016
+  prd: 10010
 
 # 指定服务提供方实例地址（为空则不指定）
 feign-url:
