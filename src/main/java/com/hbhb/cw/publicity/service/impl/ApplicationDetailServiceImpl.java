@@ -106,6 +106,10 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
 
     @Override
     public SummaryUnitGoodsResVO getUnitGoodsList(GoodsReqVO goodsReqVO) {
+        Integer hangzhou = UnitEnum.HANGZHOU.value();
+        if (hangzhou.equals(goodsReqVO.getUnitId())) {
+            goodsReqVO.setUnitId(null);
+        }
         GoodsSetting goodsSetting = null;
         if (goodsReqVO.getTime() != null && goodsReqVO.getGoodsIndex() == null) {
             return new SummaryUnitGoodsResVO();
