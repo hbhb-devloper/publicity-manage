@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.beetl.sql.annotation.entity.AutoID;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -18,6 +19,7 @@ import java.util.Date;
 @Builder
 public class Print implements Serializable {
     private static final long serialVersionUID = -922348690978064283L;
+    @AutoID
     private Long id;
     /**
      * 申请单号

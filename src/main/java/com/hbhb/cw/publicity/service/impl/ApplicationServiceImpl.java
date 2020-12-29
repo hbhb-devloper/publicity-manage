@@ -60,7 +60,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             goodsCondVO.setTime(DateUtil.dateToString(new Date()));
             // 通过时间判断批次
             goodsSetting = goodsSettingService.getSetByDate(DateUtil.dateToString(new Date()));
-        }  else {
+        } else {
             goodsSetting = goodsSettingService.getByCond(goodsCondVO.getTime(), goodsCondVO.getGoodsIndex());
         }
         if (goodsCondVO.getGoodsIndex() == null) {
@@ -92,7 +92,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         // 0.通过时间对比截止时间得到为
         // 1.得到此刻时间，通过截止时间，判断为几月的第几次。如何0的结果与1的结果不符则直接置灰。
         GoodsSetting setting = goodsSettingService.getSetByDate(DateUtil.dateToString(new Date()));
-        if (!goodsSetting.getId().equals(setting.getId())) {
+        if (setting == null || !goodsSetting.getId().equals(setting.getId())) {
             return new GoodsResVO(list, false);
         }
         // 2.得到第几次，判断这次是否提前结束。
@@ -121,8 +121,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             // 通过时间判断批次
             goodsSetting = goodsSettingService.getSetByDate(DateUtil.dateToString(new Date()));
             goodsCondAppVO.setTime(goodsSetting.getDeadline());
-        }
-        else {
+        } else {
             goodsSetting = goodsSettingService.getByCond(goodsCondAppVO.getTime(), goodsCondAppVO.getGoodsIndex());
         }
         // 如果没有次序且时间与截止时间一样则为该次截止时间
@@ -177,7 +176,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         }
         for (int i = 0; i < list.size(); i++) {
             Long applyAmount = list.get(i).getApplyAmount();
-            if (applyAmount==null||applyAmount==0L){
+            if (applyAmount == null || applyAmount == 0L) {
                 continue;
             }
             ApplicationDetail applicationDetail = new ApplicationDetail();

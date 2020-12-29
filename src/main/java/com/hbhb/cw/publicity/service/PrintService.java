@@ -1,13 +1,12 @@
 package com.hbhb.cw.publicity.service;
 
+import com.hbhb.api.core.bean.SelectVO;
 import com.hbhb.cw.publicity.model.PrintMaterials;
 import com.hbhb.cw.publicity.web.vo.*;
 import org.beetl.sql.core.page.PageResult;
 
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author wangxiaogang
@@ -57,10 +56,9 @@ public interface PrintService {
     /**
      * 批量导入
      *
-     * @param dataList      导入列表
-     * @param importHeadMap 表头
+     * @param dataList 导入列表
      */
-    void savePrint(List<PrintImportVO> dataList, Map<Integer, String> importHeadMap, AtomicLong printId, AtomicInteger type);
+    void savePrint(List<PrintImportVO> dataList, AtomicInteger type);
 
     /**
      * 删除附件
@@ -75,7 +73,7 @@ public interface PrintService {
      *
      * @param initVO 发起条件
      */
-    void toApprove(PrintInitVO initVO);
+    void toApprove(PrintInitVO initVO, Integer userId);
 
     /**
      * 修改流程状态
@@ -100,4 +98,17 @@ public interface PrintService {
      */
     String getImportDataId();
 
+    /**
+     * 获取市场部审核员下拉列表
+     *
+     * @return 下拉列表
+     */
+    List<SelectVO> getAssessor();
+
+    /**
+     * 跟据印刷用品id删除印刷物料信息
+     *
+     * @param printId 印刷物品id
+     */
+    void deletePrintMaterials(Long printId);
 }

@@ -7,10 +7,7 @@ import com.hbhb.cw.publicity.web.vo.MaterialsImportVO;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author wangxiaogang
@@ -23,7 +20,6 @@ public class MaterialsListener extends AnalysisEventListener {
      */
     private static final int BATCH_COUNT = 5000;
 
-    private final Map<Integer, String> importHeadMap = new HashMap<>();
 
     /**
      * 数据行
@@ -32,12 +28,9 @@ public class MaterialsListener extends AnalysisEventListener {
 
     private final MaterialsService materialsService;
 
-    private final AtomicLong printId;
 
-
-    public MaterialsListener(MaterialsService materialsService, AtomicLong printId) {
+    public MaterialsListener(MaterialsService materialsService) {
         this.materialsService = materialsService;
-        this.printId = printId;
     }
 
     /**
@@ -67,20 +60,10 @@ public class MaterialsListener extends AnalysisEventListener {
      */
     private void saveData() {
 
-        materialsService.saveMaterials(dataList, importHeadMap, printId);
+        materialsService.saveMaterials(dataList);
 
     }
 
 
-    /**
-     * 获取表头
-     */
-    @Override
-    public void invokeHeadMap(Map headMap, AnalysisContext context) {
-        if (headMap != null) {
-            importHeadMap.putAll(headMap);
-        }
-        // 根据自己的情况去做表头的判断即可
-    }
 
 }

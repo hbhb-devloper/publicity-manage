@@ -64,7 +64,7 @@ public class PrintMaterials implements Serializable {
     /**
      * 备注
      */
-    private String remake;
+    private String remark;
     /**
      * 物料名称
      */

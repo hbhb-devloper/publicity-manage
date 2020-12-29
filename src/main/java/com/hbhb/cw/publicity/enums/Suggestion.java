@@ -4,20 +4,15 @@ package com.hbhb.cw.publicity.enums;
  * @author wangxiaogang
  */
 
-public enum TemplateContent {
+public enum Suggestion {
     /**
-     * 内容
+     * 同意
      */
-    TITLE("{title}"),
+    AGREE("{approve}已同意{title}，请查阅！"),
     /**
-     * 审批人
+     * 拒绝
      */
-    APPROVE("{approve}"),
-    /**
-     * 意见
-     */
-    CAUSE("{cause}"),
-
+    REFUSE("{title}被{approve}否决，原因是{cause}，请修改相关信息，重新开始审批！"),
     ;
 
     public String getValue() {
@@ -26,7 +21,7 @@ public enum TemplateContent {
 
     private final String value;
 
-    TemplateContent(String value) {
+    Suggestion(String value) {
         this.value = value;
     }
 

@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.beetl.sql.annotation.entity.AutoID;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -17,6 +18,7 @@ import java.util.Date;
 @Builder
 public class PrintFlow implements Serializable {
     private static final long serialVersionUID = 2989186283780499645L;
+    @AutoID
     private Long id;
     /**
      * 印刷品id
