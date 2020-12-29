@@ -42,6 +42,9 @@ public class MaterialsInfoVO implements Serializable {
     @Schema(description = "单位id")
     private Integer unitId;
 
+    @Schema(description = "流程状态")
+    private Integer state;
+
     @Schema(description = "制作商")
     private String producers;
 

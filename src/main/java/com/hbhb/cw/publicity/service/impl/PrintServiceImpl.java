@@ -17,11 +17,24 @@ import com.hbhb.cw.publicity.model.Print;
 import com.hbhb.cw.publicity.model.PrintFile;
 import com.hbhb.cw.publicity.model.PrintFlow;
 import com.hbhb.cw.publicity.model.PrintMaterials;
-import com.hbhb.cw.publicity.rpc.*;
+import com.hbhb.cw.publicity.rpc.FileApiExp;
+import com.hbhb.cw.publicity.rpc.FlowApiExp;
+import com.hbhb.cw.publicity.rpc.FlowNodeApiExp;
+import com.hbhb.cw.publicity.rpc.FlowNodePropApiExp;
+import com.hbhb.cw.publicity.rpc.FlowRoleUserApiExp;
+import com.hbhb.cw.publicity.rpc.SysUserApiExp;
+import com.hbhb.cw.publicity.rpc.UnitApiExp;
 import com.hbhb.cw.publicity.service.PrintFlowService;
 import com.hbhb.cw.publicity.service.PrintNoticeService;
 import com.hbhb.cw.publicity.service.PrintService;
-import com.hbhb.cw.publicity.web.vo.*;
+import com.hbhb.cw.publicity.web.vo.PrintFileVO;
+import com.hbhb.cw.publicity.web.vo.PrintImportVO;
+import com.hbhb.cw.publicity.web.vo.PrintInfoVO;
+import com.hbhb.cw.publicity.web.vo.PrintInitVO;
+import com.hbhb.cw.publicity.web.vo.PrintMaterialsImportDataVO;
+import com.hbhb.cw.publicity.web.vo.PrintNoticeVO;
+import com.hbhb.cw.publicity.web.vo.PrintReqVO;
+import com.hbhb.cw.publicity.web.vo.PrintResVO;
 import com.hbhb.cw.systemcenter.enums.UnitEnum;
 import com.hbhb.cw.systemcenter.model.SysFile;
 import com.hbhb.cw.systemcenter.model.Unit;
@@ -38,7 +51,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -105,6 +124,12 @@ public class PrintServiceImpl implements PrintService {
         Print print = printMapper.single(id);
         PrintInfoVO info = new PrintInfoVO();
         BeanUtils.copyProperties(print, info);
+        // 转换用户信息
+        UserInfo user = userApi.getUserInfoById(print.getUserId());
+        info.setNickName(user.getNickName());
+        // 转换单位信息
+        Unit unit = unitApi.getUnitInfo(print.getUnitId());
+        info.setUnitName(unit.getUnitName());
         // 获取印刷品文件列表信息
         List<PrintFile> files = fileMapper.createLambdaQuery().andEq(PrintFile::getPrintId, id).select();
         if (files.size() != 0) {

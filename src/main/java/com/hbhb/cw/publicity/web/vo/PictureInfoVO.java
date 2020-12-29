@@ -30,6 +30,9 @@ public class PictureInfoVO implements Serializable {
     @Schema(description = "单位id")
     private Integer unitId;
 
+    @Schema(description = "流程状态")
+    private Integer state;
+
     @Schema(description = "申请时间")
     private String applyTime;
 

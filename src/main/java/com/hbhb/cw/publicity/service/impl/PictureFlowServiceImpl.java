@@ -5,7 +5,14 @@ import com.hbhb.core.bean.BeanConverter;
 import com.hbhb.cw.flowcenter.enums.FlowNodeNoticeTemp;
 import com.hbhb.cw.flowcenter.enums.FlowOperationType;
 import com.hbhb.cw.flowcenter.enums.FlowState;
-import com.hbhb.cw.flowcenter.vo.*;
+import com.hbhb.cw.flowcenter.vo.FlowApproveVO;
+import com.hbhb.cw.flowcenter.vo.FlowWrapperVO;
+import com.hbhb.cw.flowcenter.vo.NodeApproverReqVO;
+import com.hbhb.cw.flowcenter.vo.NodeApproverVO;
+import com.hbhb.cw.flowcenter.vo.NodeInfoVO;
+import com.hbhb.cw.flowcenter.vo.NodeOperationReqVO;
+import com.hbhb.cw.flowcenter.vo.NodeOperationVO;
+import com.hbhb.cw.flowcenter.vo.NodeSuggestionVO;
 import com.hbhb.cw.publicity.enums.FlowNodeNoticeState;
 import com.hbhb.cw.publicity.enums.PublicityErrorCode;
 import com.hbhb.cw.publicity.enums.Suggestion;
@@ -16,7 +23,12 @@ import com.hbhb.cw.publicity.mapper.PictureNoticeMapper;
 import com.hbhb.cw.publicity.model.Picture;
 import com.hbhb.cw.publicity.model.PictureFlow;
 import com.hbhb.cw.publicity.model.PictureNotice;
-import com.hbhb.cw.publicity.rpc.*;
+import com.hbhb.cw.publicity.rpc.FlowApiExp;
+import com.hbhb.cw.publicity.rpc.FlowNoticeApiExp;
+import com.hbhb.cw.publicity.rpc.FlowRoleApiExp;
+import com.hbhb.cw.publicity.rpc.FlowRoleUserApiExp;
+import com.hbhb.cw.publicity.rpc.FlowTypeApiExp;
+import com.hbhb.cw.publicity.rpc.SysUserApiExp;
 import com.hbhb.cw.publicity.service.MailService;
 import com.hbhb.cw.publicity.service.PictureFlowService;
 import com.hbhb.cw.publicity.web.vo.PictureFlowVO;
@@ -27,7 +39,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -146,7 +162,7 @@ public class PictureFlowServiceImpl implements PictureFlowService {
                 // 3-1.提醒下一个节点的审批人
                 String inform = noticeApi.getInform(currentNodeId, FlowNodeNoticeState.DEFAULT_REMINDER.value());
                 if (!isEmpty(inform)) {
-                    this.saveNotice(pictureId, next, userId,
+                    this.saveNotice(pictureId, next, approvers.get(0).getUserId(),
                             inform.replace(FlowNodeNoticeTemp.TITLE.value(), title), flowTypeId, now);
                 }
                 // 3-2.邮件推送
@@ -157,12 +173,11 @@ public class PictureFlowServiceImpl implements PictureFlowService {
             }
             // 3-3.提醒发起人
             String inform = noticeApi.getInform(currentNodeId, FlowNodeNoticeState.COMPLETE_REMINDER.value());
-            if (inform == null) {
-                inform = Suggestion.AGREE.value();
+            if (inform != null) {
+                String content = inform.replace(FlowNodeNoticeTemp.TITLE.value(), title)
+                        .replace(FlowNodeNoticeTemp.APPROVE.value(), userInfo.getNickName());
+                this.saveNotice(pictureId, approvers.get(0).getUserId(), userId, content, flowTypeId, now);
             }
-            String content = inform.replace(FlowNodeNoticeTemp.TITLE.value(), title)
-                    .replace(FlowNodeNoticeTemp.APPROVE.value(), userInfo.getNickName());
-            this.saveNotice(pictureId, approvers.get(0).getUserId(), userId, content, flowTypeId, now);
         }
         // 拒绝
         else if (approveVO.getOperation().equals(FlowOperationType.REJECT.value())) {
