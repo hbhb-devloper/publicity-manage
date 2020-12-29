@@ -38,4 +38,5 @@ public class SummaryCondVO implements Serializable {
     private Long hallId;
 
     private Integer state;
+
 }

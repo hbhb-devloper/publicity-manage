@@ -43,4 +43,10 @@ public class SummaryUnitGoodsVO implements Serializable {
 
     @Schema(description = "业务单式/宣传单页(0/1)")
     private Integer type;
+
+    /**
+     * 审批状态
+     */
+    @Schema(description = "审批状态")
+    private Integer approvedState;
 }

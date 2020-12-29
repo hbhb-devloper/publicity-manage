@@ -145,11 +145,21 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
                 map.get(cond.getGoodsId() + cond.getUnitName()).setSingleAmount(cond.getSingleAmount());
             }
         }
+        boolean flag = false;
+        if (simSummaryList.size()!=0){
+            for (SummaryUnitGoodsVO summaryUnitGoodsVO : simSummaryList) {
+                if (summaryUnitGoodsVO.getApprovedState().equals(NodeState.NOT_APPROVED.value())
+                        || summaryUnitGoodsVO.getApprovedState().equals(NodeState.APPROVE_REJECTED.value())) {
+                    flag = true;
+                    break;
+                }
+            }
+        }
         // 得到第几次，判断此次是否结束。
         if (goodsSetting.getIsEnd() != null ||
                 DateUtil.stringToDate(goodsSetting.getDeadline()).getTime() < DateUtil.stringToDate(goodsReqVO.getTime()).getTime()) {
             // 如果结束审核提交置灰
-            return new SummaryUnitGoodsResVO(simSummaryList, false, batchNum);
+            return new SummaryUnitGoodsResVO(simSummaryList, flag, batchNum);
         }
         Map<Integer, String> unitMap = unitApiExp.getUnitMapById();
         for (int i = 0; i < simSummaryList.size(); i++) {
@@ -157,7 +167,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
             simSummaryList.get(i).setUnitName(unitMap.get(simSummaryList.get(i).getUnitId()));
         }
         // 展示该次该管理部门下的申请汇总。
-        return new SummaryUnitGoodsResVO(simSummaryList, true, batchNum);
+        return new SummaryUnitGoodsResVO(simSummaryList, flag, batchNum);
     }
 
     @Override
@@ -275,7 +285,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         goodsReqVO.setTime(goodsSetting.getDeadline());
         String batchNum = DateUtil.dateToString(DateUtil.stringToDate(goodsSetting.getDeadline()), "yyyyMM") + goodsReqVO.getGoodsIndex();
         // 展示该次该单位下的申请汇总。
-        return goodsMapper.selectSummaryUnitByType(SummaryCondVO.builder()
+        return applicationDetailMapper.selectSummaryUnitByType(SummaryCondVO.builder()
                 .batchNum(batchNum)
                 .unitId(goodsReqVO.getUnitId())
                 .type(type)
@@ -533,7 +543,6 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
                     .andIn(ApplicationDetail::getApplicationId, applicationIdList)
                     .andEq(ApplicationDetail::getUnderUnitId, approveVO.getUnderUnitId())
                     .updateSelective(ApplicationDetail.builder()
-                            .underUnitId(approveVO.getUnderUnitId())
                             .approvedState(projectState)
                             .build());
         }
