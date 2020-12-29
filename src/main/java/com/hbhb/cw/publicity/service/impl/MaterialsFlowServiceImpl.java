@@ -258,42 +258,53 @@ class MaterialsFlowServiceImpl implements MaterialsFlowService {
         String flowName = flowApi.getNameByNodeId(flowNodes.get(0).getFlowNodeId());
         Materials materials = materialsMapper.single(materialsId);
         wrapper.setName(materials.getMaterialsName() + flowName);
+        // 判断流程是否已结束
+        // 根据最后一个节点的状态可判断整个流程的状态
+        if (flowNodes.get(flowNodes.size() - 1).getOperation().equals(FlowOperationType.UN_EXECUTED.value())) {
+            // 1.先获取流程流转的当前节点<currentNode>
+            // 2.再判断<loginUser>是否为<currentNode>的审批人
+            //   2-1.如果不是，则所有节点信息全部为只读
+            //   2-2.如果是，则判断是否为该流程的分配者
+            //      a.如果不是分配者，则只能编辑当前节点的按钮操作<operation>和意见<suggestion>
+            //      b.如果是分配者，则可以编辑以下：
+            //        当前节点的按钮操作<operation>和意见<suggestion>
+            //        其他节点的审批人<approver>
+            //      c.特殊节点
 
-        // 1.先获取流程流转的当前节点<currentNode>
-        // 2.再判断<loginUser>是否为<currentNode>的审批人
-        //   2-1.如果不是，则所有节点信息全部为只读
-        //   2-2.如果是，则判断是否为该流程的分配者
-        //      a.如果不是分配者，则只能编辑当前节点的按钮操作<operation>和意见<suggestion>
-        //      b.如果是分配者，则可以编辑以下：
-        //        当前节点的按钮操作<operation>和意见<suggestion>
-        //        其他节点的审批人<approver>
-        //      c.特殊节点
-
-        // 1.先获取流程流转的当前节点
-        List<NodeOperationReqVO> operations = new ArrayList<>();
-        // 当前节点id
-        String currentNodeId = getCurrentNode(operations);
-        if (!StringUtils.isEmpty(currentNodeId)) {
-            MaterialsFlowVO currentNode = flowNodeMap.get(currentNodeId);
-            // 2.判断登录用户是否为当前节点的审批人
-            // 2-1.如果不是，则所有节点信息全部为只读
-            if (!userId.equals(currentNode.getApprover())) {
-                flowNodes.forEach(flowNode -> nodes.add(buildFlowNode(flowNode, currentNodeId, 0)));
-            }
-            // 2-2.如果是，则判断是否为该流程的分配者
-            else {
-                // 用户的所有流程角色
-                List<Long> flowRoleIds = roleUserApi.getRoleIdByUserId(userId);
-                // 2-2-a.当前用户是分配者
-                if (flowRoleIds.contains(currentNode.getAssigner())) {
-                    flowNodes.forEach(flowNode -> nodes.add(buildFlowNode(flowNode, currentNodeId, 2)));
+            // 1.先获取流程流转的当前节点
+            List<NodeOperationReqVO> operations = new ArrayList<>();
+            // 当前节点id
+            String currentNodeId = getCurrentNode(operations);
+            if (!StringUtils.isEmpty(currentNodeId)) {
+                MaterialsFlowVO currentNode = flowNodeMap.get(currentNodeId);
+                // 2.判断登录用户是否为当前节点的审批人
+                // 2-1.如果不是，则所有节点信息全部为只读
+                if (!userId.equals(currentNode.getApprover())) {
+                    flowNodes.forEach(flowNode -> nodes.add(buildFlowNode(flowNode, currentNodeId, 0)));
                 }
-                // 2-2-b.当前用户不是分配者
+                // 2-2.如果是，则判断是否为该流程的分配者
                 else {
-                    flowNodes.forEach(flowNode -> nodes.add(buildFlowNode(flowNode, currentNodeId, 1)));
-                }
+                    // 用户的所有流程角色
+                    List<Long> flowRoleIds = roleUserApi.getRoleIdByUserId(userId);
+                    // 2-2-a.当前用户是分配者
+                    if (flowRoleIds.contains(currentNode.getAssigner())) {
+                        flowNodes.forEach(flowNode -> nodes.add(buildFlowNode(flowNode, currentNodeId, 2)));
+                    }
+                    // 2-2-b.当前用户不是分配者
+                    else {
+                        flowNodes.forEach(flowNode -> nodes.add(buildFlowNode(flowNode, currentNodeId, 1)));
+                    }
 
+                }
             }
+            // 当前节点序号
+            wrapper.setIndex(getCurrentNodeIndex(operations));
+        }
+        // 如果流程已结束，则所有节点只读，不能操作
+        else {
+            flowNodes.forEach(flowNode -> nodes.add(buildFlowNode(flowNode, "", 0)));
+            // 当前节点序号
+            wrapper.setIndex(0);
         }
         // 解决用户被解除流程角色后，审批人下拉框显示id而非姓名的情况
         for (NodeInfoVO vo : nodes) {
@@ -309,7 +320,6 @@ class MaterialsFlowServiceImpl implements MaterialsFlowService {
                 }
             }
         }
-        wrapper.setIndex(getCurrentNodeIndex(operations));
         wrapper.setNodes(nodes);
         return wrapper;
     }
@@ -380,6 +390,8 @@ class MaterialsFlowServiceImpl implements MaterialsFlowService {
         boolean suggestionReadOnly;
         // 可编辑字段
         List<String> filedList = new ArrayList<>();
+        // 是否请求下拉框的数据
+        boolean requestSelectData = true;
         switch (type) {
             // 审批节点（非分配者）
             case 1:
@@ -398,6 +410,7 @@ class MaterialsFlowServiceImpl implements MaterialsFlowService {
                 approverReadOnly = true;
                 operationHidden = true;
                 suggestionReadOnly = true;
+                requestSelectData = false;
         }
         result.setApprover(NodeApproverVO.builder()
                 .value(flowNode.getApprover())
@@ -411,8 +424,14 @@ class MaterialsFlowServiceImpl implements MaterialsFlowService {
                 .value(flowNode.getSuggestion())
                 .readOnly(suggestionReadOnly)
                 .build());
-        result.setApproverSelect(getApproverSelect(flowNode.getFlowNodeId(), flowNode.getMaterialsId()));
-        result.setApproverRole(flowNode.getRoleDesc());
+        result.setApproveTime(flowNode.getUpdateTime());
+        // 如果节点已经操作过，则不返回下拉框列表；如果节点未操作，则返回
+        if (requestSelectData && flowNode.getOperation().equals(FlowOperationType.UN_EXECUTED.value())) {
+            result.setApproverSelect(getApproverSelect(flowNode.getFlowNodeId(), flowNode.getMaterialsId()));
+        } else {
+            result.setApproverSelect(new ArrayList<>());
+        }
+        result.setRoleDesc(flowNode.getRoleDesc());
         result.setFiledList(filedList);
         return result;
     }

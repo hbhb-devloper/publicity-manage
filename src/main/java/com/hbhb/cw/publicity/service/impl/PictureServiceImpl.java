@@ -106,6 +106,12 @@ public class PictureServiceImpl implements PictureService {
         Picture picture = pictureMapper.single(id);
         PictureInfoVO info = new PictureInfoVO();
         BeanUtils.copyProperties(picture, info);
+        // 转换用户信息
+        UserInfo user = userApi.getUserInfoById(picture.getUserId());
+        info.setNickName(user.getNickName());
+        // 转换单位信息
+        Unit unit = unitApi.getUnitInfo(picture.getUnitId());
+        info.setUnitName(unit.getUnitName());
         // 获取文件列表信息
         List<PictureFile> files = fileMapper.createLambdaQuery().andEq(PictureFile::getPictureId, id).select();
         if (files.size() != 0) {

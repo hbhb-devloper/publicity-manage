@@ -36,8 +36,14 @@ public class PictureInfoVO implements Serializable {
     @Schema(description = "申请时间")
     private String applyTime;
 
-    @Schema(description = "用户id")
+    @Schema(description = "申请部门单位名称")
+    private String unitName;
+
+    @Schema(description = "申请人用户id")
     private Integer userId;
+
+    @Schema(description = "申请人用户姓名")
+    private String nickName;
 
     @Schema(description = "附件")
     private List<PictureFileVO> files;

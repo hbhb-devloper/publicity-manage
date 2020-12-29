@@ -132,9 +132,18 @@ public class MaterialsServiceImpl implements MaterialsService {
     @Override
     public MaterialsInfoVO getMaterials(Long id) {
         Materials materials = materialsMapper.single(id);
-        List<MaterialsFile> files = fileMapper.createLambdaQuery().andEq(MaterialsFile::getMaterialsId, id).select();
+        List<MaterialsFile> files = fileMapper
+                .createLambdaQuery()
+                .andEq(MaterialsFile::getMaterialsId, id)
+                .select();
         MaterialsInfoVO info = new MaterialsInfoVO();
         BeanUtils.copyProperties(materials, info);
+        // 转换用户信息
+        UserInfo user = userApi.getUserInfoById(materials.getUserId());
+        info.setNickName(user.getNickName());
+        // 转换单位信息
+        Unit unit = unitApi.getUnitInfo(materials.getUnitId());
+        info.setUnitName(unit.getUnitName());
         // 获取文件列表信息
         if (files.size() != 0) {
             List<Integer> fileIds = new ArrayList<>();
