@@ -151,7 +151,7 @@ selectPurchaseGoods
      where ad.state = 2
         and ad.approved_state  = 31
                 -- @if(isNotEmpty(batchNum)){
-                    and a.batchNum = #{batchNum}
+                    and a.batch_num = #{batchNum}
                 -- @}
                 -- @if(isNotEmpty(unitId)){
                     and g.unit_id = #{unitId}

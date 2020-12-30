@@ -89,8 +89,7 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
     @Override
     public void submitGoods(GoodsSaveGoodsVO goodsSaveGoodsVO) {
         // 修改审批数量
-        List<GoodsChangerVO> list = goodsSaveGoodsVO.getList();
-        changerModifyAmount(list);
+        saveGoods(goodsSaveGoodsVO);
         // 保存
         GoodsReqVO goodsReqVO = goodsSaveGoodsVO.getGoodsReqVO();
         goodsReqVO.setHallId(null);

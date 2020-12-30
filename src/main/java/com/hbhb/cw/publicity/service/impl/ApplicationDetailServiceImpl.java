@@ -163,13 +163,11 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         Map<Integer, String> unitMap = unitApiExp.getUnitMapById();
         List<SummaryUnitGoodsVO> singList = getUnitSummaryList(goodsReqVO, GoodsType.FLYER_PAGE.getValue());
         for (int i = 0; i < singList.size(); i++) {
-            singList.get(i).setSingleAmount(0L);
             singList.get(i).setLineNum(i + 1L);
             singList.get(i).setUnitName(unitMap.get(singList.get(i).getUnitId()));
         }
         List<SummaryUnitGoodsVO> simList = getUnitSummaryList(goodsReqVO, GoodsType.BUSINESS_SIMPLEX.getValue());
         for (int i = 0; i < simList.size(); i++) {
-            simList.get(i).setSingleAmount(0L);
             simList.get(i).setLineNum(i + 1L);
             simList.get(i).setUnitName(unitMap.get(simList.get(i).getUnitId()));
         }
