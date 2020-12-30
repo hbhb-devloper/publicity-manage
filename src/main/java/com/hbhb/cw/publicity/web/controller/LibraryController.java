@@ -55,7 +55,7 @@ public class LibraryController {
         libraryService.updateLibrary(userId, libraryAddVO);
     }
 
-    @PutMapping("")
+    @PutMapping("/batch")
     @Operation(summary = "批量修改物料审核员")
     public void updateBatchChecker(@RequestBody Integer beforeId,Integer afterId) {
         libraryService.updateBatchChecker(beforeId,afterId);
