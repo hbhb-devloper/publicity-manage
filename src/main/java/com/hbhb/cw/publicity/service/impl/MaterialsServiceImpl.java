@@ -115,7 +115,7 @@ public class MaterialsServiceImpl implements MaterialsService {
     @Override
     public PageResult<MaterialsResVO> getMaterialsList(MaterialsReqVO reqVO, Integer pageNum, Integer pageSize) {
         PageRequest<MaterialsResVO> request = DefaultPageRequest.of(pageNum, pageSize);
-        PageResult<MaterialsResVO> materialsList = materialsMapper.selectMaterialsListByCond(request, request);
+        PageResult<MaterialsResVO> materialsList = materialsMapper.selectMaterialsListByCond(reqVO, request);
         // 组装单位名称，用户名称
         List<Integer> userIds = new ArrayList<>();
         Map<Integer, String> unitMapById = unitApi.getUnitMapById();
@@ -165,6 +165,10 @@ public class MaterialsServiceImpl implements MaterialsService {
                     .collect(Collectors.toList());
             info.setFiles(fileVo);
         }
+        List<MaterialsInfo> materialsList = materialsInfoMapper.createLambdaQuery()
+                .andEq(MaterialsInfo::getMaterialsId, id)
+                .select();
+        info.setMaterialsInfo(materialsList);
         return info;
     }
 
@@ -195,11 +199,10 @@ public class MaterialsServiceImpl implements MaterialsService {
         materials.setUpdateTime(new Date());
         materials.setState(NodeState.NOT_APPROVED.value());
         materials.setDeleteFlag(true);
-
         // 新增印刷用品
         materialsMapper.insert(materials);
         if (infoVO.getFiles() != null) {
-            List<MaterialsFile> fileList = setMaterialsFile(infoVO.getFiles(), userId);
+            List<MaterialsFile> fileList = setMaterialsFile(infoVO.getFiles(), userId, materials.getId());
             fileMapper.insertBatch(fileList);
         }
         // 新增印刷用品导入业务单式或宣传单页数据
@@ -232,7 +235,7 @@ public class MaterialsServiceImpl implements MaterialsService {
                 files.add(fileVo);
             }
         }
-        List<MaterialsFile> fileList = setMaterialsFile(files, userId);
+        List<MaterialsFile> fileList = setMaterialsFile(files, userId, infoVO.getId());
         fileMapper.insertBatch(fileList);
     }
 
@@ -356,7 +359,7 @@ public class MaterialsServiceImpl implements MaterialsService {
 
     }
 
-    private List<MaterialsFile> setMaterialsFile(List<MaterialsFileVO> fileVOList, Integer userId) {
+    private List<MaterialsFile> setMaterialsFile(List<MaterialsFileVO> fileVOList, Integer userId, Long materialsId) {
         //获取用户姓名
         UserInfo user = userApi.getUserInfoById(userId);
         List<MaterialsFile> fileList = new ArrayList<>();
@@ -365,7 +368,7 @@ public class MaterialsServiceImpl implements MaterialsService {
                     .createBy(user.getNickName())
                     .createTime(new Date())
                     .fileId(item.getFileId())
-                    .materialsId(item.getMaterialsId())
+                    .materialsId(materialsId)
                     .build()));
         }
         return fileList;

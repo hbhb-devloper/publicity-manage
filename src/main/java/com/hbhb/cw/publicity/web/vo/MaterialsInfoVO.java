@@ -1,6 +1,6 @@
 package com.hbhb.cw.publicity.web.vo;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.hbhb.cw.publicity.model.MaterialsInfo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -63,7 +63,10 @@ public class MaterialsInfoVO implements Serializable {
     @Schema(description = "文件")
     private List<MaterialsFileVO> files;
 
-    @JsonIgnore
+    @Schema(description = "物料列表")
+    private List<MaterialsInfo> materialsInfo;
+
+
     @Schema(description = "导入物料详单excel数据id")
     private String importDateId;
 }

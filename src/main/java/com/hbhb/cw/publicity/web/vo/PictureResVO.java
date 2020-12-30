@@ -45,7 +45,7 @@ public class PictureResVO implements Serializable {
     private BigDecimal predictAmount;
 
     @Schema(description = "流程状态")
-    private Integer flowState;
+    private Integer state;
 
 
 }

@@ -218,6 +218,12 @@ public class PrintServiceImpl implements PrintService {
         }
         List<PrintFile> fileList = setPrintFile(files, userId, infoVO.getId());
         fileMapper.insertBatch(fileList);
+        // 新增印刷用品导入业务单式或宣传单页数据
+        if (!isEmpty(infoVO.getImportDateId())) {
+            List<PrintMaterials> materialsList = getPrintMaterialsList(infoVO.getImportDateId());
+            materialsList.forEach(item -> item.setPrintId(print.getId()));
+            printMaterialsMapper.insertBatch(materialsList);
+        }
     }
 
     @Override

@@ -159,8 +159,8 @@ public class PrintController {
     }
 
     @Operation(summary = "删除导入数据")
-    @DeleteMapping("/materials")
-    public void deleteMaterials(Long printId) {
+    @DeleteMapping("/materials/{printId}")
+    public void deleteMaterials(@PathVariable("printId") Long printId) {
         printService.deletePrintMaterials(printId);
     }
 

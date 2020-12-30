@@ -138,6 +138,7 @@ public class PictureServiceImpl implements PictureService {
         if (picture.getFileId() != null) {
             SysFile file = fileApi.getFileInfo(picture.getFileId());
             info.setFilePath(file.getFilePath());
+            info.setFileName(file.getFileName());
         }
         return info;
     }
@@ -166,7 +167,7 @@ public class PictureServiceImpl implements PictureService {
         pictureMapper.insert(picture);
         // 保存附件
         if (!isEmpty(infoVO.getFiles())) {
-            List<PictureFile> fileList = setPictureFile(infoVO.getFiles(), userId);
+            List<PictureFile> fileList = setPictureFile(infoVO.getFiles(), userId, picture.getId());
             fileMapper.insertBatch(fileList);
         }
 
@@ -177,8 +178,8 @@ public class PictureServiceImpl implements PictureService {
     public void updatePicture(PictureInfoVO infoVO, Integer userId) {
         // 修改宣传画面
         Picture picture = new Picture();
-        BeanUtils.copyProperties(picture, infoVO);
-        pictureMapper.updateById(picture);
+        BeanUtils.copyProperties(infoVO, picture);
+        pictureMapper.updateTemplateById(picture);
         // 修改保存附件
         if (infoVO.getFiles().size() != 0) {
             List<PictureFileVO> fileVOList = infoVO.getFiles();
@@ -188,7 +189,7 @@ public class PictureServiceImpl implements PictureService {
                     files.add(fileVo);
                 }
             }
-            List<PictureFile> fileList = setPictureFile(files, userId);
+            List<PictureFile> fileList = setPictureFile(files, userId, infoVO.getId());
             fileMapper.insertBatch(fileList);
         }
     }
@@ -202,7 +203,7 @@ public class PictureServiceImpl implements PictureService {
     }
 
 
-    private List<PictureFile> setPictureFile(List<PictureFileVO> fileVOList, Integer userId) {
+    private List<PictureFile> setPictureFile(List<PictureFileVO> fileVOList, Integer userId, Long pictureId) {
         //获取用户姓名
         UserInfo user = userApi.getUserInfoById(userId);
         List<PictureFile> fileList = new ArrayList<>();
@@ -210,7 +211,7 @@ public class PictureServiceImpl implements PictureService {
                 .createBy(user.getNickName())
                 .createTime(new Date())
                 .fileId(item.getFileId())
-                .pictureId(item.getPictureId())
+                .pictureId(pictureId)
                 .build()));
         return fileList;
     }
@@ -222,7 +223,7 @@ public class PictureServiceImpl implements PictureService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void toApprove(PictureInitVO initVO) {
+    public void toApprove(PictureInitVO initVO, Integer userId) {
         Picture picture = pictureMapper.single(initVO.getPictureId());
         //  1.判断登录用户是否与申请人一致
         UserInfo user = userApi.getUserInfoById(initVO.getUserId());
@@ -240,7 +241,7 @@ public class PictureServiceImpl implements PictureService {
             throw new PublicityException(PublicityErrorCode.LOCK_OF_APPROVAL_ROLE);
         }
         //  4.同步节点属性
-        syncPrintFlow(flowProps, picture.getId(), initVO.getUserId());
+        syncPrintFlow(flowProps, picture.getId(), userId);
         // 得到推送模板
         String inform = flowService.getInform(flowProps.get(0).getFlowNodeId(),
                 FlowNodeNoticeState.DEFAULT_REMINDER.value());
@@ -262,7 +263,7 @@ public class PictureServiceImpl implements PictureService {
         picture.setId(initVO.getPictureId());
         picture.setState(NodeState.APPROVING.value());
         picture.setUpdateBy(initVO.getUserId());
-
+        pictureMapper.updateTemplateById(picture);
     }
 
 
@@ -319,6 +320,7 @@ public class PictureServiceImpl implements PictureService {
                     .isJoin(flowPropVO.getIsJoin())
                     .assigner(flowPropVO.getAssigner())
                     .operation(OperationState.UN_EXECUTED.value())
+                    .createTime(new Date())
                     .build());
         }
         flowService.insertBatch(pictureFlowList);
@@ -335,9 +337,10 @@ public class PictureServiceImpl implements PictureService {
             throw new PublicityException(PublicityErrorCode.EXCEED_LIMIT_FLOW);
         }
         flowList.forEach(flow -> flowMap.put(nodeApi.getNodeNum(flow.getId()), flow.getId()));
-        // 预开发票流程默认为4个节点流程
+        // 画面设计
+        // 画面设计流程默认为4个节点流程
         Long flowId;
-        flowId = flowMap.get(2L);
+        flowId = flowMap.get(3L);
         if (flowId == null) {
             throw new PublicityException(PublicityErrorCode.LACK_OF_FLOW);
         }

@@ -6,6 +6,7 @@ import com.hbhb.core.utils.ExcelUtil;
 import com.hbhb.cw.publicity.enums.PublicityErrorCode;
 import com.hbhb.cw.publicity.exception.PublicityException;
 import com.hbhb.cw.publicity.model.MaterialsBudget;
+import com.hbhb.cw.publicity.model.MaterialsInfo;
 import com.hbhb.cw.publicity.rpc.FileApiExp;
 import com.hbhb.cw.publicity.service.MaterialsService;
 import com.hbhb.cw.publicity.service.listener.MaterialsListener;
@@ -116,6 +117,12 @@ public class MaterialsController {
     @PostMapping(value = "/upload", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public FileVO uploadMaterialsFile(@RequestPart(required = false, value = "file") MultipartFile file) {
         return fileApi.upload(file, FileType.PUBLICITY_MATERIALS_FILE.value());
+    }
+
+    @Operation(summary = "获取excel导入数据")
+    @GetMapping("/materials")
+    List<MaterialsInfo> getMaterialsList(@Parameter(description = "id") String uuid) {
+        return materialsService.getMaterialsInfoList(uuid);
     }
 
     @Operation(summary = "删除物料")

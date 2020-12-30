@@ -2,6 +2,7 @@ package com.hbhb.cw.publicity.service.impl;
 
 import com.hbhb.api.core.bean.SelectVO;
 import com.hbhb.core.bean.BeanConverter;
+import com.hbhb.core.utils.DateUtil;
 import com.hbhb.cw.flowcenter.enums.FlowNodeNoticeState;
 import com.hbhb.cw.flowcenter.enums.FlowNodeNoticeTemp;
 import com.hbhb.cw.flowcenter.enums.FlowOperationType;
@@ -342,6 +343,7 @@ class MaterialsFlowServiceImpl implements MaterialsFlowService {
                     vo.setApproverRole(roleApi.getNameById(flow.getFlowRoleId()));
                     vo.setNickName(userInfo == null ? null : userInfo.getNickName());
                     vo.setApprover(flow.getUserId());
+                    vo.setUpdateTime(DateUtil.dateToStringYmd(flow.getUpdateTime()));
                     return vo;
                 }).collect(Collectors.toList());
     }

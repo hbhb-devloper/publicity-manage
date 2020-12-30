@@ -15,7 +15,9 @@ where  m.id = #{id}
 selectMaterialsListByCond
 ====
 ```sql
-select id           as id,
+select 
+    -- @pageTag(){
+       id           as id,
        unit_id        as unitId,
        materials_name as materialsName,
        apply_time     as applyTime,
@@ -23,6 +25,7 @@ select id           as id,
        predict_amount as predictAmount,
        producers      as producers,
        state          as state
+    -- @}
        from materials
     -- @where(){
         -- @if(!isEmpty(cond.applyTime)){
@@ -72,7 +75,7 @@ where unitId = #{unitId}
 selectMaterialsNumCountByUnitId
 ===
 ```sql
-select IFNULL(max(right(print_num, 4)),0)
+select IFNULL(max(right(materials_num, 4)),0)
 from materials
 where year(create_time) = #{createTime}
   and delete_flag = 1

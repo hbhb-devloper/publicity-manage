@@ -2,6 +2,7 @@ package com.hbhb.cw.publicity.service.impl;
 
 import com.hbhb.api.core.bean.SelectVO;
 import com.hbhb.core.bean.BeanConverter;
+import com.hbhb.core.utils.DateUtil;
 import com.hbhb.cw.flowcenter.enums.FlowNodeNoticeTemp;
 import com.hbhb.cw.flowcenter.enums.FlowOperationType;
 import com.hbhb.cw.flowcenter.enums.FlowState;
@@ -271,6 +272,12 @@ public class PictureFlowServiceImpl implements PictureFlowService {
             // 1.先获取流程流转的当前节点
             List<NodeOperationReqVO> operations = new ArrayList<>();
             // 当前节点id
+            flowNodes.forEach(flowNode -> {
+                operations.add(NodeOperationReqVO.builder()
+                        .flowNodeId(flowNode.getFlowNodeId())
+                        .operation(flowNode.getOperation())
+                        .build());
+            });
             String currentNodeId = getCurrentNode(operations);
             if (!StringUtils.isEmpty(currentNodeId)) {
                 PictureFlowVO currentNode = flowNodeMap.get(currentNodeId);
@@ -338,6 +345,7 @@ public class PictureFlowServiceImpl implements PictureFlowService {
                     vo.setPictureId(flow.getPictureId());
                     vo.setApproverRole(roleApi.getNameById(flow.getFlowRoleId()));
                     vo.setNickName(userInfo == null ? null : userInfo.getNickName());
+                    vo.setUpdateTime(DateUtil.dateToStringYmd(flow.getUpdateTime()));
                     vo.setApprover(flow.getUserId());
                     return vo;
                 }).collect(Collectors.toList());
