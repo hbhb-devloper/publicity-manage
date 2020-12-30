@@ -28,6 +28,11 @@ public interface LibraryService {
     void updateLibrary(Integer userId, Goods libraryAddVO);
 
     /**
+     * 批量修改物料审核员
+     */
+    void updateBatchChecker(Integer beforeId, Integer afterId);
+
+    /**
      * 通过id得到物料id
      */
     GoodsInfoVO getInfo(Long id);

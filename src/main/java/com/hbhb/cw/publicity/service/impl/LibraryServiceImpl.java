@@ -213,6 +213,13 @@ public class LibraryServiceImpl implements LibraryService {
     }
 
     @Override
+    public void updateBatchChecker(Integer beforeId, Integer afterId) {
+        goodsMapper.createLambdaQuery()
+                .andEq(Goods::getChecker,beforeId)
+                .updateSelective(Goods.builder().checker(afterId));
+    }
+
+    @Override
     public GoodsInfoVO getInfo(Long id) {
         Goods goods = goodsMapper.single(id);
         GoodsInfoVO goodsInfo = new GoodsInfoVO();

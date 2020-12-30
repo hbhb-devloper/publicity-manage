@@ -55,6 +55,12 @@ public class LibraryController {
         libraryService.updateLibrary(userId, libraryAddVO);
     }
 
+    @PutMapping("")
+    @Operation(summary = "批量修改物料审核员")
+    public void updateBatchChecker(@RequestBody Integer beforeId,Integer afterId) {
+        libraryService.updateBatchChecker(beforeId,afterId);
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "得到详情")
     public GoodsInfoVO getInfo(@PathVariable Long id){

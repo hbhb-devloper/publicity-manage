@@ -38,7 +38,11 @@ public class GoodsSettingServiceImpl implements GoodsSettingService {
         // 得到当前月份
         String time = DateUtil.formatDate(new Date(), "yyyy-MM");
         // 通过月份得到该产品当月的设置
-        return goodsSettingMapper.selectByDate(time);
+        List<GoodsSetting> goodsSettings = goodsSettingMapper.selectByDate(time);
+        if (goodsSettings==null||goodsSettings.size()==0){
+            return new ArrayList<>();
+        }
+        return goodsSettings;
     }
 
     @Override
