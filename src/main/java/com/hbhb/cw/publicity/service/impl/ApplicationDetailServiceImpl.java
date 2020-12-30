@@ -127,27 +127,11 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         }
         goodsReqVO.setTime(goodsSetting.getDeadline());
         String batchNum = DateUtil.dateToString(DateUtil.stringToDate(goodsSetting.getDeadline()), "yyyyMM") + goodsReqVO.getGoodsIndex();
-        List<SummaryUnitGoodsVO> simSummaryList = getUnitSummaryList(goodsReqVO, 0);
-        List<SummaryUnitGoodsVO> singSummaryList = getUnitSummaryList(goodsReqVO, 1);
-        // 通过goodsId得到unitName
-        Map<String, SummaryUnitGoodsVO> map = new HashMap<>();
-        for (SummaryUnitGoodsVO summaryUnitGoodsVO : simSummaryList) {
-            // 业务单式下宣传单页因都为0
-            summaryUnitGoodsVO.setSingleAmount(0L);
-            map.put(summaryUnitGoodsVO.getGoodsId() + summaryUnitGoodsVO.getUnitName(), summaryUnitGoodsVO);
-        }
-        for (SummaryUnitGoodsVO cond : singSummaryList) {
-            // 宣传单页下业务单式因都为0
-            cond.setSimplexAmount(0L);
-            if (map.get(cond.getGoodsId() + cond.getUnitName()) == null) {
-                simSummaryList.add(cond);
-            } else {
-                map.get(cond.getGoodsId() + cond.getUnitName()).setSingleAmount(cond.getSingleAmount());
-            }
-        }
+        List<SummaryUnitGoodsVO> list = getUnitSummaryList(goodsReqVO, null);
+
         boolean flag = false;
-        if (simSummaryList.size()!=0){
-            for (SummaryUnitGoodsVO summaryUnitGoodsVO : simSummaryList) {
+        if (list.size()!=0){
+            for (SummaryUnitGoodsVO summaryUnitGoodsVO : list) {
                 if (summaryUnitGoodsVO.getApprovedState().equals(NodeState.NOT_APPROVED.value())
                         || summaryUnitGoodsVO.getApprovedState().equals(NodeState.APPROVE_REJECTED.value())) {
                     flag = true;
@@ -159,15 +143,15 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         if (goodsSetting.getIsEnd() != null ||
                 DateUtil.stringToDate(goodsSetting.getDeadline()).getTime() < DateUtil.stringToDate(goodsReqVO.getTime()).getTime()) {
             // 如果结束审核提交置灰
-            return new SummaryUnitGoodsResVO(simSummaryList, flag, batchNum);
+            return new SummaryUnitGoodsResVO(list, flag, batchNum);
         }
         Map<Integer, String> unitMap = unitApiExp.getUnitMapById();
-        for (int i = 0; i < simSummaryList.size(); i++) {
-            simSummaryList.get(i).setLineNum(i + 1L);
-            simSummaryList.get(i).setUnitName(unitMap.get(simSummaryList.get(i).getUnitId()));
+        for (int i = 0; i < list.size(); i++) {
+            list.get(i).setLineNum(i + 1L);
+            list.get(i).setUnitName(unitMap.get(list.get(i).getUnitId()));
         }
         // 展示该次该管理部门下的申请汇总。
-        return new SummaryUnitGoodsResVO(simSummaryList, flag, batchNum);
+        return new SummaryUnitGoodsResVO(list, flag, batchNum);
     }
 
     @Override

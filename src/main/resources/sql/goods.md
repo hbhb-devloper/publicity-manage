@@ -52,6 +52,7 @@ selectByUnitId
            g.state as state
     from goods g
     where mold = 1
+    and unit_id = #{unitId}
     and parent_id is null
 ```
 selectGoodsByActIds
@@ -63,36 +64,8 @@ selectGoodsByActIds
              mold as mold,
              state as state
              from goods
-             where parent_id in (#{join(list)})
-```
-
-selectSummaryUnitByType
-===
-```sql
-    select  g.id as `goodsId`,
-            ifnull(sum(ad.modify_amount),0) as `simplexAmount`,
-            ifnull(sum(ad.modify_amount),0) as `singleAmount`,
-            g.goods_name as `goodsName`,
-            g.unit as `unit`,
-            a.unit_id as unitId,
-            ad.modify_amount as `modifyAmount`
-    from goods g
-             left join application_detail ad on g.id = ad.goods_id
-             left join application a on a.id = ad.application_id
-            left join goods_setting gs on CONCAT(date_format(gs.deadline,'%y%m%d'),gs.goods_index) = a.batch_num
-            where a.submit = 1
-            and ad.state in (1,2)
-            and g.mold = 0
-                    -- @if(isNotEmpty(unitId)){
-                         and g.unit_id = #{unitId}
-                    -- @}
-                    -- @if(isNotEmpty(batchNum)){
-                         and a.batch_num = #{batchNum}
-                    -- @}
-                    -- @if(isNotEmpty(type)){
-                         and g.type = #{type}
-                    -- @}
-    group by a.unit_id,g.id;
+             where unit_id = #{unitId}
+             and parent_id in (#{join(list)})
 ```
 
 
@@ -177,11 +150,8 @@ selectPurchaseGoods
              left join goods_setting gs on CONCAT(date_format(gs.deadline,'%y%m%d'),gs.goods_index) = a.batch_num
      where ad.state = 2
         and ad.approved_state  = 31
-                -- @if(isNotEmpty(time)){
-                    and gs.deadline like concat(#{time},'%')
-                -- @}
-                -- @if(isNotEmpty(goodsIndex)){
-                    and gs.goods_index = #{goodsIndex}
+                -- @if(isNotEmpty(batchNum)){
+                    and a.batchNum = #{batchNum}
                 -- @}
                 -- @if(isNotEmpty(unitId)){
                     and g.unit_id = #{unitId}

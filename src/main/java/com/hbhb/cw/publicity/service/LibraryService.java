@@ -15,7 +15,7 @@ public interface LibraryService {
     /**
      * 通过登录用户得到物料产品库树形列表
      */
-    List<LibraryVO> getTreeList(Integer userId);
+    List<LibraryVO> getTreeList(Integer userId,Integer unitId);
 
     /**
      * 新增物料产品

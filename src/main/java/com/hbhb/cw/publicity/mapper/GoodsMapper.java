@@ -30,13 +30,13 @@ public interface GoodsMapper extends BaseMapper<Goods> {
 
     List<LibraryVO> selectByUnitId(Integer unitId);
 
-    List<LibraryVO> selectGoodsByActIds(List<Long> list);
+    List<LibraryVO> selectGoodsByActIds(List<Long> list,Integer unitId);
 
     List<SummaryGoodsVO> selectSummaryByState(SummaryCondVO cond);
 
     List<Long> selectIdsByCond(SummaryCondVO cond);
 
-    PageResult<PurchaseGoodsResVO> selectPurchaseGoods( PageRequest<PurchaseGoodsResVO> request,GoodsReqVO goodsReqVO);
+    PageResult<PurchaseGoodsResVO> selectPurchaseGoods( PageRequest<PurchaseGoodsResVO> request,GoodsReqVO goodsReqVO,String batchNum);
 
     List<PurchaseGoodsVO> selectGoodsByHallId(GoodsReqVO goodsReqVO);
 
