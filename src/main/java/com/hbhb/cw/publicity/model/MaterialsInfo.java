@@ -39,7 +39,7 @@ public class MaterialsInfo implements Serializable {
     /**
      * 分配地方（地址）
      */
-    private Integer address;
+    private String address;
     /**
      * 接收人
      */
@@ -55,7 +55,7 @@ public class MaterialsInfo implements Serializable {
     /**
      * 备注
      */
-    private String remake;
+    private String remark;
     /**
      * 物料名称
      */

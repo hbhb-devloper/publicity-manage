@@ -156,7 +156,7 @@ public class MaterialsServiceImpl implements MaterialsService {
                     .stream()
                     .map(file -> MaterialsFileVO.builder()
                             .author(file.getCreateBy())
-                            .createTime(file.getCreateTime().toString())
+                            .createTime(DateUtil.dateToStringYmd(file.getCreateTime()))
                             .id(file.getId())
                             .fileName(fileInfoMap.get(file.getFileId()).getFileName())
                             .filePath(fileInfoMap.get(file.getFileId()).getFilePath())
@@ -179,7 +179,14 @@ public class MaterialsServiceImpl implements MaterialsService {
         UserInfo user = userApi.getUserInfoById(userId);
         Unit unit = unitApi.getUnitInfo(user.getUnitId());
         MaterialsBudgetVO materialsBudget = getMaterialsBudget(user.getUnitId());
-        int i = materialsBudget.getBalance().compareTo(infoVO.getPredictAmount());
+        int i;
+        if (isEmpty(materialsBudget)) {
+            MaterialsBudget single = budgetMapper.createLambdaQuery()
+                    .andEq(MaterialsBudget::getUnitId, user.getUnitId()).single();
+            i = single.getBudget().compareTo(infoVO.getPredictAmount());
+        } else {
+            i = materialsBudget.getBalance().compareTo(infoVO.getPredictAmount());
+        }
         if (i < 0) {
             throw new PublicityException(PublicityErrorCode.BUDGET_INSUFFICIENT);
         }
@@ -224,9 +231,9 @@ public class MaterialsServiceImpl implements MaterialsService {
     @Override
     public void updateMaterials(MaterialsInfoVO infoVO, Integer userId) {
         Materials materials = new Materials();
-        BeanUtils.copyProperties(materials, infoVO);
+        BeanUtils.copyProperties(infoVO, materials);
         // 新增印刷用品
-        materialsMapper.insert(materials);
+        materialsMapper.updateTemplateById(materials);
         // 保存附件
         List<MaterialsFileVO> fileVOList = infoVO.getFiles();
         List<MaterialsFileVO> files = new ArrayList<>();
@@ -237,6 +244,12 @@ public class MaterialsServiceImpl implements MaterialsService {
         }
         List<MaterialsFile> fileList = setMaterialsFile(files, userId, infoVO.getId());
         fileMapper.insertBatch(fileList);
+        //
+        if (!isEmpty(infoVO.getImportDateId())) {
+            List<MaterialsInfo> materialsList = getMaterialsInfoList(infoVO.getImportDateId());
+            materialsList.forEach(item -> item.setMaterialsId(materials.getId()));
+            materialsInfoMapper.insertBatch(materialsList);
+        }
     }
 
     @Override
@@ -246,7 +259,7 @@ public class MaterialsServiceImpl implements MaterialsService {
         Map<String, Integer> unitNameMap = unitApi.getUnitMapByUnitName();
         for (MaterialsImportVO importVo : dataList) {
             MaterialsInfo materials = new MaterialsInfo();
-            BeanUtils.copyProperties(materials, importVo);
+            BeanUtils.copyProperties(importVo, materials);
             materials.setUnitId(unitNameMap.get(importVo.getUnitName()));
             materials.setDeliveryDate(DateUtil.string3DateYMD(importVo.getDeliveryDate()));
             materialsList.add(materials);
@@ -258,7 +271,6 @@ public class MaterialsServiceImpl implements MaterialsService {
         data.setMaterialsInfo(materialsList);
         mongoTemplate.insert(data);
         id = new StringBuffer(uuId);
-        materialsInfoMapper.insertBatch(materialsList);
     }
 
     @Override
@@ -268,10 +280,10 @@ public class MaterialsServiceImpl implements MaterialsService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void toApprove(MaterialsInitVO initVO) {
+    public void toApprove(MaterialsInitVO initVO, Integer userId) {
         Materials materials = materialsMapper.single(initVO.getMaterialsId());
         //  1.判断登录用户是否与申请人一致
-        UserInfo user = userApi.getUserInfoById(initVO.getUserId());
+        UserInfo user = userApi.getUserInfoById(userId);
         UserInfo userInfo = userApi.getUserInfoById(materials.getUserId());
         if (!user.getNickName().equals(userInfo.getNickName())) {
             throw new PublicityException(PublicityErrorCode.LOCK_OF_APPROVAL_ROLE);
@@ -286,7 +298,7 @@ public class MaterialsServiceImpl implements MaterialsService {
             throw new PublicityException(PublicityErrorCode.LOCK_OF_APPROVAL_ROLE);
         }
         //  5.同步节点属性
-        syncMaterialsFlow(flowProps, materials.getId(), initVO.getUserId());
+        syncMaterialsFlow(flowProps, materials.getId(), userId);
         // 得到推送模板
         String inform = flowService.getInform(flowProps.get(0).getFlowNodeId()
                 , FlowNodeNoticeState.DEFAULT_REMINDER.value());
@@ -310,7 +322,7 @@ public class MaterialsServiceImpl implements MaterialsService {
         materials.setId(initVO.getMaterialsId());
         materials.setState(NodeState.APPROVING.value());
         materials.setUpdateBy(initVO.getUserId());
-
+        materialsMapper.updateTemplateById(materials);
     }
 
     @Override
@@ -356,7 +368,9 @@ public class MaterialsServiceImpl implements MaterialsService {
 
     @Override
     public void deleteMaterialsInfo(Long materialsId) {
-
+        materialsInfoMapper.createLambdaQuery().
+                andEq(MaterialsInfo::getMaterialsId, materialsId)
+                .delete();
     }
 
     private List<MaterialsFile> setMaterialsFile(List<MaterialsFileVO> fileVOList, Integer userId, Long materialsId) {
@@ -444,6 +458,7 @@ public class MaterialsServiceImpl implements MaterialsService {
                     .isJoin(flowPropVO.getIsJoin())
                     .assigner(flowPropVO.getAssigner())
                     .operation(OperationState.UN_EXECUTED.value())
+                    .createTime(new Date())
                     .build());
         }
         flowService.insertBatch(materialsFlowList);

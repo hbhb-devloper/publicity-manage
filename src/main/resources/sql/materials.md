@@ -19,6 +19,8 @@ select
     -- @pageTag(){
        id           as id,
        unit_id        as unitId,
+       user_id        as userId,
+       materials_num  as materialsNum,
        materials_name as materialsName,
        apply_time     as applyTime,
        wide_band      as wideBand,
@@ -72,7 +74,7 @@ select t1.*, t2.declaration, t3.amountPaid
 where unitId = #{unitId}
 ```
 
-selectMaterialsNumCountByUnitId
+selectPictureNumCountByUnitId
 ===
 ```sql
 select IFNULL(max(right(materials_num, 4)),0)

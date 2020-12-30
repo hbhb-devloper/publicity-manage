@@ -12,11 +12,11 @@ import com.hbhb.cw.publicity.service.MaterialsService;
 import com.hbhb.cw.publicity.service.listener.MaterialsListener;
 import com.hbhb.cw.publicity.web.vo.MaterialsBudgetResVO;
 import com.hbhb.cw.publicity.web.vo.MaterialsBudgetVO;
+import com.hbhb.cw.publicity.web.vo.MaterialsImportVO;
 import com.hbhb.cw.publicity.web.vo.MaterialsInfoVO;
 import com.hbhb.cw.publicity.web.vo.MaterialsInitVO;
 import com.hbhb.cw.publicity.web.vo.MaterialsReqVO;
 import com.hbhb.cw.publicity.web.vo.MaterialsResVO;
-import com.hbhb.cw.publicity.web.vo.PrintImportVO;
 import com.hbhb.cw.systemcenter.enums.FileType;
 import com.hbhb.web.annotation.UserId;
 import io.swagger.v3.oas.annotations.Operation;
@@ -86,9 +86,9 @@ public class MaterialsController {
     @PostMapping("/export")
     public void exportMaterials(HttpServletRequest request, HttpServletResponse response) {
         List<Object> list = new ArrayList<>();
-        String fileName = ExcelUtil.encodingFileName(request, "宣传单页模板");
-        ExcelUtil.export2WebWithTemplate(response, fileName, "宣传单页模板",
-                fileApi.getTemplatePath() + File.separator + "宣传单页模板.xlsx", list);
+        String fileName = ExcelUtil.encodingFileName(request, "中国移动杭州分公司宣传物料设计导入模板");
+        ExcelUtil.export2WebWithTemplate(response, fileName, "中国移动杭州分公司宣传物料设计导入模板",
+                fileApi.getTemplatePath() + File.separator + "中国移动杭州分公司宣传物料设计导入模板.xlsx", list);
     }
 
     @Operation(summary = "宣传物料导入")
@@ -97,7 +97,7 @@ public class MaterialsController {
         long begin = System.currentTimeMillis();
 
         try {
-            EasyExcel.read(file.getInputStream(), PrintImportVO.class,
+            EasyExcel.read(file.getInputStream(), MaterialsImportVO.class,
                     new MaterialsListener(materialsService)).sheet().headRowNumber(2).doRead();
         } catch (IOException | NumberFormatException | NullPointerException e) {
             log.error(e.getMessage(), e);
@@ -108,9 +108,9 @@ public class MaterialsController {
     }
 
     @Operation(summary = "删除导入数据")
-    @DeleteMapping("/materials")
-    public void deleteMaterialsInfo(Long printId) {
-        materialsService.deleteMaterialsInfo(printId);
+    @DeleteMapping("/materials/{materialsId}")
+    public void deleteMaterialsInfo(@PathVariable("materialsId") Long materialsId) {
+        materialsService.deleteMaterialsInfo(materialsId);
     }
 
     @Operation(summary = "上传附件")
@@ -135,8 +135,8 @@ public class MaterialsController {
     @PostMapping("/to-approve")
     public void toApprove(@RequestBody MaterialsInitVO initVO,
                           @Parameter(hidden = true) @UserId Integer userId) {
-        initVO.setUserId(userId);
-        materialsService.toApprove(initVO);
+
+        materialsService.toApprove(initVO, userId);
     }
 
     @Operation(summary = "删除附件")

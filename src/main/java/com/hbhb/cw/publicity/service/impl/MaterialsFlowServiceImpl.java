@@ -275,6 +275,12 @@ class MaterialsFlowServiceImpl implements MaterialsFlowService {
             // 1.先获取流程流转的当前节点
             List<NodeOperationReqVO> operations = new ArrayList<>();
             // 当前节点id
+            flowNodes.forEach(flowNode -> {
+                operations.add(NodeOperationReqVO.builder()
+                        .flowNodeId(flowNode.getFlowNodeId())
+                        .operation(flowNode.getOperation())
+                        .build());
+            });
             String currentNodeId = getCurrentNode(operations);
             if (!StringUtils.isEmpty(currentNodeId)) {
                 MaterialsFlowVO currentNode = flowNodeMap.get(currentNodeId);

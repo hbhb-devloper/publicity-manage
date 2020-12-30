@@ -34,9 +34,9 @@ public interface MaterialsMapper extends BaseMapper<Materials> {
     /**
      * 获取单位下今年最大编号
      *
-     * @param date   时间
-     * @param unitId 单位
+     * @param createTime 时间
+     * @param unitId     单位
      * @return 最大编号
      */
-    Integer selectPictureNumCountByUnitId(Date date, Integer unitId);
+    Integer selectPictureNumCountByUnitId(Date createTime, Integer unitId);
 }
