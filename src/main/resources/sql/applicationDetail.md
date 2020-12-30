@@ -2,8 +2,8 @@ selectSummaryUnitByType
 ===
 ```sql
     select  g.id as `goodsId`,
-            ifnull(sum(ad.modify_amount),0) as `simplexAmount`,
-            ifnull(sum(ad.modify_amount),0) as `singleAmount`,
+            sum(ad.modify_amount) as `simplexAmount`,
+            sum(ad.modify_amount) as `singleAmount`,
             g.goods_name as `goodsName`,
             g.unit as `unit`,
             a.unit_id as unitId,

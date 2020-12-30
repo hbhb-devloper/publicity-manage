@@ -38,12 +38,13 @@ public class LibraryServiceImpl implements LibraryService {
     private GoodsMapper goodsMapper;
 
     @Override
-    public List<LibraryVO> getTreeList(Integer userId) {
+    public List<LibraryVO> getTreeList(Integer userId,Integer unitId) {
         // 通过id得到起所属单位
         UserInfo user = userApi.getUserInfoById(userId);
-        Integer unitId = user.getUnitId();
+        if (unitId==null) {
+             unitId = user.getUnitId();
+        }
         // 得到该单位下的所有活动
-        // todo 需要优化
         List<LibraryVO> list = goodsMapper.selectByUnitId(unitId);
         List<Long> parents = new ArrayList<>();
         for (LibraryVO libraryVO : list) {
@@ -52,7 +53,7 @@ public class LibraryServiceImpl implements LibraryService {
         if (parents.size() == 0) {
             return list;
         }
-        List<LibraryVO> actList = goodsMapper.selectGoodsByActIds(parents);
+        List<LibraryVO> actList = goodsMapper.selectGoodsByActIds(parents,unitId);
         Map<Long, List<LibraryVO>> actMap = new HashMap<>();
         for (LibraryVO cond : actList) {
             // 判断该活动下是否有类别
@@ -85,7 +86,7 @@ public class LibraryServiceImpl implements LibraryService {
             return list;
         }
         // 与活动结合转为树形结构
-        List<LibraryVO> goodsList = goodsMapper.selectGoodsByActIds(activities);
+        List<LibraryVO> goodsList = goodsMapper.selectGoodsByActIds(activities,unitId);
         // activityId => Goods
         Map<Long, List<LibraryVO>> goodsMap = new HashMap<>();
         for (LibraryVO cond : goodsList) {
@@ -164,12 +165,14 @@ public class LibraryServiceImpl implements LibraryService {
             if (libraryAddVO.getUnitId() == null || libraryAddVO.getGoodsName() == null) {
                 throw new PublicityException(PublicityErrorCode.NOT_FILLED_IN);
             }
-            // 得到其父类
-            List<Goods> actGoods = goodsMapper.createLambdaQuery()
-                    .andEq(Goods::getId, libraryAddVO.getParentId()).select();
-            // 判断父类是否禁用
-            if (actGoods != null && actGoods.size() != 0 && !actGoods.get(0).getState() && libraryAddVO.getState()) {
-                throw new PublicityException(PublicityErrorCode.DO_NOT_OPERATE);
+            if (libraryAddVO.getParentId()!=null) {
+                // 得到其父类
+                List<Goods> actGoods = goodsMapper.createLambdaQuery()
+                        .andEq(Goods::getId, libraryAddVO.getParentId()).select();
+                // 判断父类是否禁用
+                if (actGoods != null && actGoods.size() != 0 && !actGoods.get(0).getState() && libraryAddVO.getState()) {
+                    throw new PublicityException(PublicityErrorCode.DO_NOT_OPERATE);
+                }
             }
             // 修改改活动下所有的子类状态
             goodsMapper.createLambdaQuery()
@@ -200,7 +203,7 @@ public class LibraryServiceImpl implements LibraryService {
             // 判断必填项是否添加
             if (libraryAddVO.getGoodsName() == null || libraryAddVO.getType() == null
                     || libraryAddVO.getChecker() == null || libraryAddVO.getUnitId() == null || libraryAddVO.getSize() == null || libraryAddVO.getPaper() == null
-                    || libraryAddVO.getUpdateBy() == null || !libraryAddVO.getState()) {
+                    || libraryAddVO.getUpdateBy() == null) {
                 throw new PublicityException(PublicityErrorCode.NOT_FILLED_IN);
             }
         }

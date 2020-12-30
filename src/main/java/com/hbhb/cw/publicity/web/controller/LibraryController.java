@@ -39,8 +39,8 @@ public class LibraryController {
 
     @GetMapping("/tree")
     @Operation(summary = "物料活动产品列表")
-    public List<LibraryVO> getTreeList(@Parameter(hidden = true) @UserId Integer userId) {
-        return libraryService.getTreeList(userId);
+    public List<LibraryVO> getTreeList(@Parameter(hidden = true) @UserId Integer userId,Integer unitId) {
+        return libraryService.getTreeList(userId,unitId);
     }
 
     @PostMapping("/add")
