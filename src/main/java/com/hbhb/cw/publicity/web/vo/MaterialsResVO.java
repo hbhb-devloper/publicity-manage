@@ -18,6 +18,7 @@ import java.util.Date;
 public class MaterialsResVO implements Serializable {
     private static final long serialVersionUID = 6972467700655170579L;
 
+    private Long id;
 
     @Schema(description = "申请单名称")
     private String materialsName;

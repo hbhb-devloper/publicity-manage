@@ -6,6 +6,7 @@ import com.hbhb.cw.publicity.web.vo.PictureReqVO;
 import com.hbhb.cw.publicity.web.vo.PictureResVO;
 import org.beetl.sql.core.page.PageRequest;
 import org.beetl.sql.core.page.PageResult;
+import org.beetl.sql.mapper.annotation.Param;
 
 import java.util.Date;
 
@@ -25,9 +26,9 @@ public interface PictureMapper extends BaseMapper<Picture> {
     /**
      * 获取单位下今年最大编号
      *
-     * @param date   时间
-     * @param unitId 单位
+     * @param createTime 时间
+     * @param unitId     单位
      * @return 最大编号
      */
-    Integer selectPictureNumCountByUnitId(Date date, Integer unitId);
+    Integer selectPictureNumCountByUnitId(@Param("createTime") Date createTime, @Param("unitId") Integer unitId);
 }

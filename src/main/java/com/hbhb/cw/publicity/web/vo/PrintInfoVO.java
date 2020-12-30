@@ -37,11 +37,20 @@ public class PrintInfoVO implements Serializable {
     @Schema(description = "申请部门单位id")
     private Integer unitId;
 
+    @Schema(description = "申请部门单位名称")
+    private String unitName;
+
     @Schema(description = "申请人用户id")
     private Integer userId;
 
+    @Schema(description = "申请人用户姓名")
+    private String nickName;
+
     @Schema(description = "申请时间")
     private Date applyTime;
+
+    @Schema(description = "流程状态")
+    private Integer state;
 
     @Schema(description = "材料类型（0 业务单式/1 宣传单页）")
     private Integer materialType;

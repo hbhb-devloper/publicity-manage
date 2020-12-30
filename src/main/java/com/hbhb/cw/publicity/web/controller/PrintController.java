@@ -2,6 +2,7 @@
 package com.hbhb.cw.publicity.web.controller;
 
 import com.alibaba.excel.EasyExcel;
+import com.hbhb.api.core.bean.FileVO;
 import com.hbhb.api.core.bean.SelectVO;
 import com.hbhb.core.utils.ExcelUtil;
 import com.hbhb.cw.publicity.enums.PublicityErrorCode;
@@ -10,9 +11,12 @@ import com.hbhb.cw.publicity.model.PrintMaterials;
 import com.hbhb.cw.publicity.rpc.FileApiExp;
 import com.hbhb.cw.publicity.service.PrintService;
 import com.hbhb.cw.publicity.service.listener.PrintListener;
-import com.hbhb.cw.publicity.web.vo.*;
+import com.hbhb.cw.publicity.web.vo.PrintImportVO;
+import com.hbhb.cw.publicity.web.vo.PrintInfoVO;
+import com.hbhb.cw.publicity.web.vo.PrintInitVO;
+import com.hbhb.cw.publicity.web.vo.PrintReqVO;
+import com.hbhb.cw.publicity.web.vo.PrintResVO;
 import com.hbhb.cw.systemcenter.enums.FileType;
-import com.hbhb.cw.systemcenter.vo.FileVO;
 import com.hbhb.web.annotation.UserId;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -155,8 +159,8 @@ public class PrintController {
     }
 
     @Operation(summary = "删除导入数据")
-    @DeleteMapping("/materials")
-    public void deleteMaterials(Long printId) {
+    @DeleteMapping("/materials/{printId}")
+    public void deleteMaterials(@PathVariable("printId") Long printId) {
         printService.deletePrintMaterials(printId);
     }
 

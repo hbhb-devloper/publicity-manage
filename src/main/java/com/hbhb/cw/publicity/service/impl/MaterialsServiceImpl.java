@@ -4,18 +4,42 @@ import com.hbhb.core.utils.DateUtil;
 import com.hbhb.cw.flowcenter.enums.FlowNodeNoticeTemp;
 import com.hbhb.cw.flowcenter.model.Flow;
 import com.hbhb.cw.flowcenter.vo.FlowNodePropVO;
-import com.hbhb.cw.publicity.enums.*;
+import com.hbhb.cw.publicity.enums.EnableCond;
+import com.hbhb.cw.publicity.enums.FlowNodeNoticeState;
+import com.hbhb.cw.publicity.enums.NodeState;
+import com.hbhb.cw.publicity.enums.OperationState;
+import com.hbhb.cw.publicity.enums.PublicityErrorCode;
 import com.hbhb.cw.publicity.exception.PublicityException;
 import com.hbhb.cw.publicity.mapper.MaterialsBudgetMapper;
 import com.hbhb.cw.publicity.mapper.MaterialsFileMapper;
 import com.hbhb.cw.publicity.mapper.MaterialsInfoMapper;
 import com.hbhb.cw.publicity.mapper.MaterialsMapper;
-import com.hbhb.cw.publicity.model.*;
-import com.hbhb.cw.publicity.rpc.*;
+import com.hbhb.cw.publicity.model.Materials;
+import com.hbhb.cw.publicity.model.MaterialsBudget;
+import com.hbhb.cw.publicity.model.MaterialsFile;
+import com.hbhb.cw.publicity.model.MaterialsFlow;
+import com.hbhb.cw.publicity.model.MaterialsInfo;
+import com.hbhb.cw.publicity.model.MaterialsNotice;
+import com.hbhb.cw.publicity.rpc.FileApiExp;
+import com.hbhb.cw.publicity.rpc.FlowApiExp;
+import com.hbhb.cw.publicity.rpc.FlowNodeApiExp;
+import com.hbhb.cw.publicity.rpc.FlowNodePropApiExp;
+import com.hbhb.cw.publicity.rpc.FlowRoleUserApiExp;
+import com.hbhb.cw.publicity.rpc.SysDictApiExp;
+import com.hbhb.cw.publicity.rpc.SysUserApiExp;
+import com.hbhb.cw.publicity.rpc.UnitApiExp;
 import com.hbhb.cw.publicity.service.MaterialsFlowService;
 import com.hbhb.cw.publicity.service.MaterialsNoticeService;
 import com.hbhb.cw.publicity.service.MaterialsService;
-import com.hbhb.cw.publicity.web.vo.*;
+import com.hbhb.cw.publicity.web.vo.MaterialsBudgetResVO;
+import com.hbhb.cw.publicity.web.vo.MaterialsBudgetVO;
+import com.hbhb.cw.publicity.web.vo.MaterialsFileVO;
+import com.hbhb.cw.publicity.web.vo.MaterialsImportVO;
+import com.hbhb.cw.publicity.web.vo.MaterialsInfoImportDataVO;
+import com.hbhb.cw.publicity.web.vo.MaterialsInfoVO;
+import com.hbhb.cw.publicity.web.vo.MaterialsInitVO;
+import com.hbhb.cw.publicity.web.vo.MaterialsReqVO;
+import com.hbhb.cw.publicity.web.vo.MaterialsResVO;
 import com.hbhb.cw.systemcenter.enums.DictCode;
 import com.hbhb.cw.systemcenter.enums.TypeCode;
 import com.hbhb.cw.systemcenter.enums.UnitEnum;
@@ -36,7 +60,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -85,7 +115,7 @@ public class MaterialsServiceImpl implements MaterialsService {
     @Override
     public PageResult<MaterialsResVO> getMaterialsList(MaterialsReqVO reqVO, Integer pageNum, Integer pageSize) {
         PageRequest<MaterialsResVO> request = DefaultPageRequest.of(pageNum, pageSize);
-        PageResult<MaterialsResVO> materialsList = materialsMapper.selectMaterialsListByCond(request, request);
+        PageResult<MaterialsResVO> materialsList = materialsMapper.selectMaterialsListByCond(reqVO, request);
         // 组装单位名称，用户名称
         List<Integer> userIds = new ArrayList<>();
         Map<Integer, String> unitMapById = unitApi.getUnitMapById();
@@ -102,9 +132,18 @@ public class MaterialsServiceImpl implements MaterialsService {
     @Override
     public MaterialsInfoVO getMaterials(Long id) {
         Materials materials = materialsMapper.single(id);
-        List<MaterialsFile> files = fileMapper.createLambdaQuery().andEq(MaterialsFile::getMaterialsId, id).select();
+        List<MaterialsFile> files = fileMapper
+                .createLambdaQuery()
+                .andEq(MaterialsFile::getMaterialsId, id)
+                .select();
         MaterialsInfoVO info = new MaterialsInfoVO();
         BeanUtils.copyProperties(materials, info);
+        // 转换用户信息
+        UserInfo user = userApi.getUserInfoById(materials.getUserId());
+        info.setNickName(user.getNickName());
+        // 转换单位信息
+        Unit unit = unitApi.getUnitInfo(materials.getUnitId());
+        info.setUnitName(unit.getUnitName());
         // 获取文件列表信息
         if (files.size() != 0) {
             List<Integer> fileIds = new ArrayList<>();
@@ -126,6 +165,10 @@ public class MaterialsServiceImpl implements MaterialsService {
                     .collect(Collectors.toList());
             info.setFiles(fileVo);
         }
+        List<MaterialsInfo> materialsList = materialsInfoMapper.createLambdaQuery()
+                .andEq(MaterialsInfo::getMaterialsId, id)
+                .select();
+        info.setMaterialsInfo(materialsList);
         return info;
     }
 
@@ -156,11 +199,10 @@ public class MaterialsServiceImpl implements MaterialsService {
         materials.setUpdateTime(new Date());
         materials.setState(NodeState.NOT_APPROVED.value());
         materials.setDeleteFlag(true);
-
         // 新增印刷用品
         materialsMapper.insert(materials);
         if (infoVO.getFiles() != null) {
-            List<MaterialsFile> fileList = setMaterialsFile(infoVO.getFiles(), userId);
+            List<MaterialsFile> fileList = setMaterialsFile(infoVO.getFiles(), userId, materials.getId());
             fileMapper.insertBatch(fileList);
         }
         // 新增印刷用品导入业务单式或宣传单页数据
@@ -193,7 +235,7 @@ public class MaterialsServiceImpl implements MaterialsService {
                 files.add(fileVo);
             }
         }
-        List<MaterialsFile> fileList = setMaterialsFile(files, userId);
+        List<MaterialsFile> fileList = setMaterialsFile(files, userId, infoVO.getId());
         fileMapper.insertBatch(fileList);
     }
 
@@ -286,7 +328,10 @@ public class MaterialsServiceImpl implements MaterialsService {
 
     @Override
     public List<MaterialsBudgetResVO> getMaterialsBudgetList() {
-        return budgetMapper.selectBudgetList();
+        List<MaterialsBudgetResVO> list = budgetMapper.selectBudgetList();
+        Map<Integer, String> userMap = unitApi.getUnitMapById();
+        list.forEach(item -> item.setUnitName(userMap.get(item.getUnitId())));
+        return list;
     }
 
     @Override
@@ -314,7 +359,7 @@ public class MaterialsServiceImpl implements MaterialsService {
 
     }
 
-    private List<MaterialsFile> setMaterialsFile(List<MaterialsFileVO> fileVOList, Integer userId) {
+    private List<MaterialsFile> setMaterialsFile(List<MaterialsFileVO> fileVOList, Integer userId, Long materialsId) {
         //获取用户姓名
         UserInfo user = userApi.getUserInfoById(userId);
         List<MaterialsFile> fileList = new ArrayList<>();
@@ -323,7 +368,7 @@ public class MaterialsServiceImpl implements MaterialsService {
                     .createBy(user.getNickName())
                     .createTime(new Date())
                     .fileId(item.getFileId())
-                    .materialsId(item.getMaterialsId())
+                    .materialsId(materialsId)
                     .build()));
         }
         return fileList;

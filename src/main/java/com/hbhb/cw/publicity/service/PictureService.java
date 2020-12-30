@@ -72,5 +72,5 @@ public interface PictureService {
      *
      * @param initVO 发起条件
      */
-    void toApprove(PictureInitVO initVO);
+    void toApprove(PictureInitVO initVO, Integer userId);
 }

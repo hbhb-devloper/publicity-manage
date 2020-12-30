@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import org.beetl.sql.annotation.entity.AutoID;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -30,11 +32,35 @@ public class PictureInfoVO implements Serializable {
     @Schema(description = "单位id")
     private Integer unitId;
 
-    @Schema(description = "申请时间")
-    private String applyTime;
+    @Schema(description = "流程状态")
+    private Integer state;
 
-    @Schema(description = "用户id")
+    @Schema(description = "申请时间")
+    private Date applyTime;
+
+    @Schema(description = "是否有宽带: (0-没有，1-有)")
+    private Integer wideBand;
+
+    @Schema(description = "制作商")
+    private String producers;
+
+    @Schema(description = "申请部门单位名称")
+    private String unitName;
+
+    @Schema(description = "申请人用户id")
     private Integer userId;
+
+    @Schema(description = "申请人用户姓名")
+    private String nickName;
+
+    @Schema(description = "预算费用（元）")
+    private BigDecimal predictAmount;
+
+    @Schema(description = "选择原因")
+    private String reason;
+
+    @Schema(description = "备注")
+    private String remark;
 
     @Schema(description = "附件")
     private List<PictureFileVO> files;
@@ -42,6 +68,9 @@ public class PictureInfoVO implements Serializable {
     @Schema(description = "画面设计文件id")
     private Integer fileId;
 
-    @Schema(description = "画面设计文件id")
+    @Schema(description = "画面设计文件路径")
     private String filePath;
+
+    @Schema(description = "宣传画面设计文件名称")
+    private String fileName;
 }

@@ -2,12 +2,21 @@ package com.hbhb.cw.publicity.service.impl;
 
 import com.hbhb.api.core.bean.SelectVO;
 import com.hbhb.core.bean.BeanConverter;
+import com.hbhb.core.utils.DateUtil;
 import com.hbhb.cw.flowcenter.enums.FlowNodeNoticeTemp;
 import com.hbhb.cw.flowcenter.enums.FlowOperationType;
 import com.hbhb.cw.flowcenter.enums.FlowState;
-import com.hbhb.cw.flowcenter.vo.*;
+import com.hbhb.cw.flowcenter.vo.FlowApproveVO;
+import com.hbhb.cw.flowcenter.vo.FlowWrapperVO;
+import com.hbhb.cw.flowcenter.vo.NodeApproverReqVO;
+import com.hbhb.cw.flowcenter.vo.NodeApproverVO;
+import com.hbhb.cw.flowcenter.vo.NodeInfoVO;
+import com.hbhb.cw.flowcenter.vo.NodeOperationReqVO;
+import com.hbhb.cw.flowcenter.vo.NodeOperationVO;
+import com.hbhb.cw.flowcenter.vo.NodeSuggestionVO;
 import com.hbhb.cw.publicity.enums.FlowNodeNoticeState;
 import com.hbhb.cw.publicity.enums.PublicityErrorCode;
+import com.hbhb.cw.publicity.enums.Suggestion;
 import com.hbhb.cw.publicity.exception.PublicityException;
 import com.hbhb.cw.publicity.mapper.PrintFlowMapper;
 import com.hbhb.cw.publicity.mapper.PrintMapper;
@@ -15,7 +24,12 @@ import com.hbhb.cw.publicity.mapper.PrintNoticeMapper;
 import com.hbhb.cw.publicity.model.Print;
 import com.hbhb.cw.publicity.model.PrintFlow;
 import com.hbhb.cw.publicity.model.PrintNotice;
-import com.hbhb.cw.publicity.rpc.*;
+import com.hbhb.cw.publicity.rpc.FlowApiExp;
+import com.hbhb.cw.publicity.rpc.FlowNoticeApiExp;
+import com.hbhb.cw.publicity.rpc.FlowRoleApiExp;
+import com.hbhb.cw.publicity.rpc.FlowRoleUserApiExp;
+import com.hbhb.cw.publicity.rpc.FlowTypeApiExp;
+import com.hbhb.cw.publicity.rpc.SysUserApiExp;
 import com.hbhb.cw.publicity.service.MailService;
 import com.hbhb.cw.publicity.service.PrintFlowService;
 import com.hbhb.cw.publicity.web.vo.PrintFlowVO;
@@ -26,7 +40,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -94,7 +112,6 @@ public class PrintFlowServiceImpl implements PrintFlowService {
         // 提醒标题 = 印刷品名称_编号_流程名称
         String title = print.getPrintName() + "_" + print.getPrintNum() + "_" + flowName;
 
-        Integer projectState = null;
         // 节点操作
         Integer operation = null;
         // 流程状态
@@ -146,7 +163,7 @@ public class PrintFlowServiceImpl implements PrintFlowService {
                 // 3-1.提醒下一个节点的审批人
                 String inform = noticeApi.getInform(currentNodeId, FlowNodeNoticeState.DEFAULT_REMINDER.value());
                 if (!isEmpty(inform)) {
-                    this.saveNotice(printId, next, userId,
+                    this.saveNotice(printId, next, approvers.get(0).getUserId(),
                             inform.replace(FlowNodeNoticeTemp.TITLE.value(), title), flowTypeId, now);
                 }
                 // 3-2.邮件推送
@@ -157,9 +174,11 @@ public class PrintFlowServiceImpl implements PrintFlowService {
             }
             // 3-3.提醒发起人
             String inform = noticeApi.getInform(currentNodeId, FlowNodeNoticeState.COMPLETE_REMINDER.value());
-            String content = inform.replace(FlowNodeNoticeTemp.TITLE.value(), title)
-                    .replace(FlowNodeNoticeTemp.APPROVE.value(), userInfo.getNickName());
-            this.saveNotice(printId, approvers.get(0).getUserId(), userId, content, flowTypeId, now);
+            if (inform != null) {
+                String content = inform.replace(FlowNodeNoticeTemp.TITLE.value(), title)
+                        .replace(FlowNodeNoticeTemp.APPROVE.value(), userInfo.getNickName());
+                this.saveNotice(printId, approvers.get(0).getUserId(), userId, content, flowTypeId, now);
+            }
         }
         // 拒绝
         else if (approveVO.getOperation().equals(FlowOperationType.REJECT.value())) {
@@ -167,6 +186,9 @@ public class PrintFlowServiceImpl implements PrintFlowService {
             flowState = FlowState.APPROVE_REJECTED.value();
             // 提醒发起人
             String inform = noticeApi.getInform(currentNodeId, FlowNodeNoticeState.REJECT_REMINDER.value());
+            if (inform == null) {
+                inform = Suggestion.REFUSE.value();
+            }
             String content = inform.replace(FlowNodeNoticeTemp.TITLE.value(), title)
                     .replace(FlowNodeNoticeTemp.APPROVE.value(), userInfo.getNickName())
                     .replace(FlowNodeNoticeTemp.CAUSE.value(), approveVO.getSuggestion());
@@ -233,42 +255,59 @@ public class PrintFlowServiceImpl implements PrintFlowService {
         String flowName = flowApi.getNameByNodeId(flowNodes.get(0).getFlowNodeId());
         Print print = printMapper.single(printId);
         wrapper.setName(print.getPrintName() + flowName);
+        // 判断流程是否已结束
+        // 根据最后一个节点的状态可判断整个流程的状态
+        if (flowNodes.get(flowNodes.size() - 1).getOperation().equals(FlowOperationType.UN_EXECUTED.value())) {
+            // 1.先获取流程流转的当前节点<currentNode>
+            // 2.再判断<loginUser>是否为<currentNode>的审批人
+            //   2-1.如果不是，则所有节点信息全部为只读
+            //   2-2.如果是，则判断是否为该流程的分配者
+            //      a.如果不是分配者，则只能编辑当前节点的按钮操作<operation>和意见<suggestion>
+            //      b.如果是分配者，则可以编辑以下：
+            //        当前节点的按钮操作<operation>和意见<suggestion>
+            //        其他节点的审批人<approver>
+            //      c.特殊节点
 
-        // 1.先获取流程流转的当前节点<currentNode>
-        // 2.再判断<loginUser>是否为<currentNode>的审批人
-        //   2-1.如果不是，则所有节点信息全部为只读
-        //   2-2.如果是，则判断是否为该流程的分配者
-        //      a.如果不是分配者，则只能编辑当前节点的按钮操作<operation>和意见<suggestion>
-        //      b.如果是分配者，则可以编辑以下：
-        //        当前节点的按钮操作<operation>和意见<suggestion>
-        //        其他节点的审批人<approver>
-        //      c.特殊节点
-
-        // 1.先获取流程流转的当前节点
-        List<NodeOperationReqVO> operations = new ArrayList<>();
-        // 当前节点id
-        String currentNodeId = getCurrentNode(operations);
-        if (!StringUtils.isEmpty(currentNodeId)) {
-            PrintFlowVO currentNode = flowNodeMap.get(currentNodeId);
-            // 2.判断登录用户是否为当前节点的审批人
-            // 2-1.如果不是，则所有节点信息全部为只读
-            if (!userId.equals(currentNode.getApprover())) {
-                flowNodes.forEach(flowNode -> nodes.add(buildFlowNode(flowNode, currentNodeId, 0)));
-            }
-            // 2-2.如果是，则判断是否为该流程的分配者
-            else {
-                // 用户的所有流程角色
-                List<Long> flowRoleIds = roleUserApi.getRoleIdByUserId(userId);
-                // 2-2-a.当前用户是分配者
-                if (flowRoleIds.contains(currentNode.getAssigner())) {
-                    flowNodes.forEach(flowNode -> nodes.add(buildFlowNode(flowNode, currentNodeId, 2)));
+            // 1.先获取流程流转的当前节点
+            List<NodeOperationReqVO> operations = new ArrayList<>();
+            flowNodes.forEach(flowNode -> {
+                operations.add(NodeOperationReqVO.builder()
+                        .flowNodeId(flowNode.getFlowNodeId())
+                        .operation(flowNode.getOperation())
+                        .build());
+            });
+            // 当前节点id
+            String currentNodeId = getCurrentNode(operations);
+            if (!StringUtils.isEmpty(currentNodeId)) {
+                PrintFlowVO currentNode = flowNodeMap.get(currentNodeId);
+                // 2.判断登录用户是否为当前节点的审批人
+                // 2-1.如果不是，则所有节点信息全部为只读
+                if (!userId.equals(currentNode.getApprover())) {
+                    flowNodes.forEach(flowNode -> nodes.add(buildFlowNode(flowNode, currentNodeId, 0)));
                 }
-                // 2-2-b.当前用户不是分配者
+                // 2-2.如果是，则判断是否为该流程的分配者
                 else {
-                    flowNodes.forEach(flowNode -> nodes.add(buildFlowNode(flowNode, currentNodeId, 1)));
-                }
+                    // 用户的所有流程角色
+                    List<Long> flowRoleIds = roleUserApi.getRoleIdByUserId(userId);
+                    // 2-2-a.当前用户是分配者
+                    if (flowRoleIds.contains(currentNode.getAssigner())) {
+                        flowNodes.forEach(flowNode -> nodes.add(buildFlowNode(flowNode, currentNodeId, 2)));
+                    }
+                    // 2-2-b.当前用户不是分配者
+                    else {
+                        flowNodes.forEach(flowNode -> nodes.add(buildFlowNode(flowNode, currentNodeId, 1)));
+                    }
 
+                }
             }
+            // 当前节点序号
+            wrapper.setIndex(getCurrentNodeIndex(operations));
+        }
+        // 如果流程已结束，则所有节点只读，不能操作
+        else {
+            flowNodes.forEach(flowNode -> nodes.add(buildFlowNode(flowNode, "", 0)));
+            // 当前节点序号
+            wrapper.setIndex(0);
         }
         // 解决用户被解除流程角色后，审批人下拉框显示id而非姓名的情况
         for (NodeInfoVO vo : nodes) {
@@ -284,7 +323,6 @@ public class PrintFlowServiceImpl implements PrintFlowService {
                 }
             }
         }
-        wrapper.setIndex(getCurrentNodeIndex(operations));
         wrapper.setNodes(nodes);
         return wrapper;
     }
@@ -307,6 +345,7 @@ public class PrintFlowServiceImpl implements PrintFlowService {
                     vo.setApproverRole(roleApi.getNameById(flow.getFlowRoleId()));
                     vo.setNickName(userInfo == null ? null : userInfo.getNickName());
                     vo.setApprover(flow.getUserId());
+                    vo.setUpdateTime(DateUtil.dateToStringYmd(flow.getUpdateTime()));
                     return vo;
                 }).collect(Collectors.toList());
     }
@@ -355,6 +394,8 @@ public class PrintFlowServiceImpl implements PrintFlowService {
         boolean suggestionReadOnly;
         // 可编辑字段
         List<String> filedList = new ArrayList<>();
+        // 是否请求下拉框的数据
+        boolean requestSelectData = true;
         switch (type) {
             // 审批节点（非分配者）
             case 1:
@@ -373,6 +414,7 @@ public class PrintFlowServiceImpl implements PrintFlowService {
                 approverReadOnly = true;
                 operationHidden = true;
                 suggestionReadOnly = true;
+                requestSelectData = false;
         }
         result.setApprover(NodeApproverVO.builder()
                 .value(flowNode.getApprover())
@@ -386,8 +428,14 @@ public class PrintFlowServiceImpl implements PrintFlowService {
                 .value(flowNode.getSuggestion())
                 .readOnly(suggestionReadOnly)
                 .build());
-        result.setApproverSelect(getApproverSelect(flowNode.getFlowNodeId(), flowNode.getPrintId()));
-        result.setApproverRole(flowNode.getRoleDesc());
+        result.setApproveTime(flowNode.getUpdateTime());
+        // 如果节点已经操作过，则不返回下拉框列表；如果节点未操作，则返回
+        if (requestSelectData && flowNode.getOperation().equals(FlowOperationType.UN_EXECUTED.value())) {
+            result.setApproverSelect(getApproverSelect(flowNode.getFlowNodeId(), flowNode.getPrintId()));
+        } else {
+            result.setApproverSelect(new ArrayList<>());
+        }
+        result.setRoleDesc(flowNode.getRoleDesc());
         result.setFiledList(filedList);
         return result;
     }

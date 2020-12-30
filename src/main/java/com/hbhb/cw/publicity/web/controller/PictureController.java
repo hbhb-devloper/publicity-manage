@@ -1,6 +1,7 @@
 
 package com.hbhb.cw.publicity.web.controller;
 
+import com.hbhb.api.core.bean.FileVO;
 import com.hbhb.cw.publicity.rpc.FileApiExp;
 import com.hbhb.cw.publicity.service.PictureService;
 import com.hbhb.cw.publicity.web.vo.PictureInfoVO;
@@ -8,8 +9,8 @@ import com.hbhb.cw.publicity.web.vo.PictureInitVO;
 import com.hbhb.cw.publicity.web.vo.PictureReqVO;
 import com.hbhb.cw.publicity.web.vo.PictureResVO;
 import com.hbhb.cw.systemcenter.enums.FileType;
-import com.hbhb.cw.systemcenter.vo.FileVO;
 import com.hbhb.web.annotation.UserId;
+import com.hbhb.web.util.FileUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -66,12 +67,13 @@ public class PictureController {
     @PostMapping("/export")
     public void exportPicture(HttpServletResponse response) {
         String path = fileApi.getTemplatePath() + "/宣传画面设计需求单模板v2.doc";
-        fileApi.download(response, path, false);
+        FileUtil.download(response, path, false);
     }
 
     @Operation(summary = "修改宣传画面")
     @PutMapping("")
-    public void updatePicture(@RequestBody PictureInfoVO pictureInfoVO, @Parameter(hidden = true) @UserId Integer userId) {
+    public void updatePicture(@RequestBody PictureInfoVO pictureInfoVO,
+                              @Parameter(hidden = true) @UserId Integer userId) {
         pictureService.updatePicture(pictureInfoVO, userId);
     }
 
@@ -97,8 +99,7 @@ public class PictureController {
     @Operation(summary = "发起审批")
     @PostMapping("/to-approve")
     public void toApprove(@RequestBody PictureInitVO initVO, @Parameter(hidden = true) @UserId Integer userId) {
-        initVO.setUserId(userId);
-        pictureService.toApprove(initVO);
+        pictureService.toApprove(initVO, userId);
     }
 
     @Operation(summary = "删除附件")

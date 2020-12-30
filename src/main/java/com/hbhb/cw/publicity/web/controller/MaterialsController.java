@@ -1,16 +1,23 @@
 package com.hbhb.cw.publicity.web.controller;
 
 import com.alibaba.excel.EasyExcel;
+import com.hbhb.api.core.bean.FileVO;
 import com.hbhb.core.utils.ExcelUtil;
 import com.hbhb.cw.publicity.enums.PublicityErrorCode;
 import com.hbhb.cw.publicity.exception.PublicityException;
 import com.hbhb.cw.publicity.model.MaterialsBudget;
+import com.hbhb.cw.publicity.model.MaterialsInfo;
 import com.hbhb.cw.publicity.rpc.FileApiExp;
 import com.hbhb.cw.publicity.service.MaterialsService;
 import com.hbhb.cw.publicity.service.listener.MaterialsListener;
-import com.hbhb.cw.publicity.web.vo.*;
+import com.hbhb.cw.publicity.web.vo.MaterialsBudgetResVO;
+import com.hbhb.cw.publicity.web.vo.MaterialsBudgetVO;
+import com.hbhb.cw.publicity.web.vo.MaterialsInfoVO;
+import com.hbhb.cw.publicity.web.vo.MaterialsInitVO;
+import com.hbhb.cw.publicity.web.vo.MaterialsReqVO;
+import com.hbhb.cw.publicity.web.vo.MaterialsResVO;
+import com.hbhb.cw.publicity.web.vo.PrintImportVO;
 import com.hbhb.cw.systemcenter.enums.FileType;
-import com.hbhb.cw.systemcenter.vo.FileVO;
 import com.hbhb.web.annotation.UserId;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -110,6 +117,12 @@ public class MaterialsController {
     @PostMapping(value = "/upload", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public FileVO uploadMaterialsFile(@RequestPart(required = false, value = "file") MultipartFile file) {
         return fileApi.upload(file, FileType.PUBLICITY_MATERIALS_FILE.value());
+    }
+
+    @Operation(summary = "获取excel导入数据")
+    @GetMapping("/materials")
+    List<MaterialsInfo> getMaterialsList(@Parameter(description = "id") String uuid) {
+        return materialsService.getMaterialsInfoList(uuid);
     }
 
     @Operation(summary = "删除物料")
