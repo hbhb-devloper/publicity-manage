@@ -19,7 +19,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 
@@ -53,8 +52,10 @@ public class GoodsServiceImpl implements GoodsService {
             userIds.add(cond.getCheckerId());
         }
         List<UserInfo> userInfoBatch = sysUserApiExp.getUserInfoBatch(userIds);
-        Map<Integer, String> userMap = userInfoBatch.stream()
-                .collect(Collectors.toMap(UserInfo::getId,UserInfo::getUserName));
+        Map<Integer, String> userMap = new HashMap<>();
+        for (UserInfo infoBatch : userInfoBatch) {
+            userMap.put(infoBatch.getId(),infoBatch.getNickName());
+        }
         for (PurchaseGoodsResVO cond : list.getList()) {
             cond.setUnitName(unitMap.get(cond.getUnitId()));
             cond.setChecker(userMap.get(cond.getCheckerId()));
