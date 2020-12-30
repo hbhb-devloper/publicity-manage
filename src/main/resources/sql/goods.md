@@ -141,7 +141,7 @@ selectPurchaseGoods
             g.size  as  `size`,
             g.attribute as `attribute`,
             g.paper as `paper`,
-            g.checker as `checker`,
+            g.checker as `checkerId`,
             g.unit_id as unitId
         -- @}
     from goods g

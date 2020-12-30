@@ -1,11 +1,13 @@
 package com.hbhb.cw.publicity.service.impl;
 
 import com.hbhb.cw.publicity.mapper.GoodsMapper;
+import com.hbhb.cw.publicity.rpc.SysUserApiExp;
 import com.hbhb.cw.publicity.rpc.UnitApiExp;
 import com.hbhb.cw.publicity.service.GoodsService;
 import com.hbhb.cw.publicity.web.vo.GoodsReqVO;
 import com.hbhb.cw.publicity.web.vo.PurchaseGoodsResVO;
 import com.hbhb.cw.publicity.web.vo.PurchaseGoodsVO;
+import com.hbhb.cw.systemcenter.vo.UserInfo;
 
 import org.beetl.sql.core.page.DefaultPageRequest;
 import org.beetl.sql.core.page.PageRequest;
@@ -17,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 
@@ -35,6 +38,8 @@ public class GoodsServiceImpl implements GoodsService {
     private GoodsMapper goodsMapper;
     @Resource
     private UnitApiExp unitApiExp;
+    @Resource
+    private SysUserApiExp sysUserApiExp;
 
     @Override
     public PageResult<PurchaseGoodsResVO> getPurchaseGoodsList(GoodsReqVO goodsReqVO, Integer pageNum, Integer pageSize) {
@@ -42,8 +47,17 @@ public class GoodsServiceImpl implements GoodsService {
         PageRequest<PurchaseGoodsResVO> request = DefaultPageRequest.of(pageNum, pageSize);
         PageResult<PurchaseGoodsResVO> list = goodsMapper.selectPurchaseGoods(request,goodsReqVO,batchNum);
         Map<Integer, String> unitMap = unitApiExp.getUnitMapById();
+        // 得到所有物料的物料审核员id
+        List<Integer> userIds = new ArrayList<>();
+        for (PurchaseGoodsResVO cond : list.getList()) {
+            userIds.add(cond.getCheckerId());
+        }
+        List<UserInfo> userInfoBatch = sysUserApiExp.getUserInfoBatch(userIds);
+        Map<Integer, String> userMap = userInfoBatch.stream()
+                .collect(Collectors.toMap(UserInfo::getId,UserInfo::getUserName));
         for (PurchaseGoodsResVO cond : list.getList()) {
             cond.setUnitName(unitMap.get(cond.getUnitId()));
+            cond.setChecker(userMap.get(cond.getCheckerId()));
         }
         return list;
     }
