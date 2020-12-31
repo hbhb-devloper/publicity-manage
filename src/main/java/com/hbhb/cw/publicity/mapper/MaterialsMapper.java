@@ -9,6 +9,7 @@ import org.beetl.sql.core.page.PageRequest;
 import org.beetl.sql.core.page.PageResult;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author wangxiaogang
@@ -19,9 +20,10 @@ public interface MaterialsMapper extends BaseMapper<Materials> {
      *
      * @param cond    条件
      * @param request 页数
+     * @param list    单位列表
      * @return 宣传物料制作列表
      */
-    PageResult<MaterialsResVO> selectMaterialsListByCond(MaterialsReqVO cond, PageRequest<MaterialsResVO> request);
+    PageResult<MaterialsResVO> selectMaterialsListByCond(MaterialsReqVO cond, List<Integer> list, PageRequest<MaterialsResVO> request);
 
     /**
      * 跟据单位id统计单位下制作预算信息

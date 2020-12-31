@@ -30,19 +30,23 @@ select
     -- @}
        from materials
     -- @where(){
-        -- @if(!isEmpty(cond.applyTime)){
+        -- @if(isNotEmpty(cond.applyTime)){
           apply_time = concat('%', #{cond.applyTime}, '%')
         -- @}
-        -- @if(!isEmpty(cond.state)){
+        -- @if(isNotEmpty(cond.state)){
           and state = #{cond.state}
         -- @}
-        -- @if(!isEmpty(cond.materialsNum)){
+        -- @if(isNotEmpty(cond.materialsNum)){
           and materials_num  =#{cond.materialsNum}
         -- @}
-        -- @if(!isEmpty(cond.materialsName)){
+        -- @if(isNotEmpty(cond.materialsName)){
           and materials_name = #{materialsName}
         -- @}
+        -- @if(isNotEmpty(list)){
+           and unit_id in (#{join(list)})
+        -- @}
     -- @}
+        order by apply_time
 ```
 
 selectMaterialsBudgetByUnitId
@@ -53,7 +57,7 @@ select t1.*, t2.declaration, t3.amountPaid
              select sum(predict_amount)          as useAmount,
                     m.unit_id                    as unitId,
                     mb.budget                    as budget,
-                    budget - sum(predict_amount) as balance,
+                   ROUND(budget - sum(predict_amount),4) as balance,
                     sum(predict_amount)/budget   as proportion
              from materials m
                       left join materials_budget mb on m.unit_id = mb.unit_id

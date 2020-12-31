@@ -349,7 +349,7 @@ class MaterialsFlowServiceImpl implements MaterialsFlowService {
                     vo.setApproverRole(roleApi.getNameById(flow.getFlowRoleId()));
                     vo.setNickName(userInfo == null ? null : userInfo.getNickName());
                     vo.setApprover(flow.getUserId());
-                    vo.setUpdateTime(DateUtil.dateToStringYmd(flow.getUpdateTime()));
+                    vo.setUpdateTime(DateUtil.formatDate(flow.getUpdateTime(), DateUtil.FORMAT_PATTERN_COMM));
                     return vo;
                 }).collect(Collectors.toList());
     }

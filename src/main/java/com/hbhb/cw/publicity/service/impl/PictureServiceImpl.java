@@ -87,8 +87,10 @@ public class PictureServiceImpl implements PictureService {
 
     @Override
     public PageResult<PictureResVO> getPictureList(PictureReqVO reqVO, Integer pageNum, Integer pageSize) {
+        // 获取所有下属单位
+        List<Integer> unitIds = unitApi.getSubUnit(reqVO.getUnitId());
         PageRequest<PictureResVO> request = DefaultPageRequest.of(pageNum, pageSize);
-        PageResult<PictureResVO> list = pictureMapper.selectPictureListByCond(reqVO, request);
+        PageResult<PictureResVO> list = pictureMapper.selectPictureListByCond(reqVO, unitIds, request);
         List<Integer> userIds = new ArrayList<>();
         Map<Integer, String> unitMapById = unitApi.getUnitMapById();
         list.getList().forEach(item -> userIds.add(item.getUserId()));
@@ -176,6 +178,10 @@ public class PictureServiceImpl implements PictureService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updatePicture(PictureInfoVO infoVO, Integer userId) {
+        Picture single = pictureMapper.single(infoVO.getId());
+        if (userId.equals(single.getUserId())) {
+            throw new PublicityException(PublicityErrorCode.NO_OPERATION_PERMISSION);
+        }
         // 修改宣传画面
         Picture picture = new Picture();
         BeanUtils.copyProperties(infoVO, picture);
@@ -195,7 +201,11 @@ public class PictureServiceImpl implements PictureService {
     }
 
     @Override
-    public void deletePicture(Long id) {
+    public void deletePicture(Long id, Integer userId) {
+        Picture single = pictureMapper.single(id);
+        if (userId.equals(single.getUserId())) {
+            throw new PublicityException(PublicityErrorCode.NO_OPERATION_PERMISSION);
+        }
         Picture picture = new Picture();
         picture.setId(id);
         picture.setDeleteFlag(false);

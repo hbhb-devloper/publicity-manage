@@ -15,6 +15,7 @@ import com.hbhb.cw.flowcenter.vo.NodeOperationReqVO;
 import com.hbhb.cw.flowcenter.vo.NodeOperationVO;
 import com.hbhb.cw.flowcenter.vo.NodeSuggestionVO;
 import com.hbhb.cw.publicity.enums.FlowNodeNoticeState;
+import com.hbhb.cw.publicity.enums.NoticeState;
 import com.hbhb.cw.publicity.enums.PublicityErrorCode;
 import com.hbhb.cw.publicity.enums.Suggestion;
 import com.hbhb.cw.publicity.exception.PublicityException;
@@ -120,7 +121,7 @@ public class PictureFlowServiceImpl implements PictureFlowService {
         // 更新当前节点之前的所有节点提醒状态为已读
         noticeMapper.updateTemplateById(PictureNotice.builder()
                 .id(pictureId)
-                .state(1)
+                .state(NoticeState.READ.value())
                 .build());
 
         // 同意
@@ -345,7 +346,7 @@ public class PictureFlowServiceImpl implements PictureFlowService {
                     vo.setPictureId(flow.getPictureId());
                     vo.setApproverRole(roleApi.getNameById(flow.getFlowRoleId()));
                     vo.setNickName(userInfo == null ? null : userInfo.getNickName());
-                    vo.setUpdateTime(DateUtil.dateToStringYmd(flow.getUpdateTime()));
+                    vo.setUpdateTime(DateUtil.formatDate(flow.getUpdateTime(), DateUtil.FORMAT_PATTERN_COMM));
                     vo.setApprover(flow.getUserId());
                     return vo;
                 }).collect(Collectors.toList());

@@ -127,8 +127,9 @@ public class MaterialsController {
 
     @Operation(summary = "删除物料")
     @DeleteMapping("/{id}")
-    public void deleteMaterials(@PathVariable("id") Long id) {
-        materialsService.deleteMaterials(id);
+    public void deleteMaterials(@PathVariable("id") Long id,
+                                @Parameter(hidden = true) @UserId Integer userId) {
+        materialsService.deleteMaterials(id, userId);
     }
 
     @Operation(summary = "发起审批")

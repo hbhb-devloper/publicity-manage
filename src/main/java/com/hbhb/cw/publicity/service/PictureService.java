@@ -49,7 +49,7 @@ public interface PictureService {
      *
      * @param id id
      */
-    void deletePicture(Long id);
+    void deletePicture(Long id, Integer userId);
 
     /**
      * 删除附件

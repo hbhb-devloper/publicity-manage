@@ -48,7 +48,7 @@ public interface MaterialsService {
      *
      * @param id id
      */
-    void deleteMaterials(Long id);
+    void deleteMaterials(Long id, Integer userId);
 
     /**
      * 修改物料设计

@@ -9,6 +9,7 @@ import org.beetl.sql.core.page.PageResult;
 import org.beetl.sql.mapper.annotation.Param;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author wangxiaogang
@@ -19,9 +20,10 @@ public interface PictureMapper extends BaseMapper<Picture> {
      *
      * @param reqVO   查询条件
      * @param request 分页
+     * @param list    单位列表
      * @return 宣传画面列表
      */
-    PageResult<PictureResVO> selectPictureListByCond(PictureReqVO reqVO, PageRequest<PictureResVO> request);
+    PageResult<PictureResVO> selectPictureListByCond(PictureReqVO reqVO, List<Integer> list, PageRequest<PictureResVO> request);
 
     /**
      * 获取单位下今年最大编号

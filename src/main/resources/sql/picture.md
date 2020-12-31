@@ -30,19 +30,23 @@ select
     -- @}
 from picture p
     -- @where(){
-        -- @if(!isEmpty(cond.applyTime)){
+        -- @if(isNotEmpty(cond.applyTime)){
           apply_time = concat('%', #{cond.applyTime}, '%')
         -- @}
-        -- @if(!isEmpty(cond.state)){
+        -- @if(isNotEmpty(cond.state)){
           and state = #{cond.state}
         -- @}
-        -- @if(!isEmpty(cond.pictureNum)){
+        -- @if(isNotEmpty(cond.pictureNum)){
           and picture_num =#{cond.pictureNum}
         -- @}
-        -- @if(!isEmpty(cond.pictureName)){
+        -- @if(isNotEmpty(cond.pictureName)){
           and picture_name = #{pictureName}
         -- @}
+        -- @if(isNotEmpty(list)){
+           and unit_id in (#{join(list)})
+        -- @}
     -- @}
+        order by apply_time
 ```
 
 selectPictureNumCountByUnitId

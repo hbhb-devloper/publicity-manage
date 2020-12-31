@@ -22,6 +22,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
+import org.beetl.sql.core.page.DefaultPageResult;
 import org.beetl.sql.core.page.PageResult;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -60,10 +61,12 @@ public class PrintController {
     public PageResult<PrintResVO> getPrintList(
             @Parameter(description = "页码，默认为1") @RequestParam(required = false) Integer pageNum,
             @Parameter(description = "每页数量，默认为10") @RequestParam(required = false) Integer pageSize,
-            @Parameter(description = "查询参数") PrintReqVO reqVO,
-            @Parameter(hidden = true) @UserId Integer userId) {
+            @Parameter(description = "查询参数") PrintReqVO reqVO) {
         pageNum = pageNum == null ? 1 : pageNum;
         pageSize = pageSize == null ? 10 : pageSize;
+        if (reqVO.getUnitId() == null) {
+            return new DefaultPageResult<>();
+        }
         return printService.getPrintList(reqVO, pageNum, pageSize);
     }
 
@@ -76,8 +79,8 @@ public class PrintController {
 
     @Operation(summary = "删除印刷品")
     @DeleteMapping("/{id}")
-    public void deletePrint(@PathVariable Long id) {
-        printService.deletePrint(id);
+    public void deletePrint(@PathVariable Long id, @Parameter(hidden = true) @UserId Integer userId) {
+        printService.deletePrint(id, userId);
     }
 
     @Operation(summary = "修改印刷品")
@@ -169,5 +172,6 @@ public class PrintController {
     List<SelectVO> getAssessorList() {
         return printService.getAssessor();
     }
+
 }
 

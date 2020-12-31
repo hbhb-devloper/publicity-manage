@@ -114,8 +114,10 @@ public class MaterialsServiceImpl implements MaterialsService {
 
     @Override
     public PageResult<MaterialsResVO> getMaterialsList(MaterialsReqVO reqVO, Integer pageNum, Integer pageSize) {
+        // 获取所有下属单位
+        List<Integer> unitIds = unitApi.getSubUnit(reqVO.getUnitId());
         PageRequest<MaterialsResVO> request = DefaultPageRequest.of(pageNum, pageSize);
-        PageResult<MaterialsResVO> materialsList = materialsMapper.selectMaterialsListByCond(reqVO, request);
+        PageResult<MaterialsResVO> materialsList = materialsMapper.selectMaterialsListByCond(reqVO, unitIds, request);
         // 组装单位名称，用户名称
         List<Integer> userIds = new ArrayList<>();
         Map<Integer, String> unitMapById = unitApi.getUnitMapById();
@@ -221,7 +223,11 @@ public class MaterialsServiceImpl implements MaterialsService {
     }
 
     @Override
-    public void deleteMaterials(Long id) {
+    public void deleteMaterials(Long id, Integer userId) {
+        Materials single = materialsMapper.single(id);
+        if (userId.equals(single.getUserId())) {
+            throw new PublicityException(PublicityErrorCode.NO_OPERATION_PERMISSION);
+        }
         Materials materials = new Materials();
         materials.setId(id);
         materials.setDeleteFlag(false);
@@ -230,6 +236,10 @@ public class MaterialsServiceImpl implements MaterialsService {
 
     @Override
     public void updateMaterials(MaterialsInfoVO infoVO, Integer userId) {
+        Materials single = materialsMapper.single(infoVO.getId());
+        if (userId.equals(single.getUserId())) {
+            throw new PublicityException(PublicityErrorCode.NO_OPERATION_PERMISSION);
+        }
         Materials materials = new Materials();
         BeanUtils.copyProperties(infoVO, materials);
         // 新增印刷用品

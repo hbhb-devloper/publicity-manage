@@ -11,28 +11,17 @@ import com.hbhb.cw.publicity.web.vo.PictureResVO;
 import com.hbhb.cw.systemcenter.enums.FileType;
 import com.hbhb.web.annotation.UserId;
 import com.hbhb.web.util.FileUtil;
-
-import org.beetl.sql.core.page.PageResult;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
-
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletResponse;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
+import org.beetl.sql.core.page.PageResult;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author wangxiaogang
@@ -54,7 +43,7 @@ public class PictureController {
             @Parameter(description = "页码，默认为1") @RequestParam(required = false) Integer pageNum,
             @Parameter(description = "每页数量，默认为10") @RequestParam(required = false) Integer pageSize,
             @Parameter(description = "查询参数") PictureReqVO reqVO,
-            @Parameter(hidden = false) @UserId Integer userId) {
+            @Parameter(hidden = true) @UserId Integer userId) {
         pageNum = pageNum == null ? 1 : pageNum;
         pageSize = pageSize == null ? 10 : pageSize;
         return pictureService.getPictureList(reqVO, pageNum, pageSize);
@@ -82,7 +71,8 @@ public class PictureController {
 
     @Operation(summary = "修改宣传画面")
     @PutMapping("")
-    public void updatePicture(@RequestBody PictureInfoVO pictureInfoVO, @Parameter(hidden = true) @UserId Integer userId) {
+    public void updatePicture(@RequestBody PictureInfoVO pictureInfoVO,
+                              @Parameter(hidden = true) @UserId Integer userId) {
         pictureService.updatePicture(pictureInfoVO, userId);
     }
 
@@ -102,13 +92,15 @@ public class PictureController {
 
     @Operation(summary = "删除宣传画面")
     @DeleteMapping("/{id}")
-    public void deletePicture(@PathVariable("id") Long id) {
-        pictureService.deletePicture(id);
+    public void deletePicture(@PathVariable("id") Long id,
+                              @Parameter(hidden = true) @UserId Integer userId) {
+        pictureService.deletePicture(id, userId);
     }
 
     @Operation(summary = "发起审批")
     @PostMapping("/to-approve")
-    public void toApprove(@RequestBody PictureInitVO initVO, @Parameter(hidden = true) @UserId Integer userId) {
+    public void toApprove(@RequestBody PictureInitVO initVO,
+                          @Parameter(hidden = true) @UserId Integer userId) {
         pictureService.toApprove(initVO, userId);
     }
 

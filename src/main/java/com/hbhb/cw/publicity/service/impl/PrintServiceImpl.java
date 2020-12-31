@@ -105,8 +105,10 @@ public class PrintServiceImpl implements PrintService {
     @Override
     public PageResult<PrintResVO> getPrintList(PrintReqVO reqVO, Integer pageNum,
                                                Integer pageSize) {
+        // 获取所有下属单位
+        List<Integer> unitIds = unitApi.getSubUnit(reqVO.getUnitId());
         PageRequest<PrintResVO> request = DefaultPageRequest.of(pageNum, pageSize);
-        PageResult<PrintResVO> list = printMapper.selectPrintByCond(reqVO, request);
+        PageResult<PrintResVO> list = printMapper.selectPrintByCond(reqVO, unitIds, request);
         List<Integer> userIds = new ArrayList<>();
         Map<Integer, String> unitMapById = unitApi.getUnitMapById();
         list.getList().forEach(item -> userIds.add(item.getUserId()));
@@ -195,7 +197,11 @@ public class PrintServiceImpl implements PrintService {
     }
 
     @Override
-    public void deletePrint(Long id) {
+    public void deletePrint(Long id, Integer userId) {
+        Print single = printMapper.single(id);
+        if (userId.equals(single.getUserId())) {
+            throw new PublicityException(PublicityErrorCode.NO_OPERATION_PERMISSION);
+        }
         Print print = new Print();
         print.setDeleteFlag(false);
         print.setId(id);
@@ -205,6 +211,10 @@ public class PrintServiceImpl implements PrintService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updatePrint(PrintInfoVO infoVO, Integer userId) {
+        Print single = printMapper.single(infoVO.getId());
+        if (userId.equals(single.getUserId())) {
+            throw new PublicityException(PublicityErrorCode.NO_OPERATION_PERMISSION);
+        }
         Print print = new Print();
         BeanUtils.copyProperties(infoVO, print);
         printMapper.updateTemplateById(print);
