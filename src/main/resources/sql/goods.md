@@ -141,7 +141,7 @@ selectPurchaseGoods
             g.size  as  `size`,
             g.attribute as `attribute`,
             g.paper as `paper`,
-            g.checker as `checker`,
+            g.checker as `checkerId`,
             g.unit_id as unitId
         -- @}
     from goods g
@@ -218,7 +218,7 @@ selectVerifyHallList
           g.goods_name    as `goodsName`,
           a.hall_id       as `hallId`,
           ad.modify_amount as `modifyAmount`,
-          ad.unit_id       as unitId,
+          a.unit_id       as unitId,
           ad.id           as `applicationDetailId`
     from goods g
              left join application_detail ad on g.id = ad.goods_id

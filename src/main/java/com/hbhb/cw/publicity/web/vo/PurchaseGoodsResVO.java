@@ -44,6 +44,9 @@ public class PurchaseGoodsResVO implements Serializable {
     @Schema(description = "物料归属单位")
     private String unitName;
 
+    @Schema(description = "物料负责人Id")
+    private Integer checkerId;
+
     @Schema(description = "物料负责人")
     private String checker;
 }
