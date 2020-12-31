@@ -104,6 +104,7 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
             detailIds.add(applicationDetail.getId());
         }
         List<Integer> stateList = new ArrayList<>();
+        // 只修改这两种状态下的
         stateList.add(0);
         stateList.add(3);
         // 判断为第一次提交还是，被拒绝后提交

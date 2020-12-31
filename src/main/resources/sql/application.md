@@ -6,7 +6,7 @@ selectApplicationByUnitId
            -- @if(isNotEmpty(unitId)){
                 and unit_id = #{unitId}
            -- @}
-           -- @if(isNotEmpty(goodsIndex)){
+           -- @if(isNotEmpty(batchNum)){
                 and batch_num = #{batchNum}
            -- @}
            -- @if(isNotEmpty(hallId)){
