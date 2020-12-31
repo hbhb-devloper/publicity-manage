@@ -7,6 +7,7 @@ import com.hbhb.cw.publicity.mapper.GoodsMapper;
 import com.hbhb.cw.publicity.model.Goods;
 import com.hbhb.cw.publicity.rpc.SysUserApiExp;
 import com.hbhb.cw.publicity.service.LibraryService;
+import com.hbhb.cw.publicity.web.vo.CheckerVO;
 import com.hbhb.cw.publicity.web.vo.GoodsInfoVO;
 import com.hbhb.cw.publicity.web.vo.LibraryVO;
 import com.hbhb.cw.systemcenter.vo.UserInfo;
@@ -213,10 +214,10 @@ public class LibraryServiceImpl implements LibraryService {
     }
 
     @Override
-    public void updateBatchChecker(Integer beforeId, Integer afterId) {
+    public void updateBatchChecker(CheckerVO checkerVO) {
         goodsMapper.createLambdaQuery()
-                .andEq(Goods::getChecker,beforeId)
-                .updateSelective(Goods.builder().checker(afterId));
+                .andEq(Goods::getChecker,checkerVO.getBeforeId())
+                .updateSelective(Goods.builder().checker(checkerVO.getAfterId()).build());
     }
 
     @Override

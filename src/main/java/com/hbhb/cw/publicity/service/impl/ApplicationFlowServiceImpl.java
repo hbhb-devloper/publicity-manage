@@ -3,6 +3,7 @@ package com.hbhb.cw.publicity.service.impl;
 import com.alibaba.excel.util.StringUtils;
 import com.hbhb.api.core.bean.SelectVO;
 import com.hbhb.core.bean.BeanConverter;
+import com.hbhb.cw.flowcenter.enums.FlowOperationType;
 import com.hbhb.cw.flowcenter.vo.NodeApproverVO;
 import com.hbhb.cw.flowcenter.vo.NodeOperationVO;
 import com.hbhb.cw.flowcenter.vo.NodeSuggestionVO;
@@ -82,80 +83,61 @@ public class ApplicationFlowServiceImpl implements ApplicationFlowService {
     @Override
     public List<ApplicationFlowInfoVO> getInfoByBatchNum(String batchNum, Integer userId) {
         List<ApplicationFlowInfoVO> list = new ArrayList<>();
+        // 通过userId得到nickName
+        UserInfo userInfo = sysUserApiExp.getUserInfoById(userId);
         // 查询流程的所有节点
         List<ApplicationFlow> applicationFlows= applicationFlowMapper.createLambdaQuery()
-                .andEq(ApplicationFlow::getBatchNum, batchNum).select();
+                .andEq(ApplicationFlow::getBatchNum, batchNum)
+                .andEq(ApplicationFlow::getUnitId,userInfo.getUnitId()).select();
         List<ApplicationFlowVO> flowNodes = BeanConverter.copyBeanList(applicationFlows, ApplicationFlowVO.class);
         for (ApplicationFlowVO flowNode : flowNodes) {
             flowNode.setNickName(sysUserApiExp.getUserInfoById(flowNode.getUserId()).getNickName());
         }
-        // 通过userId得到nickName
-        UserInfo userInfo = sysUserApiExp.getUserInfoById(userId);
-        // 如果流程已结束，参与流程的角色登入
-        for (int i = 0; i < flowNodes.size(); i++) {
-            if (flowNodes.get(i).getOperation() == null
-                    || !flowNodes.get(flowNodes.size() - 1).getOperation().equals(OperationState.UN_EXECUTED.value())) {
-                for (ApplicationFlowVO flowNode : flowNodes) {
-                    ApplicationFlowInfoVO result = new ApplicationFlowInfoVO();
-                    BeanConverter.copyProp(flowNode, result);
-                    result.setApproverRole(flowNode.getRoleDesc());
-                    result.setApprover(NodeApproverVO.builder()
-                            .value(flowNode.getUserId())
-                            .readOnly(true)
-                            .build());
-                    result.setOperation(NodeOperationVO.builder()
-                            .value(flowNode.getOperation())
-                            .hidden(true)
-                            .build());
-                    result.setSuggestion(NodeSuggestionVO.builder()
-                            .value(flowNode.getSuggestion())
-                            .readOnly(true)
-                            .build());
-                    result.setApproverSelect(getApproverSelectList(flowNode.getFlowNodeId(),
-                           batchNum));
-                    list.add(result);
-                }
-                return list;
-            }
-        }
         Map<String, ApplicationFlowVO> flowNodeMap = flowNodes.stream().collect(
                 Collectors.toMap(ApplicationFlowVO::getFlowNodeId, Function.identity()));
-        // 通过userId得到该用户的所有流程角色
-        List<Long> flowRoleIds = flowRoleUserApiExp.getRoleIdByUserId(userId);
-        // 1.先获取流程流转的当前节点<currentNode>
-        // 2.再判断<loginUser>是否为<currentNode>的审批人
-        //   2-1.如果不是，则所有节点信息全部为只读
-        //   2-2.如果是，则判断是否为该流程的分配者
-        //      a.如果不是分配者，则只能编辑当前节点的按钮操作<operation>和意见<suggestion>
-        //      b.如果是分配者，则可以编辑以下：
-        //        当前节点的按钮操作<operation>和意见<suggestion>
-        //        其他节点的审批人<approver>
+        // 判断流程是否已结束
+        // 根据最后一个节点的状态可判断整个流程的状态
+        if (flowNodes.get(flowNodes.size() - 1).getOperation().equals(FlowOperationType.UN_EXECUTED.value())) {
+            // 1.先获取流程流转的当前节点<currentNode>
+            // 2.再判断<loginUser>是否为<currentNode>的审批人
+            //   2-1.如果不是，则所有节点信息全部为只读
+            //   2-2.如果是，则判断是否为该流程的分配者
+            //      a.如果不是分配者，则只能编辑当前节点的按钮操作<operation>和意见<suggestion>
+            //      b.如果是分配者，则可以编辑以下：
+            //        当前节点的按钮操作<operation>和意见<suggestion>
+            //        其他节点的审批人<approver>
 
-        // 1.先获取流程流转的当前节点
-        List<FlowNodeOperationVO> voList = new ArrayList<>();
-        flowNodes.forEach(flowNode -> voList.add(FlowNodeOperationVO.builder()
-                .flowNodeId(flowNode.getFlowNodeId())
-                .operation(flowNode.getOperation())
-                .build()));
-        // 当前节点id
-        String currentNodeId = getCurrentNode(voList);
-        if (!StringUtils.isEmpty(currentNodeId)) {
-            ApplicationFlowVO currentNode = flowNodeMap.get(currentNodeId);
-            // 2.判断登录用户是否为该审批人
-            if (!userId.equals(currentNode.getUserId())) {
-                // 2-1.如果不是，则所有节点信息全部为只读
-                flowNodes.forEach(flowNode -> list.add(buildFlowNode(flowNode, currentNodeId, 0)));
-            } else {
-                // 2-2-a.如果是审批人，且为分配者
-                if (flowRoleIds.contains(currentNode.getAssigner())) {
-                    flowNodes.forEach(
-                            flowNode -> list.add(buildFlowNode(flowNode, currentNodeId, 2)));
+            // 1.先获取流程流转的当前节点
+            List<FlowNodeOperationVO> voList = new ArrayList<>();
+            flowNodes.forEach(flowNode -> voList.add(FlowNodeOperationVO.builder()
+                    .flowNodeId(flowNode.getFlowNodeId())
+                    .operation(flowNode.getOperation())
+                    .build()));
+            // 当前节点id
+            String currentNodeId = getCurrentNode(voList);
+            if (!StringUtils.isEmpty(currentNodeId)) {
+                ApplicationFlowVO currentNode = flowNodeMap.get(currentNodeId);
+                // 2.判断登录用户是否为该审批人
+                if (!userId.equals(currentNode.getUserId())) {
+                    // 2-1.如果不是，则所有节点信息全部为只读
+                    flowNodes.forEach(flowNode -> list.add(buildFlowNode(flowNode, currentNodeId, 0)));
                 } else {
-                    // 2-2-b.如果是审批人，但不是分配者
-                    flowNodes.forEach(
-                            flowNode -> list.add(buildFlowNode(flowNode, currentNodeId, 1)));
+                    // 通过userId得到该用户的所有流程角色
+                    List<Long> flowRoleIds = flowRoleUserApiExp.getRoleIdByUserId(userId);
+                    // 2-2-a.如果是审批人，且为分配者
+                    if (flowRoleIds.contains(currentNode.getAssigner())) {
+                        flowNodes.forEach(
+                                flowNode -> list.add(buildFlowNode(flowNode, currentNodeId, 2)));
+                    } else {
+                        // 2-2-b.如果是审批人，但不是分配者
+                        flowNodes.forEach(
+                                flowNode -> list.add(buildFlowNode(flowNode, currentNodeId, 1)));
+                    }
                 }
             }
+        }  // 如果流程已结束，则所有节点只读，不能操作
+        else {
+            flowNodes.forEach(flowNode -> list.add(buildFlowNode(flowNode, "", 0)));
         }
         // 如果是审批人，但是默认用户下拉框没有该用户的时候，加上该用户
         for (ApplicationFlowInfoVO applicationFlowInfoVO : list) {
@@ -172,22 +154,6 @@ public class ApplicationFlowServiceImpl implements ApplicationFlowService {
                     approverSelect.add(flowRoleResVO);
                     applicationFlowInfoVO.setApproverSelect(approverSelect);
                 }
-            }
-        }
-        // 审批未结束，具有节点审批人权限的人登入
-        for (ApplicationFlowInfoVO infoVO : list) {
-            if (!infoVO.getFlowNodeId().equals(currentNodeId)
-                    && !infoVO.getOperation().getValue().equals(OperationState.UN_EXECUTED.value())) {
-                infoVO.setApprover(NodeApproverVO.builder()
-                        .value(infoVO.getApprover().getValue()).readOnly(true).build());
-                infoVO.setOperation(NodeOperationVO.builder()
-                        .value(infoVO.getOperation().getValue()).hidden(true).build());
-                infoVO.setSuggestion(NodeSuggestionVO.builder()
-                        .value(infoVO.getSuggestion().getValue()).readOnly(true).build());
-                infoVO.setApproverSelect(getApproverSelectList(infoVO.getFlowNodeId(),
-                      batchNum));
-            } else {
-                break;
             }
         }
         return list;

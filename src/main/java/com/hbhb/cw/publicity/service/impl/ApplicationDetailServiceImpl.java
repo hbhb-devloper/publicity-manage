@@ -106,10 +106,6 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
 
     @Override
     public SummaryUnitGoodsResVO getUnitGoodsList(GoodsReqVO goodsReqVO) {
-        Integer hangzhou = UnitEnum.HANGZHOU.value();
-        if (hangzhou.equals(goodsReqVO.getUnitId())) {
-            goodsReqVO.setUnitId(null);
-        }
         GoodsSetting goodsSetting = null;
         if (goodsReqVO.getTime() != null && goodsReqVO.getGoodsIndex() == null) {
             return new SummaryUnitGoodsResVO();
@@ -400,7 +396,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         String batchNum = DateUtil.dateToString(DateUtil.stringToDate(setInfo.getDeadline()), "yyyyMM")
                 + setInfo.getGoodsIndex();
         //  4.同步节点属性
-        syncBudgetProjectFlow(flowProps, batchNum, userId);
+        syncBudgetProjectFlow(flowProps, batchNum, userId, user.getUnitId());
         // 得到推送模板
         String inform = getInform(flowProps.get(0).getFlowNodeId()
                 , FlowNodeNoticeState.DEFAULT_REMINDER.value());
@@ -576,7 +572,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
     /**
      * 同步节点属性
      */
-    private void syncBudgetProjectFlow(List<FlowNodePropVO> flowProps, String batchNum, Integer userId) {
+    private void syncBudgetProjectFlow(List<FlowNodePropVO> flowProps, String batchNum, Integer userId, Integer unitId) {
 
         // 用来存储同步节点的list
         List<ApplicationFlow> list = new ArrayList<>();
@@ -603,6 +599,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
                     .isJoin(flowPropVO.getIsJoin())
                     .assigner(flowPropVO.getAssigner())
                     .operation(OperationState.UN_EXECUTED.value())
+                    .unitId(unitId)
                     .build());
         }
         applicationFlowService.insertBatch(list);

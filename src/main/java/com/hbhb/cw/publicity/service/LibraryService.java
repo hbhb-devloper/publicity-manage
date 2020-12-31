@@ -1,6 +1,7 @@
 package com.hbhb.cw.publicity.service;
 
 import com.hbhb.cw.publicity.model.Goods;
+import com.hbhb.cw.publicity.web.vo.CheckerVO;
 import com.hbhb.cw.publicity.web.vo.GoodsInfoVO;
 import com.hbhb.cw.publicity.web.vo.LibraryVO;
 
@@ -30,7 +31,7 @@ public interface LibraryService {
     /**
      * 批量修改物料审核员
      */
-    void updateBatchChecker(Integer beforeId, Integer afterId);
+    void updateBatchChecker(CheckerVO checkerVO);
 
     /**
      * 通过id得到物料id
