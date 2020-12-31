@@ -51,6 +51,8 @@ public class GoodsServiceImpl implements GoodsService {
         for (PurchaseGoodsResVO cond : list.getList()) {
             userIds.add(cond.getCheckerId());
         }
+        // 防止userIds等于0
+        userIds.add(-1);
         List<UserInfo> userInfoBatch = sysUserApiExp.getUserInfoBatch(userIds);
         Map<Integer, String> userMap = new HashMap<>();
         for (UserInfo infoBatch : userInfoBatch) {
