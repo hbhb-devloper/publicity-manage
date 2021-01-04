@@ -2,6 +2,7 @@ package com.hbhb.cw.publicity.service.impl;
 
 import com.hbhb.core.utils.DateUtil;
 import com.hbhb.cw.publicity.enums.NoticeState;
+import com.hbhb.cw.publicity.enums.NoticeType;
 import com.hbhb.cw.publicity.mapper.PrintNoticeMapper;
 import com.hbhb.cw.publicity.model.PrintNotice;
 import com.hbhb.cw.publicity.rpc.FlowTypeApiExp;
@@ -69,7 +70,6 @@ public class PrintNoticeServiceImpl implements PrintNoticeService {
                                                    Integer pageNum, Integer pageSize) {
         PageRequest request = DefaultPageRequest.of(pageNum, pageSize);
         PageResult<NoticeResVO> page = noticeMapper.selectPageByCond(cond, request);
-
         // 项目状态字典
         List<DictVO> stateList = dictApi.getDict(TypeCode.FUND.value(), DictCode.FUND_INVOICE_STATUS.value());
         Map<String, String> stateMap = stateList.stream().collect(
@@ -81,7 +81,6 @@ public class PrintNoticeServiceImpl implements PrintNoticeService {
             item.setFlowType(typeApi.getNameById(item.getFlowTypeId()));
             item.setUnitName(unitApi.getUnitInfo(item.getUnitId()).getUnitName());
         });
-
         return page;
     }
 
@@ -104,6 +103,7 @@ public class PrintNoticeServiceImpl implements PrintNoticeService {
                         .businessId(notice.getPrintId())
                         .date(DateUtil.dateToString(notice.getCreateTime()))
                         .userName(userMap.get(notice.getPromoter()))
+                        .noticeType(NoticeType.PRINT.value())
                         .build())
                 .collect(Collectors.toList());
     }

@@ -2,6 +2,7 @@ package com.hbhb.cw.publicity.service.impl;
 
 import com.hbhb.core.utils.DateUtil;
 import com.hbhb.cw.publicity.enums.NoticeState;
+import com.hbhb.cw.publicity.enums.NoticeType;
 import com.hbhb.cw.publicity.mapper.PictureNoticeMapper;
 import com.hbhb.cw.publicity.model.PictureNotice;
 import com.hbhb.cw.publicity.rpc.FlowTypeApiExp;
@@ -71,6 +72,7 @@ public class PictureNoticeServiceImpl implements PictureNoticeService {
                         .businessId(notice.getPictureId())
                         .date(DateUtil.dateToString(notice.getCreateTime()))
                         .userName(userMap.get(notice.getPromoter()))
+                        .noticeType(NoticeType.PICTURE.value())
                         .build())
                 .collect(Collectors.toList());
     }
@@ -91,6 +93,7 @@ public class PictureNoticeServiceImpl implements PictureNoticeService {
             item.setStateLabel(stateMap.get(item.getState().toString()));
             item.setFlowType(typeApi.getNameById(item.getFlowTypeId()));
             item.setUnitName(unitApi.getUnitInfo(item.getUnitId()).getUnitName());
+            item.setNoticeType(NoticeType.PICTURE.value());
         });
 
         return page;

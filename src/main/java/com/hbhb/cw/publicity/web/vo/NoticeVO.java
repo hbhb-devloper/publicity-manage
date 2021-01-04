@@ -26,4 +26,6 @@ public class NoticeVO implements Serializable {
     private String date;
     @Schema(description = "签报人")
     private String userName;
+    @Schema(description = "提醒类型")
+    private String noticeType;
 }

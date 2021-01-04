@@ -55,4 +55,7 @@ public class NoticeResVO implements Serializable {
 
     @Schema(description = "状态名称")
     private String stateLabel;
+
+    @Schema(description = "提醒类型")
+    private String noticeType;
 }

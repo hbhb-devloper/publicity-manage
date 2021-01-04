@@ -2,6 +2,7 @@ package com.hbhb.cw.publicity.service.impl;
 
 import com.hbhb.core.utils.DateUtil;
 import com.hbhb.cw.publicity.enums.NoticeState;
+import com.hbhb.cw.publicity.enums.NoticeType;
 import com.hbhb.cw.publicity.mapper.MaterialsNoticeMapper;
 import com.hbhb.cw.publicity.model.MaterialsNotice;
 import com.hbhb.cw.publicity.rpc.FlowTypeApiExp;
@@ -71,6 +72,7 @@ public class MaterialsNoticeServiceImpl implements MaterialsNoticeService {
                         .businessId(notice.getMaterialsId())
                         .date(DateUtil.dateToString(notice.getCreateTime()))
                         .userName(userMap.get(notice.getPromoter()))
+                        .noticeType(NoticeType.MATERIALS.value())
                         .build())
                 .collect(Collectors.toList());
     }
@@ -91,6 +93,7 @@ public class MaterialsNoticeServiceImpl implements MaterialsNoticeService {
             item.setStateLabel(stateMap.get(item.getState().toString()));
             item.setFlowType(typeApi.getNameById(item.getFlowTypeId()));
             item.setUnitName(unitApi.getUnitInfo(item.getUnitId()).getUnitName());
+            item.setNoticeType(NoticeType.MATERIALS.value());
         });
 
         return page;

@@ -17,16 +17,16 @@ selectPageByCond
           left join print p on pn.print_id = p.id
     where pn.state = 0
     -- @if(isNotEmpty(cond.userId)){
-        and mn.receiver = #{cond.userId}
+        and pn.receiver = #{cond.userId}
     -- @}
     -- @if(isNotEmpty(cond.num)){
         and p.print_num like concat('%', #{cond.num}, '%')
     -- @}
     -- @if(isNotEmpty(cond.amountMin)){
-        and m.predict_amount >= #{cond.amountMin}
+        and p.predict_amount >= #{cond.amountMin}
     -- @}
     -- @if(isNotEmpty(cond.amountMax)){
-        and m.predict_amount <= #{cond.amountMax}
+        and p.predict_amount <= #{cond.amountMax}
     -- @}
     -- @pageIgnoreTag(){
         order by pn.create_time desc, pn.state
