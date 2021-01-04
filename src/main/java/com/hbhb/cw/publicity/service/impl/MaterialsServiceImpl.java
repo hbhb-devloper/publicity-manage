@@ -358,7 +358,10 @@ public class MaterialsServiceImpl implements MaterialsService {
 
     @Override
     public MaterialsBudgetVO getMaterialsBudget(Integer unitId) {
-        return materialsMapper.selectMaterialsBudgetByUnitId(unitId);
+        MaterialsBudgetVO materialsBudgetVO = materialsMapper.selectMaterialsBudgetByUnitId(unitId);
+        Map<Integer, String> unitMap = unitApi.getUnitMapById();
+        materialsBudgetVO.setUnitName(unitMap.get(materialsBudgetVO.getUnitId()));
+        return materialsBudgetVO;
     }
 
     @Override

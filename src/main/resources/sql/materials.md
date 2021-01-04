@@ -31,7 +31,7 @@ select
        from materials
     -- @where(){
         -- @if(isNotEmpty(cond.applyTime)){
-          apply_time = concat('%', #{cond.applyTime}, '%')
+          apply_time like concat('%', #{cond.applyTime}, '%')
         -- @}
         -- @if(isNotEmpty(cond.state)){
           and state = #{cond.state}
