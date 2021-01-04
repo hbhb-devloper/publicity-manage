@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 public class SummaryUnitGoodsResVO implements Serializable {
     private static final long serialVersionUID = 8649705922317903666L;
 
-    private List<SummaryUnitGoodsVO> list;
+    private List<SummaryUnitApplicationVO> list;
 
     private Boolean flag;
 

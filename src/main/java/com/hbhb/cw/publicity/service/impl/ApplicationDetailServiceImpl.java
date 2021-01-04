@@ -29,6 +29,7 @@ import com.hbhb.cw.publicity.service.ApplicationDetailService;
 import com.hbhb.cw.publicity.service.ApplicationFlowService;
 import com.hbhb.cw.publicity.service.ApplicationNoticeService;
 import com.hbhb.cw.publicity.service.GoodsSettingService;
+import com.hbhb.cw.publicity.service.MailService;
 import com.hbhb.cw.publicity.web.vo.ApplicationApproveVO;
 import com.hbhb.cw.publicity.web.vo.ApplicationByUnitVO;
 import com.hbhb.cw.publicity.web.vo.ApplicationFlowNodeVO;
@@ -39,6 +40,7 @@ import com.hbhb.cw.publicity.web.vo.GoodsCheckerVO;
 import com.hbhb.cw.publicity.web.vo.GoodsReqVO;
 import com.hbhb.cw.publicity.web.vo.SummaryByUnitVO;
 import com.hbhb.cw.publicity.web.vo.SummaryCondVO;
+import com.hbhb.cw.publicity.web.vo.SummaryUnitApplicationVO;
 import com.hbhb.cw.publicity.web.vo.SummaryUnitGoodsResVO;
 import com.hbhb.cw.publicity.web.vo.SummaryUnitGoodsVO;
 import com.hbhb.cw.publicity.web.vo.UnitGoodsStateVO;
@@ -51,6 +53,7 @@ import com.hbhb.cw.systemcenter.enums.UnitEnum;
 import com.hbhb.cw.systemcenter.vo.DictVO;
 import com.hbhb.cw.systemcenter.vo.UserInfo;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -103,9 +106,18 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
     private FlowNodePropApiExp flowNodePropApiExp;
     @Resource
     private FlowApiExp flowApiExp;
+    @Resource
+    private MailService mailService;
+    @Value("${mail.enable}")
+    private Boolean mailEnable;
 
     @Override
     public SummaryUnitGoodsResVO getUnitGoodsList(GoodsReqVO goodsReqVO) {
+        Integer hangzhou = UnitEnum.HANGZHOU.value();
+        // 如果为杭州则能看全部
+        if (hangzhou.equals(goodsReqVO.getUnitId())){
+            goodsReqVO.setUnitId(null);
+        }
         GoodsSetting goodsSetting = null;
         if (goodsReqVO.getTime() != null && goodsReqVO.getGoodsIndex() == null) {
             return new SummaryUnitGoodsResVO();
@@ -117,17 +129,42 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
             goodsReqVO.setGoodsIndex(goodsSetting.getGoodsIndex());
         } else {
             goodsSetting = goodsSettingService.getByCond(goodsReqVO.getTime(), goodsReqVO.getGoodsIndex());
+            if (goodsSetting == null) {
+                return new SummaryUnitGoodsResVO();
+            }
+            goodsReqVO.setTime(goodsSetting.getDeadline());
         }
-        if (goodsSetting == null) {
+        if (goodsSetting.getDeadline()==null) {
             return new SummaryUnitGoodsResVO();
         }
-        goodsReqVO.setTime(goodsSetting.getDeadline());
         String batchNum = DateUtil.dateToString(DateUtil.stringToDate(goodsSetting.getDeadline()), "yyyyMM") + goodsReqVO.getGoodsIndex();
-        List<SummaryUnitGoodsVO> list = getUnitSummaryList(goodsReqVO, null);
-
+        // 业务单式
+        List<SummaryUnitApplicationVO> simplexList = getApplicationSum(batchNum, goodsReqVO.getUnitId(), GoodsType.BUSINESS_SIMPLEX.getValue());
+        // 宣传单页
+        List<SummaryUnitApplicationVO> singleList = getApplicationSum(batchNum, goodsReqVO.getUnitId(), GoodsType.FLYER_PAGE.getValue());
+        // 通过goodsId得到unitName
+        Map<String, SummaryUnitApplicationVO> map = new HashMap<>();
+        for (SummaryUnitApplicationVO summaryUnitGoodsVO : simplexList) {
+            // 业务单式下宣传单页因都为0
+            summaryUnitGoodsVO.setSingleAmount(0L);
+            map.put(summaryUnitGoodsVO.getUnitName(), summaryUnitGoodsVO);
+        }
+        if (singleList.size()==0){
+            simplexList.addAll(singleList);
+        }
+        for (SummaryUnitApplicationVO cond : singleList) {
+            // 宣传单页下业务单式因都为0
+            cond.setSimplexAmount(0L);
+            if (map.get(cond.getUnitName()) == null) {
+                simplexList.add(cond);
+            } else {
+                map.get(cond.getUnitName()).setSingleAmount(cond.getSingleAmount());
+            }
+        }
+        goodsReqVO.setTime(goodsSetting.getDeadline());
         boolean flag = false;
-        if (list.size()!=0){
-            for (SummaryUnitGoodsVO summaryUnitGoodsVO : list) {
+        if (simplexList.size()!=0){
+            for (SummaryUnitApplicationVO summaryUnitGoodsVO : simplexList) {
                 if (summaryUnitGoodsVO.getApprovedState().equals(NodeState.NOT_APPROVED.value())
                         || summaryUnitGoodsVO.getApprovedState().equals(NodeState.APPROVE_REJECTED.value())) {
                     flag = true;
@@ -135,19 +172,21 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
                 }
             }
         }
+        String deadline = goodsSetting.getDeadline();
+        String time = goodsReqVO.getTime();
         // 得到第几次，判断此次是否结束。
         if (goodsSetting.getIsEnd() != null ||
-                DateUtil.stringToDate(goodsSetting.getDeadline()).getTime() < DateUtil.stringToDate(goodsReqVO.getTime()).getTime()) {
+                DateUtil.stringToDate(deadline).getTime()<DateUtil.stringToDate(time).getTime()) {
             // 如果结束审核提交置灰
-            return new SummaryUnitGoodsResVO(list, flag, batchNum);
+            return new SummaryUnitGoodsResVO(simplexList, flag, batchNum);
         }
         Map<Integer, String> unitMap = unitApiExp.getUnitMapById();
-        for (int i = 0; i < list.size(); i++) {
-            list.get(i).setLineNum(i + 1L);
-            list.get(i).setUnitName(unitMap.get(list.get(i).getUnitId()));
+        for (int i = 0; i < simplexList.size(); i++) {
+            simplexList.get(i).setLineNum(i + 1L);
+            simplexList.get(i).setUnitName(unitMap.get(simplexList.get(i).getUnitId()));
         }
         // 展示该次该管理部门下的申请汇总。
-        return new SummaryUnitGoodsResVO(list, flag, batchNum);
+        return new SummaryUnitGoodsResVO(simplexList, flag, batchNum);
     }
 
     @Override
@@ -252,7 +291,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
             goodsReqVO.setTime(goodsSetting.getDeadline());
         }
         else {
-            goodsSetting = goodsSettingService.getByCond(goodsReqVO.getTime(), goodsReqVO.getGoodsIndex());
+            goodsSetting = goodsSettingService.getByCond(DateUtil.dateToString(DateUtil.stringToDate(goodsReqVO.getTime()),"yyyy-MM"), goodsReqVO.getGoodsIndex());
         }
         if (goodsSetting == null) {
             return new ArrayList<SummaryUnitGoodsVO>();
@@ -393,6 +432,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         }
         // 通过时间和次序得到该次下的所有申请id（已提交且未被拒绝）
         GoodsSetting setInfo = goodsSettingService.getSetByDate(goodsApproveVO.getTime());
+        // 获取批次号
         String batchNum = DateUtil.dateToString(DateUtil.stringToDate(setInfo.getDeadline()), "yyyyMM")
                 + setInfo.getGoodsIndex();
         //  4.同步节点属性
@@ -427,7 +467,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
                 .andIn(ApplicationDetail::getApplicationId, applicationIdList)
                 .andEq(ApplicationDetail::getUnderUnitId, goodsApproveVO.getUnderUnitId())
                 .updateSelective(ApplicationDetail.builder()
-                        .approvedState(20)
+                        .approvedState(NodeState.APPROVING.value())
                         .build());
         // 修改批次状态
         goodsSettingService.updateByBatchNum(batchNum);
@@ -438,6 +478,10 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         // 查询当前节点信息
         ApplicationFlow currentFlow = applicationFlowService
                 .getInfoById(approveVO.getId());
+        // 校验审批人是否为本人
+        if (!currentFlow.getUserId().equals(userId)) {
+            throw new PublicityException(PublicityErrorCode.LOCK_OF_APPROVAL_ROLE);
+        }
         // 项目签报批次号
         String batchNum = currentFlow.getBatchNum();
         // 当前节点id
@@ -678,13 +722,13 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
                                 .flowTypeId(flowTypeId)
                                 .build());
                 // 推送邮件
-//                if (mailEnable) {
-//                    // 下一节点审批人信息
-//                    UserInfo nextApproverInfo = sysUserApiExp.getUserInfoById(nextApprover);
-//                    // 推送内容
-//                    String info = "宣传用品" + batchNum + "费用签报";
-//                    mailApiExp.postMail(new MailVO(nextApproverInfo.getEmail(), nextApproverInfo.getNickName(), info));
-//                }
+                if (mailEnable) {
+                    // 下一节点审批人信息
+                    UserInfo nextApproverInfo = sysUserApiExp.getUserInfoById(nextApprover);
+                    // 推送内容
+                    String info = "宣传用品" + batchNum + "费用签报";
+                    mailService.postMail(nextApproverInfo.getEmail(), nextApproverInfo.getNickName(), info);
+                }
             }
 
 
@@ -723,5 +767,18 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
                             .build());
 
         }
+    }
+
+    /**
+     * 获取汇总
+     * @return
+     */
+    private List<SummaryUnitApplicationVO> getApplicationSum(String batchNum,Integer unitId, Integer type){
+        // 展示该次该单位下的申请汇总。
+        return applicationDetailMapper.selectApplicationSumByType(SummaryCondVO.builder()
+                .batchNum(batchNum)
+                .unitId(unitId)
+                .type(type)
+                .build());
     }
 }

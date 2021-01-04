@@ -23,4 +23,7 @@ public class GoodsResVO implements Serializable {
 
     @Schema(description = "保存按钮是否可用")
     private Boolean flag;
+
+    @Schema(description = "相关内容")
+    private String contents;
 }

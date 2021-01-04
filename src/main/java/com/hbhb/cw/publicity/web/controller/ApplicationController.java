@@ -41,4 +41,5 @@ public class ApplicationController {
     public void addGoods(@RequestBody GoodsCondAppVO goodsCondAppVO) {
         applicationService.applyGoods(goodsCondAppVO);
     }
+
 }

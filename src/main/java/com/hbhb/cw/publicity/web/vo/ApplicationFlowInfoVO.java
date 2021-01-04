@@ -27,7 +27,7 @@ public class ApplicationFlowInfoVO implements Serializable {
     @Schema(description = "发票流程信息表id")
     private Long id;
 
-    @Schema(description = "方法id")
+    @Schema(description = "批次号")
     private String batchNum;
 
     @Schema(description = "节点id")
@@ -39,7 +39,7 @@ public class ApplicationFlowInfoVO implements Serializable {
     @Schema(description = "审批人角色描述")
     private String roleDesc;
 
-    @Schema(description = "审批人名称")
+    @Schema(description = "审批人姓名")
     private String nickName;
 
     @Schema(description = "审批人")
@@ -51,10 +51,7 @@ public class ApplicationFlowInfoVO implements Serializable {
     @Schema(description = "审批意见")
     private NodeSuggestionVO suggestion;
 
-    @Schema(description = "是否可以填写（0-可填写、1-不可填写）")
-    private Boolean input;
-
-    @Schema(description = "是否能够自定义流程（0-否、1-是）")
+    @Schema(description = "是否能够自定义流程（0-不能、1-能）")
     private Boolean controlAccess;
 
     @Schema(description = "是否允许被设置不参与流程（0-不参与、1-参与）")
@@ -63,10 +60,10 @@ public class ApplicationFlowInfoVO implements Serializable {
     @Schema(description = "审批人下拉框选项")
     private List<SelectVO> approverSelect;
 
-    @Schema(description = "红字名称nickName")
-    private List<SelectVO> nickNameSelect;
+    @Schema(description = "审批时间")
+    private String approveTime;
 
-    @Schema(description = "更新时间")
-    private String updateTime;
+    @Schema(description = "可编辑字段列表")
+    private List<String> filedList;
 
 }

@@ -93,6 +93,8 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
         // 保存
         GoodsReqVO goodsReqVO = goodsSaveGoodsVO.getGoodsReqVO();
         goodsReqVO.setHallId(null);
+        String time = goodsSaveGoodsVO.getGoodsReqVO().getTime();
+        goodsReqVO.setTime(DateUtil.dateToString(DateUtil.stringToDate(time),"yyyy-MM"));
         // 当提交时提交为整个分公司
         List<Long> applicationIds = getApplicationIds(goodsReqVO);
         List<ApplicationDetail> applicationDetailList = applicationDetailMapper
