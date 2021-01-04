@@ -40,6 +40,7 @@ import com.hbhb.cw.publicity.web.vo.GoodsCheckerVO;
 import com.hbhb.cw.publicity.web.vo.GoodsReqVO;
 import com.hbhb.cw.publicity.web.vo.SummaryByUnitVO;
 import com.hbhb.cw.publicity.web.vo.SummaryCondVO;
+import com.hbhb.cw.publicity.web.vo.SummaryUnitApplicationVO;
 import com.hbhb.cw.publicity.web.vo.SummaryUnitGoodsResVO;
 import com.hbhb.cw.publicity.web.vo.SummaryUnitGoodsVO;
 import com.hbhb.cw.publicity.web.vo.UnitGoodsStateVO;
@@ -112,6 +113,11 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
 
     @Override
     public SummaryUnitGoodsResVO getUnitGoodsList(GoodsReqVO goodsReqVO) {
+        Integer hangzhou = UnitEnum.HANGZHOU.value();
+        // 如果为杭州则能看全部
+        if (hangzhou.equals(goodsReqVO.getUnitId())){
+            goodsReqVO.setUnitId(null);
+        }
         GoodsSetting goodsSetting = null;
         if (goodsReqVO.getTime() != null && goodsReqVO.getGoodsIndex() == null) {
             return new SummaryUnitGoodsResVO();
@@ -132,11 +138,33 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
             return new SummaryUnitGoodsResVO();
         }
         String batchNum = DateUtil.dateToString(DateUtil.stringToDate(goodsSetting.getDeadline()), "yyyyMM") + goodsReqVO.getGoodsIndex();
-        List<SummaryUnitGoodsVO> list = getUnitSummaryList(goodsReqVO, null);
+        // 业务单式
+        List<SummaryUnitApplicationVO> simplexList = getApplicationSum(batchNum, goodsReqVO.getUnitId(), GoodsType.BUSINESS_SIMPLEX.getValue());
+        // 宣传单页
+        List<SummaryUnitApplicationVO> singleList = getApplicationSum(batchNum, goodsReqVO.getUnitId(), GoodsType.FLYER_PAGE.getValue());
+        // 通过goodsId得到unitName
+        Map<String, SummaryUnitApplicationVO> map = new HashMap<>();
+        for (SummaryUnitApplicationVO summaryUnitGoodsVO : simplexList) {
+            // 业务单式下宣传单页因都为0
+            summaryUnitGoodsVO.setSingleAmount(0L);
+            map.put(summaryUnitGoodsVO.getUnitName(), summaryUnitGoodsVO);
+        }
+        if (singleList.size()==0){
+            simplexList.addAll(singleList);
+        }
+        for (SummaryUnitApplicationVO cond : singleList) {
+            // 宣传单页下业务单式因都为0
+            cond.setSimplexAmount(0L);
+            if (map.get(cond.getUnitName()) == null) {
+                simplexList.add(cond);
+            } else {
+                map.get(cond.getUnitName()).setSingleAmount(cond.getSingleAmount());
+            }
+        }
         goodsReqVO.setTime(goodsSetting.getDeadline());
         boolean flag = false;
-        if (list.size()!=0){
-            for (SummaryUnitGoodsVO summaryUnitGoodsVO : list) {
+        if (simplexList.size()!=0){
+            for (SummaryUnitApplicationVO summaryUnitGoodsVO : simplexList) {
                 if (summaryUnitGoodsVO.getApprovedState().equals(NodeState.NOT_APPROVED.value())
                         || summaryUnitGoodsVO.getApprovedState().equals(NodeState.APPROVE_REJECTED.value())) {
                     flag = true;
@@ -150,15 +178,15 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         if (goodsSetting.getIsEnd() != null ||
                 DateUtil.stringToDate(deadline).getTime()<DateUtil.stringToDate(time).getTime()) {
             // 如果结束审核提交置灰
-            return new SummaryUnitGoodsResVO(list, flag, batchNum);
+            return new SummaryUnitGoodsResVO(simplexList, flag, batchNum);
         }
         Map<Integer, String> unitMap = unitApiExp.getUnitMapById();
-        for (int i = 0; i < list.size(); i++) {
-            list.get(i).setLineNum(i + 1L);
-            list.get(i).setUnitName(unitMap.get(list.get(i).getUnitId()));
+        for (int i = 0; i < simplexList.size(); i++) {
+            simplexList.get(i).setLineNum(i + 1L);
+            simplexList.get(i).setUnitName(unitMap.get(simplexList.get(i).getUnitId()));
         }
         // 展示该次该管理部门下的申请汇总。
-        return new SummaryUnitGoodsResVO(list, flag, batchNum);
+        return new SummaryUnitGoodsResVO(simplexList, flag, batchNum);
     }
 
     @Override
@@ -739,5 +767,18 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
                             .build());
 
         }
+    }
+
+    /**
+     * 获取汇总
+     * @return
+     */
+    private List<SummaryUnitApplicationVO> getApplicationSum(String batchNum,Integer unitId, Integer type){
+        // 展示该次该单位下的申请汇总。
+        return applicationDetailMapper.selectApplicationSumByType(SummaryCondVO.builder()
+                .batchNum(batchNum)
+                .unitId(unitId)
+                .type(type)
+                .build());
     }
 }

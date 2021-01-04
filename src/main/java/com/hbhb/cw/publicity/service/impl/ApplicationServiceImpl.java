@@ -71,6 +71,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                     DateUtil.dateToString(DateUtil.stringToDate(goodsSetting.getDeadline()), "yyyyMM")
                             + goodsCondVO.getGoodsIndex());
         }
+        String contents = goodsSetting.getContents();
         // 通过营业厅得到该营业厅下该时间的申请详情
         List<GoodsVO> goods = applicationMapper.selectByCond(goodsCondVO);
         // 得到所有产品
@@ -93,11 +94,11 @@ public class ApplicationServiceImpl implements ApplicationService {
         // 1.得到此刻时间，通过截止时间，判断为几月的第几次。如何0的结果与1的结果不符则直接置灰。
         GoodsSetting setting = goodsSettingService.getSetByDate(DateUtil.dateToString(new Date()));
         if (setting == null || !goodsSetting.getId().equals(setting.getId())) {
-            return new GoodsResVO(list, false);
+            return new GoodsResVO(list, false, contents);
         }
         // 2.得到第几次，判断这次是否提前结束。
         else if (setting.getIsEnd() != null) {
-            return new GoodsResVO(list, false);
+            return new GoodsResVO(list, false, contents);
         }
         String batchNum = DateUtil.dateToString(DateUtil.stringToDate(setting.getDeadline()), "yyyyMM") + goodsSetting.getGoodsIndex();
         // 3.判断本月此次下该分公司是否已保存
@@ -105,9 +106,9 @@ public class ApplicationServiceImpl implements ApplicationService {
                 goodsCondVO.getHallId(),
                 batchNum);
         if (applications != null && applications.size() != 0 && applications.get(0).getEditable()) {
-            return new GoodsResVO(list, false);
+            return new GoodsResVO(list, false, contents);
         }
-        return new GoodsResVO(list, true);
+        return new GoodsResVO(list, true, contents);
     }
 
     @Override
