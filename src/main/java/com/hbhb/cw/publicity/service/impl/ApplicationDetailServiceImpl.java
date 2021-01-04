@@ -29,6 +29,7 @@ import com.hbhb.cw.publicity.service.ApplicationDetailService;
 import com.hbhb.cw.publicity.service.ApplicationFlowService;
 import com.hbhb.cw.publicity.service.ApplicationNoticeService;
 import com.hbhb.cw.publicity.service.GoodsSettingService;
+import com.hbhb.cw.publicity.service.MailService;
 import com.hbhb.cw.publicity.web.vo.ApplicationApproveVO;
 import com.hbhb.cw.publicity.web.vo.ApplicationByUnitVO;
 import com.hbhb.cw.publicity.web.vo.ApplicationFlowNodeVO;
@@ -51,6 +52,7 @@ import com.hbhb.cw.systemcenter.enums.UnitEnum;
 import com.hbhb.cw.systemcenter.vo.DictVO;
 import com.hbhb.cw.systemcenter.vo.UserInfo;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -103,6 +105,10 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
     private FlowNodePropApiExp flowNodePropApiExp;
     @Resource
     private FlowApiExp flowApiExp;
+    @Resource
+    private MailService mailService;
+    @Value("${mail.enable}")
+    private Boolean mailEnable;
 
     @Override
     public SummaryUnitGoodsResVO getUnitGoodsList(GoodsReqVO goodsReqVO) {
@@ -117,14 +123,17 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
             goodsReqVO.setGoodsIndex(goodsSetting.getGoodsIndex());
         } else {
             goodsSetting = goodsSettingService.getByCond(goodsReqVO.getTime(), goodsReqVO.getGoodsIndex());
+            if (goodsSetting == null) {
+                return new SummaryUnitGoodsResVO();
+            }
+            goodsReqVO.setTime(goodsSetting.getDeadline());
         }
-        if (goodsSetting == null) {
+        if (goodsSetting.getDeadline()==null) {
             return new SummaryUnitGoodsResVO();
         }
-        goodsReqVO.setTime(goodsSetting.getDeadline());
         String batchNum = DateUtil.dateToString(DateUtil.stringToDate(goodsSetting.getDeadline()), "yyyyMM") + goodsReqVO.getGoodsIndex();
         List<SummaryUnitGoodsVO> list = getUnitSummaryList(goodsReqVO, null);
-
+        goodsReqVO.setTime(goodsSetting.getDeadline());
         boolean flag = false;
         if (list.size()!=0){
             for (SummaryUnitGoodsVO summaryUnitGoodsVO : list) {
@@ -135,9 +144,11 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
                 }
             }
         }
+        String deadline = goodsSetting.getDeadline();
+        String time = goodsReqVO.getTime();
         // 得到第几次，判断此次是否结束。
         if (goodsSetting.getIsEnd() != null ||
-                DateUtil.stringToDate(goodsSetting.getDeadline()).getTime() < DateUtil.stringToDate(goodsReqVO.getTime()).getTime()) {
+                DateUtil.stringToDate(deadline).getTime()<DateUtil.stringToDate(time).getTime()) {
             // 如果结束审核提交置灰
             return new SummaryUnitGoodsResVO(list, flag, batchNum);
         }
@@ -252,7 +263,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
             goodsReqVO.setTime(goodsSetting.getDeadline());
         }
         else {
-            goodsSetting = goodsSettingService.getByCond(goodsReqVO.getTime(), goodsReqVO.getGoodsIndex());
+            goodsSetting = goodsSettingService.getByCond(DateUtil.dateToString(DateUtil.stringToDate(goodsReqVO.getTime()),"yyyy-MM"), goodsReqVO.getGoodsIndex());
         }
         if (goodsSetting == null) {
             return new ArrayList<SummaryUnitGoodsVO>();
@@ -393,6 +404,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         }
         // 通过时间和次序得到该次下的所有申请id（已提交且未被拒绝）
         GoodsSetting setInfo = goodsSettingService.getSetByDate(goodsApproveVO.getTime());
+        // 获取批次号
         String batchNum = DateUtil.dateToString(DateUtil.stringToDate(setInfo.getDeadline()), "yyyyMM")
                 + setInfo.getGoodsIndex();
         //  4.同步节点属性
@@ -427,7 +439,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
                 .andIn(ApplicationDetail::getApplicationId, applicationIdList)
                 .andEq(ApplicationDetail::getUnderUnitId, goodsApproveVO.getUnderUnitId())
                 .updateSelective(ApplicationDetail.builder()
-                        .approvedState(20)
+                        .approvedState(NodeState.APPROVING.value())
                         .build());
         // 修改批次状态
         goodsSettingService.updateByBatchNum(batchNum);
@@ -438,6 +450,10 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         // 查询当前节点信息
         ApplicationFlow currentFlow = applicationFlowService
                 .getInfoById(approveVO.getId());
+        // 校验审批人是否为本人
+        if (!currentFlow.getUserId().equals(userId)) {
+            throw new PublicityException(PublicityErrorCode.LOCK_OF_APPROVAL_ROLE);
+        }
         // 项目签报批次号
         String batchNum = currentFlow.getBatchNum();
         // 当前节点id
@@ -678,13 +694,13 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
                                 .flowTypeId(flowTypeId)
                                 .build());
                 // 推送邮件
-//                if (mailEnable) {
-//                    // 下一节点审批人信息
-//                    UserInfo nextApproverInfo = sysUserApiExp.getUserInfoById(nextApprover);
-//                    // 推送内容
-//                    String info = "宣传用品" + batchNum + "费用签报";
-//                    mailApiExp.postMail(new MailVO(nextApproverInfo.getEmail(), nextApproverInfo.getNickName(), info));
-//                }
+                if (mailEnable) {
+                    // 下一节点审批人信息
+                    UserInfo nextApproverInfo = sysUserApiExp.getUserInfoById(nextApprover);
+                    // 推送内容
+                    String info = "宣传用品" + batchNum + "费用签报";
+                    mailService.postMail(nextApproverInfo.getEmail(), nextApproverInfo.getNickName(), info);
+                }
             }
 
 

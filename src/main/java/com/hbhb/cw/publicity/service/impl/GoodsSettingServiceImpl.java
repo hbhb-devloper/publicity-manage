@@ -123,7 +123,7 @@ public class GoodsSettingServiceImpl implements GoodsSettingService {
             throw new PublicityException(PublicityErrorCode.NOT_NUMBER_IN_MONTH);
         }
         List<GoodsSetting> goodsSetting = goodsSettingMapper.createLambdaQuery()
-                .andLike(GoodsSetting::getDeadline, DateUtil.dateToString(DateUtil.stringToDate(time),"yyyy-MM")+"%")
+                .andLike(GoodsSetting::getDeadline, time+"%")
                 .andEq(GoodsSetting::getGoodsIndex, goodsIndex)
                 .select();
         if (goodsSetting!=null&&goodsSetting.size()!=0){

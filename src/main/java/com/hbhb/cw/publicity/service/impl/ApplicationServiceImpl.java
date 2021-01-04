@@ -72,7 +72,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                             + goodsCondVO.getGoodsIndex());
         }
         // 通过营业厅得到该营业厅下该时间的申请详情
-        List<GoodsVO> goods = goodsMapper.selectByCond(goodsCondVO);
+        List<GoodsVO> goods = applicationMapper.selectByCond(goodsCondVO);
         // 得到所有产品
         List<GoodsVO> list = goodsMapper.selectGoodsList();
         for (GoodsVO goodsVO : list) {
