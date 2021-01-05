@@ -40,7 +40,7 @@ from picture p
           and picture_num =#{cond.pictureNum}
         -- @}
         -- @if(isNotEmpty(cond.pictureName)){
-          and picture_name = #{pictureName}
+          and picture_name = #{cond.pictureName}
         -- @}
         -- @if(isNotEmpty(list)){
            and unit_id in (#{join(list)})

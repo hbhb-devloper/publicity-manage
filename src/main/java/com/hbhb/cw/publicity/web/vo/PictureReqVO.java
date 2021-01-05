@@ -29,4 +29,11 @@ public class PictureReqVO implements Serializable {
 
     @Schema(description = "画面类型")
     private Integer pictureType;
+
+    @Schema(description = "申请单名称")
+    private String pictureName;
+
+    @Schema(description = "申请单号")
+    private String pictureNum;
+
 }

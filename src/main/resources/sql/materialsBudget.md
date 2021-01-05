@@ -7,7 +7,7 @@ selectBudgetList
            budget                               as budget,
            mb.remark                            as remark,
            sum(predict_amount)                  as amountPaid,
-          ROUND(sum(predict_amount) / budget,4) as proportion
+          ROUND(sum(predict_amount) / budget,4)*100 as proportion
     from materials_budget mb
              left join materials m on mb.unit_id = m.unit_id
     -- @pageIgnoreTag(){
