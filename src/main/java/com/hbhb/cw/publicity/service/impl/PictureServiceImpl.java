@@ -203,7 +203,7 @@ public class PictureServiceImpl implements PictureService {
     @Override
     public void deletePicture(Long id, Integer userId) {
         Picture single = pictureMapper.single(id);
-        if (userId.equals(single.getUserId())) {
+        if (!userId.equals(single.getUserId())) {
             throw new PublicityException(PublicityErrorCode.NO_OPERATION_PERMISSION);
         }
         Picture picture = new Picture();

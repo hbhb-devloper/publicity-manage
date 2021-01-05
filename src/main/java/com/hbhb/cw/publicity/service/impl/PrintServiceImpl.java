@@ -199,7 +199,7 @@ public class PrintServiceImpl implements PrintService {
     @Override
     public void deletePrint(Long id, Integer userId) {
         Print single = printMapper.single(id);
-        if (userId.equals(single.getUserId())) {
+        if (!userId.equals(single.getUserId())) {
             throw new PublicityException(PublicityErrorCode.NO_OPERATION_PERMISSION);
         }
         Print print = new Print();

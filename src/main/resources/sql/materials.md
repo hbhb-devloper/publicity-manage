@@ -45,8 +45,11 @@ select
         -- @if(isNotEmpty(list)){
            and unit_id in (#{join(list)})
         -- @}
+           and delete_flag =1
     -- @}
-        order by apply_time
+    -- @pageIgnoreTag(){
+        order by  apply_time desc 
+    -- @}
 ```
 
 selectMaterialsBudgetByUnitId

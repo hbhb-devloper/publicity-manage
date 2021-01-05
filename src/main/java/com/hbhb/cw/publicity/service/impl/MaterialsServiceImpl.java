@@ -182,7 +182,7 @@ public class MaterialsServiceImpl implements MaterialsService {
         Unit unit = unitApi.getUnitInfo(user.getUnitId());
         MaterialsBudgetVO materialsBudget = getMaterialsBudget(user.getUnitId());
         int i;
-        if (isEmpty(materialsBudget)) {
+        if (!isEmpty(materialsBudget)) {
             MaterialsBudget single = budgetMapper.createLambdaQuery()
                     .andEq(MaterialsBudget::getUnitId, user.getUnitId()).single();
             i = single.getBudget().compareTo(infoVO.getPredictAmount());
@@ -225,7 +225,7 @@ public class MaterialsServiceImpl implements MaterialsService {
     @Override
     public void deleteMaterials(Long id, Integer userId) {
         Materials single = materialsMapper.single(id);
-        if (userId.equals(single.getUserId())) {
+        if (!userId.equals(single.getUserId())) {
             throw new PublicityException(PublicityErrorCode.NO_OPERATION_PERMISSION);
         }
         Materials materials = new Materials();
@@ -360,7 +360,9 @@ public class MaterialsServiceImpl implements MaterialsService {
     public MaterialsBudgetVO getMaterialsBudget(Integer unitId) {
         MaterialsBudgetVO materialsBudgetVO = materialsMapper.selectMaterialsBudgetByUnitId(unitId);
         Map<Integer, String> unitMap = unitApi.getUnitMapById();
-        materialsBudgetVO.setUnitName(unitMap.get(materialsBudgetVO.getUnitId()));
+        if (!isEmpty(materialsBudgetVO)) {
+            materialsBudgetVO.setUnitName(unitMap.get(materialsBudgetVO.getUnitId()));
+        }
         return materialsBudgetVO;
     }
 

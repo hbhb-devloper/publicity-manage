@@ -3,6 +3,7 @@ package com.hbhb.cw.publicity.model;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.beetl.sql.annotation.entity.AutoID;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -15,6 +16,7 @@ public class MaterialsInfo implements Serializable {
     /**
      * id
      */
+    @AutoID
     private Long id;
     /**
      * 申请数量
