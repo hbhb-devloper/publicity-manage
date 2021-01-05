@@ -54,11 +54,11 @@ selectMaterialsBudgetByUnitId
 ```sql
 select t1.*, t2.declaration, t3.amountPaid
     from (
-             select sum(predict_amount)          as useAmount,
-                    m.unit_id                    as unitId,
-                    mb.budget                    as budget,
-                   ROUND(budget - sum(predict_amount),4) as balance,
-                    sum(predict_amount)/budget   as proportion
+             select sum(predict_amount)                   as useAmount,
+                    m.unit_id                             as unitId,
+                    mb.budget                             as budget,
+                   ROUND(budget - sum(predict_amount),4)  as balance,
+                    ROUND(sum(predict_amount)/budget,4)   as proportion
              from materials m
                       left join materials_budget mb on m.unit_id = mb.unit_id
              where state in (10, 20, 31)

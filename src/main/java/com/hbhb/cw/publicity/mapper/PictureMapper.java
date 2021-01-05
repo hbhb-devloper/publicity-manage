@@ -18,12 +18,12 @@ public interface PictureMapper extends BaseMapper<Picture> {
     /**
      * 跟据条件查询宣传画面列表
      *
-     * @param reqVO   查询条件
+     * @param cond    查询条件
      * @param request 分页
      * @param list    单位列表
      * @return 宣传画面列表
      */
-    PageResult<PictureResVO> selectPictureListByCond(PictureReqVO reqVO, List<Integer> list, PageRequest<PictureResVO> request);
+    PageResult<PictureResVO> selectPictureListByCond(PictureReqVO cond, List<Integer> list, PageRequest<PictureResVO> request);
 
     /**
      * 获取单位下今年最大编号

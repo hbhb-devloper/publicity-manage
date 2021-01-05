@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
+import org.beetl.sql.core.page.DefaultPageResult;
 import org.beetl.sql.core.page.PageResult;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -37,15 +38,17 @@ public class PictureController {
     @Resource
     private PictureService pictureService;
 
-    @Operation(summary = "印刷用品管理列表")
+    @Operation(summary = "宣传画面管理列表")
     @GetMapping("/list")
     public PageResult<PictureResVO> getPictureList(
             @Parameter(description = "页码，默认为1") @RequestParam(required = false) Integer pageNum,
             @Parameter(description = "每页数量，默认为10") @RequestParam(required = false) Integer pageSize,
-            @Parameter(description = "查询参数") PictureReqVO reqVO,
-            @Parameter(hidden = true) @UserId Integer userId) {
+            @Parameter(description = "查询参数") PictureReqVO reqVO) {
         pageNum = pageNum == null ? 1 : pageNum;
         pageSize = pageSize == null ? 10 : pageSize;
+        if (reqVO.getUnitId() == null) {
+            return new DefaultPageResult<>();
+        }
         return pictureService.getPictureList(reqVO, pageNum, pageSize);
     }
 
