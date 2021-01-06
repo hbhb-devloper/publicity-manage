@@ -10,36 +10,23 @@ import lombok.NoArgsConstructor;
 
 /**
  * @author yzc
- * @since 2020-12-04
+ * @since 2021-01-05
  */
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class ApplicationNoticeVO implements Serializable {
-
-    private static final long serialVersionUID = -2963184819678898269L;
-
+    private static final long serialVersionUID = 7668254396519171210L;
     private Long id;
-
-    @Schema(description = "项目签报id")
-    private String batchNum;
-
-    @Schema(description = "接收人id")
-    private Integer receiver;
-
-    @Schema(description = "发起人id")
-    private Integer promoter;
-
-    @Schema(description = "提醒内容")
+    @Schema(description = "内容")
     private String content;
-
-    @Schema(description = "状态")
-    private Integer state;
-
-    @Schema(description = "优先级")
-    private Integer priority;
-
-    @Schema(description = "流程类型id")
-    private Long flowTypeId;
+    @Schema(description = "批次号")
+    private String batchNum;
+    @Schema(description = "日期")
+    private String date;
+    @Schema(description = "签报人")
+    private String userName;
+    @Schema(description = "提醒类型")
+    private String noticeType;
 }

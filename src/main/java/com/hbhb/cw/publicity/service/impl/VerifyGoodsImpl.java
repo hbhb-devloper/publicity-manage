@@ -55,8 +55,9 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
 
     @Override
     public SummaryGoodsResVO getAuditList(GoodsReqVO goodsReqVO) {
-//        state = state == null ? 0 : state;
         Map<Integer, String> unitMap = unitApiExp.getUnitMapById();
+        // todo
+        // 得到该单位下所有营业厅map
         List<SummaryGoodsVO> simList = getSummaryList(goodsReqVO, GoodsType.BUSINESS_SIMPLEX.getValue());
         for (int i = 0; i < simList.size(); i++) {
             simList.get(i).setLineNum(i + 1L);

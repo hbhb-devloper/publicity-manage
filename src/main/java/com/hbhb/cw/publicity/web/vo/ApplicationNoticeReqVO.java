@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class AppliactionNoticeReqVO implements Serializable {
+public class ApplicationNoticeReqVO implements Serializable {
 
     private static final long serialVersionUID = -2963184819678898269L;
 
@@ -42,4 +42,7 @@ public class AppliactionNoticeReqVO implements Serializable {
 
     @Schema(description = "流程类型id")
     private Long flowTypeId;
+
+    @Schema(description = "时间")
+    private String date;
 }

@@ -48,10 +48,10 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Override
     public GoodsResVO getList(GoodsCondVO goodsCondVO) {
-//        if (goodsCondVO.getHallId() == null) {
-//            // 报异常
-//            throw new GoodsException(GoodsErrorCode.NOT_SERVICE_HALL);
-//        }
+        if (goodsCondVO.getHallId() == null) {
+            // 报异常
+           return new GoodsResVO();
+        }
         GoodsSetting goodsSetting = null;
         if (goodsCondVO.getTime() != null && goodsCondVO.getGoodsIndex() == null) {
             return new GoodsResVO();

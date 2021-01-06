@@ -33,7 +33,7 @@ import com.hbhb.cw.publicity.service.MailService;
 import com.hbhb.cw.publicity.web.vo.ApplicationApproveVO;
 import com.hbhb.cw.publicity.web.vo.ApplicationByUnitVO;
 import com.hbhb.cw.publicity.web.vo.ApplicationFlowNodeVO;
-import com.hbhb.cw.publicity.web.vo.ApplicationNoticeVO;
+import com.hbhb.cw.publicity.web.vo.ApplicationNoticeResVO;
 import com.hbhb.cw.publicity.web.vo.GoodsApproveVO;
 import com.hbhb.cw.publicity.web.vo.GoodsCheckerResVO;
 import com.hbhb.cw.publicity.web.vo.GoodsCheckerVO;
@@ -337,6 +337,8 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
                 .build()
         );
         Map<Integer, String> unitMap = unitApiExp.getUnitMapById();
+        // todo
+        // 得到该单位下所有营业厅map
         for (VerifyHallGoodsVO verifyHallGoodsVO : list) {
             verifyHallGoodsVO.setUnitName(unitMap.get(verifyHallGoodsVO.getUnitId()));
             verifyHallGoodsVO.setHallName(verifyHallGoodsVO.getHallId().toString());
@@ -448,7 +450,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
                 , "宣传用品" + batchNum + "批次");
         // 推送消息给发起人
         applicationNoticeService.saveApplicationNotice(
-                ApplicationNoticeVO.builder()
+                ApplicationNoticeResVO.builder()
                         .batchNum(batchNum)
                         .receiver(userId)
                         .promoter(userId)
@@ -715,7 +717,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
                 // 推送下一位审批者
                 Integer nextApprover = approverMap.get(getNextNode(currentFlowNodeId, flowNodes));
                 applicationNoticeService.saveApplicationNotice(
-                        ApplicationNoticeVO.builder().batchNum(batchNum)
+                        ApplicationNoticeResVO.builder().batchNum(batchNum)
                                 .receiver(nextApprover)
                                 .promoter(userId)
                                 .content(inform)
@@ -741,7 +743,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
             inform = inform.replace("approve", user.getNickName());
             // 推送发起人
             applicationNoticeService.saveApplicationNotice(
-                    ApplicationNoticeVO.builder().batchNum(batchNum)
+                    ApplicationNoticeResVO.builder().batchNum(batchNum)
                             .receiver(approvers.get(0).getUserId())
                             .promoter(userId)
                             .content(inform)
@@ -759,7 +761,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
             inform = replace.replace("approve", user.getNickName());
             inform = inform.replace("cause", suggestion);
             applicationNoticeService.saveApplicationNotice(
-                    ApplicationNoticeVO.builder().batchNum(batchNum)
+                    ApplicationNoticeResVO.builder().batchNum(batchNum)
                             .receiver(approvers.get(0).getUserId())
                             .promoter(userId)
                             .content(inform)
