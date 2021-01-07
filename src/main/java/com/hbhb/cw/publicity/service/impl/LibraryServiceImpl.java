@@ -1,15 +1,20 @@
 package com.hbhb.cw.publicity.service.impl;
 
+import com.hbhb.core.bean.BeanConverter;
 import com.hbhb.core.utils.DateUtil;
 import com.hbhb.cw.publicity.enums.PublicityErrorCode;
 import com.hbhb.cw.publicity.exception.PublicityException;
+import com.hbhb.cw.publicity.mapper.GoodsFileMapper;
 import com.hbhb.cw.publicity.mapper.GoodsMapper;
 import com.hbhb.cw.publicity.model.Goods;
+import com.hbhb.cw.publicity.model.GoodsFile;
 import com.hbhb.cw.publicity.rpc.SysUserApiExp;
 import com.hbhb.cw.publicity.service.LibraryService;
 import com.hbhb.cw.publicity.web.vo.CheckerVO;
 import com.hbhb.cw.publicity.web.vo.GoodsInfoVO;
+import com.hbhb.cw.publicity.web.vo.LibraryAddVO;
 import com.hbhb.cw.publicity.web.vo.LibraryVO;
+import com.hbhb.cw.publicity.web.vo.PublicityPictureVO;
 import com.hbhb.cw.systemcenter.vo.UserInfo;
 
 import org.springframework.beans.BeanUtils;
@@ -37,6 +42,8 @@ public class LibraryServiceImpl implements LibraryService {
     private SysUserApiExp userApi;
     @Resource
     private GoodsMapper goodsMapper;
+    @Resource
+    private GoodsFileMapper goodsFileMapper;
 
     @Override
     public List<LibraryVO> getTreeList(Integer userId,Integer unitId) {
@@ -110,8 +117,13 @@ public class LibraryServiceImpl implements LibraryService {
         return list;
     }
 
+
     @Override
-    public void addLibrary(Integer userId, Goods libraryAddVO) {
+    public void addLibrary(Integer userId, LibraryAddVO cond) {
+        Goods libraryAddVO = new Goods();
+        BeanUtils.copyProperties(cond,libraryAddVO);
+        // 通过id得到起所属单位
+        UserInfo user = userApi.getUserInfoById(userId);
         // 通过flag判断增加的是产品还是活动， 添加
         // 如果为活动
         if (libraryAddVO.getMold()) {
@@ -156,6 +168,21 @@ public class LibraryServiceImpl implements LibraryService {
         libraryAddVO.setUpdateTime(new Date());
         libraryAddVO.setState(true);
         goodsMapper.insert(libraryAddVO);
+        List<PublicityPictureVO> files = cond.getFiles();
+        if (files != null && files.size() != 0) {
+            List<PublicityPictureVO> fileList = new ArrayList<>();
+            for (PublicityPictureVO file : files) {
+                fileList.add(PublicityPictureVO.builder()
+                        .author(user.getNickName())
+                        .createTime(DateUtil.dateToString(new Date()))
+                        .required(file.getRequired())
+                        .goodsId(libraryAddVO.getId())
+                        .fileId(file.getFileId())
+                        .build());
+            }
+            List<GoodsFile> goodsFiles = BeanConverter.copyBeanList(fileList, GoodsFile.class);
+            goodsFileMapper.insertBatch(goodsFiles);
+        }
     }
 
     @Override
@@ -223,7 +250,9 @@ public class LibraryServiceImpl implements LibraryService {
     @Override
     public GoodsInfoVO getInfo(Long id) {
         Goods goods = goodsMapper.single(id);
+        List<GoodsFile> files = goodsFileMapper.createLambdaQuery().andEq(GoodsFile::getGoodsId, id).select();
         GoodsInfoVO goodsInfo = new GoodsInfoVO();
+        goodsInfo.setFiles(files);
         BeanUtils.copyProperties(goods, goodsInfo);
         goodsInfo.setUpdateTime(DateUtil.dateToString(goods.getUpdateTime()));
         String checkerName = userApi.getUserInfoById(goods.getChecker()).getNickName();

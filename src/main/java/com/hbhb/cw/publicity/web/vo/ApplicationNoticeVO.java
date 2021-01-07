@@ -29,4 +29,6 @@ public class ApplicationNoticeVO implements Serializable {
     private String userName;
     @Schema(description = "提醒类型")
     private String noticeType;
+    @Schema(description = "单位")
+    private Integer unitId;
 }

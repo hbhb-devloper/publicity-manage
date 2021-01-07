@@ -17,8 +17,11 @@ import lombok.NoArgsConstructor;
 public class GoodsChangerVO implements Serializable {
     private static final long serialVersionUID = 4874055501533876549L;
 
-    @Schema(description = "申请货物id")
+    @Schema(description = "申领货物详情id（detailId）")
     private Long id;
+
+    @Schema(description = "物料id")
+    private Long goodsId;
 
     @Schema(description = "修改申请数量")
     private Long modifyAmount;

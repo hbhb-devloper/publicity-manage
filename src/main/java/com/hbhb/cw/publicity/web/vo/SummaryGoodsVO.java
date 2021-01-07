@@ -20,6 +20,9 @@ public class SummaryGoodsVO implements Serializable {
     @Schema(description = "序号")
     private Long lineNum;
 
+    @Schema(description = "物料id")
+    private Long goodsId;
+
     @Schema(description = "物料申请id")
     private Long applicationId;
 

@@ -16,6 +16,7 @@ import com.hbhb.cw.publicity.web.vo.ApplicationNoticeVO;
 import com.hbhb.cw.systemcenter.enums.DictCode;
 import com.hbhb.cw.systemcenter.enums.TypeCode;
 import com.hbhb.cw.systemcenter.vo.DictVO;
+import com.hbhb.cw.systemcenter.vo.UserInfo;
 
 import org.beetl.sql.core.page.DefaultPageRequest;
 import org.beetl.sql.core.page.PageRequest;
@@ -72,6 +73,7 @@ public class ApplicationNoticeServiceImpl implements ApplicationNoticeService {
 
     @Override
     public Long countNotice(Integer userId) {
+        userId = 27;
         return applicationNoticeMapper.createLambdaQuery()
                 .andEq(ApplicationNotice::getReceiver, userId)
                 .andEq(ApplicationNotice::getState, NoticeState.UN_READ.value())
@@ -80,6 +82,8 @@ public class ApplicationNoticeServiceImpl implements ApplicationNoticeService {
 
     @Override
     public List<ApplicationNoticeVO> listInvoiceNotice(Integer userId) {
+        userId = 27;
+        UserInfo user = userApi.getUserInfoById(userId);
         List<ApplicationNotice> list = applicationNoticeMapper.createLambdaQuery()
                 .andEq(ApplicationNotice::getReceiver, userId)
                 .andEq(ApplicationNotice::getState, NoticeState.UN_READ.value())
@@ -97,7 +101,8 @@ public class ApplicationNoticeServiceImpl implements ApplicationNoticeService {
                         .batchNum(applicationNotice.getBatchNum())
                         .date(DateUtil.dateToString(applicationNotice.getCreateTime()))
                         .userName(userMap.get(applicationNotice.getPromoter()))
-                        .noticeType(NoticeType.MATERIALS.value())
+                        .noticeType(NoticeType.GOODS.value())
+                        .unitId(user.getUnitId())
                         .build())
                 .collect(Collectors.toList());
     }

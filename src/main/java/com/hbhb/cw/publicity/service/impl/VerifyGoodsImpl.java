@@ -3,14 +3,15 @@ package com.hbhb.cw.publicity.service.impl;
 import com.hbhb.core.bean.BeanConverter;
 import com.hbhb.core.utils.DateUtil;
 import com.hbhb.cw.publicity.enums.GoodsType;
-import com.hbhb.cw.publicity.enums.PublicityErrorCode;
-import com.hbhb.cw.publicity.exception.PublicityException;
 import com.hbhb.cw.publicity.mapper.ApplicationDetailMapper;
 import com.hbhb.cw.publicity.mapper.ApplicationMapper;
 import com.hbhb.cw.publicity.mapper.GoodsMapper;
+import com.hbhb.cw.publicity.mapper.VerifyNoticeMapper;
 import com.hbhb.cw.publicity.model.Application;
 import com.hbhb.cw.publicity.model.ApplicationDetail;
+import com.hbhb.cw.publicity.model.Goods;
 import com.hbhb.cw.publicity.model.GoodsSetting;
+import com.hbhb.cw.publicity.model.VerifyNotice;
 import com.hbhb.cw.publicity.rpc.UnitApiExp;
 import com.hbhb.cw.publicity.service.GoodsSettingService;
 import com.hbhb.cw.publicity.service.VerifyGoodsService;
@@ -51,6 +52,8 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
     @Resource
     private ApplicationDetailMapper applicationDetailMapper;
     @Resource
+    private VerifyNoticeMapper verifyNoticeMapper;
+    @Resource
     private UnitApiExp unitApiExp;
 
     @Override
@@ -58,13 +61,14 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
         Map<Integer, String> unitMap = unitApiExp.getUnitMapById();
         // todo
         // 得到该单位下所有营业厅map
-        List<SummaryGoodsVO> simList = getSummaryList(goodsReqVO, GoodsType.BUSINESS_SIMPLEX.getValue());
+        String batchNum = getBatchNum(goodsReqVO);
+        List<SummaryGoodsVO> simList = getSummaryList(batchNum ,goodsReqVO, GoodsType.BUSINESS_SIMPLEX.getValue());
         for (int i = 0; i < simList.size(); i++) {
             simList.get(i).setLineNum(i + 1L);
             simList.get(i).setUnitName(unitMap.get(simList.get(i).getUnitId()));
             simList.get(i).setHallName(simList.get(i).getHallId().toString());
         }
-        List<SummaryGoodsVO> singList = getSummaryList(goodsReqVO, GoodsType.FLYER_PAGE.getValue());
+        List<SummaryGoodsVO> singList = getSummaryList(batchNum ,goodsReqVO, GoodsType.FLYER_PAGE.getValue());
         for (int i = 0; i < singList.size(); i++) {
             singList.get(i).setLineNum(i + 1L);
             singList.get(i).setUnitName(unitMap.get(singList.get(i).getUnitId()));
@@ -81,7 +85,8 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
         // 保存
         GoodsReqVO goodsReqVO = goodsSaveGoodsVO.getGoodsReqVO();
         goodsReqVO.setHallId(null);
-        List<Long> applicationIds = getApplicationIds(goodsReqVO);
+        String batchNum = getBatchNum(goodsReqVO);
+        List<Long> applicationIds = getApplicationIds(goodsReqVO, batchNum);
         applicationMapper.createLambdaQuery()
                 .andIn(Application::getId, applicationIds)
                 .updateSelective(Application.builder().editable(true).build());
@@ -95,9 +100,10 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
         GoodsReqVO goodsReqVO = goodsSaveGoodsVO.getGoodsReqVO();
         goodsReqVO.setHallId(null);
         String time = goodsSaveGoodsVO.getGoodsReqVO().getTime();
-        goodsReqVO.setTime(DateUtil.dateToString(DateUtil.stringToDate(time),"yyyy-MM"));
+        goodsReqVO.setTime(DateUtil.dateToString(DateUtil.stringToDate(time), "yyyy-MM"));
         // 当提交时提交为整个分公司
-        List<Long> applicationIds = getApplicationIds(goodsReqVO);
+        String batchNum = getBatchNum(goodsReqVO);
+        List<Long> applicationIds = getApplicationIds(goodsReqVO, batchNum);
         List<ApplicationDetail> applicationDetailList = applicationDetailMapper
                 .createLambdaQuery()
                 .andIn(ApplicationDetail::getApplicationId, applicationIds)
@@ -119,8 +125,44 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
                 .andIn(ApplicationDetail::getId, detailIds)
                 .andIn(ApplicationDetail::getState, stateList)
                 .updateSelective(ApplicationDetail.builder().state(1).build());
-        // 判断工作台有没有 ，没有则发送工作台
-
+        // 得到所有申请物料的物料审核员
+        List<Long> goodsIdList = new ArrayList<>();
+        List<GoodsChangerVO> list = goodsSaveGoodsVO.getList();
+        for (GoodsChangerVO goodsChangerVO : list) {
+            goodsIdList.add(goodsChangerVO.getGoodsId());
+        }
+        // 通过物料id得到该公司所有申领物料
+        List<Goods> goodsList = goodsMapper.createLambdaQuery().andIn(Goods::getId, goodsIdList).select();
+        List<Integer> userIdList = new ArrayList<>();
+        // 得到所有物料的审核员
+        for (Goods goods : goodsList) {
+            userIdList.add(goods.getChecker());
+        }
+        // 判断该次下是否有此代办
+        List<VerifyNotice> notices = verifyNoticeMapper.createLambdaQuery()
+                .andEq(VerifyNotice::getBatchNum, batchNum)
+                .andEq(VerifyNotice::getState, 0)
+                .select();
+        // 用来存储需要发送提醒的用户
+        List<Integer> receiverList = new ArrayList<>();
+        for (VerifyNotice notice : notices) {
+            receiverList.add(notice.getReceiver());
+        }
+        userIdList.removeAll(receiverList);
+        // 如果有则发送
+        if (userIdList.size() != 0) {
+            for (Integer userId : userIdList) {
+                verifyNoticeMapper.insertTemplate(
+                        VerifyNotice.builder()
+                                .batchNum(batchNum)
+                                .content("您还有宣传物料需要审批")
+                                .createTime(new Date())
+                                .receiver(userId)
+                                .state(0)
+                                .build()
+                );
+            }
+        }
     }
 
 
@@ -160,36 +202,7 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
     /**
      * 获取需要修改的申领id
      */
-    private List<Long> getApplicationIds(GoodsReqVO goodsReqVO) {
-        GoodsSetting goodsSetting = null;
-        if (goodsReqVO.getTime() != null && goodsReqVO.getGoodsIndex() == null) {
-            return new ArrayList<>();
-        }
-        if (goodsReqVO.getTime() == null) {
-            // 通过时间判断批次
-            goodsSetting = goodsSettingService.getSetByDate(DateUtil.dateToString(new Date()));
-            if (goodsSetting == null) {
-                return new ArrayList<>();
-            }
-            goodsReqVO.setTime(goodsSetting.getDeadline());
-        } else {
-            goodsSetting = goodsSettingService.getByCond(goodsReqVO.getTime(), goodsReqVO.getGoodsIndex());
-            if (goodsSetting == null) {
-                return new ArrayList<>();
-            }
-            goodsReqVO.setTime(goodsSetting.getDeadline());
-        }
-        if (goodsReqVO.getGoodsIndex() == null) {
-            goodsReqVO.setGoodsIndex(goodsSetting.getGoodsIndex());
-        }
-        // 得到第几次，判断此次是否结束。
-        if (goodsSetting.getIsEnd() != null
-                || DateUtil.stringToDate(goodsSetting.getDeadline()).getTime() < DateUtil.stringToDate(goodsReqVO.getTime()).getTime()) {
-            // 报异常
-            throw new PublicityException(PublicityErrorCode.ALREADY_CLOSE);
-        }
-        String batchNum = DateUtil.dateToString(DateUtil.stringToDate(goodsReqVO.getTime()), "yyyyMM") + goodsReqVO.getGoodsIndex();
-
+    private List<Long> getApplicationIds(GoodsReqVO goodsReqVO, String batchNum) {
         // 展示该次该单位下的申请汇总。
         return goodsMapper.selectIdsByCond(SummaryCondVO.builder()
                 .batchNum(batchNum)
@@ -198,34 +211,32 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
                 .build());
     }
 
+   private String getBatchNum(GoodsReqVO goodsReqVO){
+       GoodsSetting goodsSetting = null;
+       if (goodsReqVO.getTime() != null && goodsReqVO.getGoodsIndex() == null) {
+           return "";
+       }
+       if (goodsReqVO.getTime() == null) {
+           // 通过时间判断批次
+           goodsSetting = goodsSettingService.getSetByDate(DateUtil.dateToString(new Date()));
+       } else {
+           goodsSetting = goodsSettingService.getByCond(goodsReqVO.getTime(), goodsReqVO.getGoodsIndex());
+       }
+       if (goodsSetting == null) {
+           return "";
+       }
+       goodsReqVO.setTime(goodsSetting.getDeadline());
+       if (goodsReqVO.getGoodsIndex() == null) {
+           goodsReqVO.setGoodsIndex(goodsSetting.getGoodsIndex());
+       }
+       return DateUtil.dateToString(DateUtil.stringToDate(goodsReqVO.getTime()), "yyyyMM") + goodsReqVO.getGoodsIndex();
+
+   }
 
     /**
      * 获取分公司汇总（审核）
      */
-    private List<SummaryGoodsVO> getSummaryList(GoodsReqVO goodsReqVO, Integer type) {
-        GoodsSetting goodsSetting = null;
-        if (goodsReqVO.getTime() != null && goodsReqVO.getGoodsIndex() == null) {
-            return new ArrayList<>();
-        }
-        if (goodsReqVO.getTime() == null) {
-            // 通过时间判断批次
-            goodsSetting = goodsSettingService.getSetByDate(DateUtil.dateToString(new Date()));
-            if (goodsSetting == null) {
-                return new ArrayList<SummaryGoodsVO>();
-            }
-            goodsReqVO.setTime(goodsSetting.getDeadline());
-        } else {
-            goodsSetting = goodsSettingService.getByCond(goodsReqVO.getTime(), goodsReqVO.getGoodsIndex());
-            if (goodsSetting == null) {
-                return new ArrayList<SummaryGoodsVO>();
-            }
-            goodsReqVO.setTime(goodsSetting.getDeadline());
-        }
-        if (goodsReqVO.getGoodsIndex() == null) {
-            goodsReqVO.setGoodsIndex(goodsSetting.getGoodsIndex());
-        }
-        String batchNum = DateUtil.dateToString(DateUtil.stringToDate(goodsReqVO.getTime()), "yyyyMM") + goodsReqVO.getGoodsIndex();
-
+    private List<SummaryGoodsVO> getSummaryList(String batchNum ,GoodsReqVO goodsReqVO, Integer type) {
         // 展示该次该单位下的申请汇总。
         List<SummaryGoodsVO> summaries = goodsMapper.selectSummaryByState(SummaryCondVO.builder()
                 .batchNum(batchNum)

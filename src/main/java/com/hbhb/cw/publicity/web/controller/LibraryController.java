@@ -4,6 +4,7 @@ import com.hbhb.cw.publicity.model.Goods;
 import com.hbhb.cw.publicity.service.LibraryService;
 import com.hbhb.cw.publicity.web.vo.CheckerVO;
 import com.hbhb.cw.publicity.web.vo.GoodsInfoVO;
+import com.hbhb.cw.publicity.web.vo.LibraryAddVO;
 import com.hbhb.cw.publicity.web.vo.LibraryVO;
 import com.hbhb.web.annotation.UserId;
 
@@ -46,7 +47,7 @@ public class LibraryController {
 
     @PostMapping("/add")
     @Operation(summary = "新增物料活动产品列表")
-    public void addLibrary(@Parameter(hidden = true) @UserId Integer userId, @RequestBody Goods libraryAddVO) {
+    public void addLibrary(@Parameter(hidden = true) @UserId Integer userId, @RequestBody LibraryAddVO libraryAddVO) {
         libraryService.addLibrary(userId, libraryAddVO);
     }
 

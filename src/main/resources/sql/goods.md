@@ -47,6 +47,7 @@ selectSummaryByState
 ===
 ```sql
     select  ad.id  as `applicationDetailId`,
+            g.id as goodsId,
             a.id as applicationId,
             g.goods_name as `goodsName`,
             g.unit as `unit`,

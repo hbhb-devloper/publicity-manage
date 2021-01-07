@@ -16,7 +16,15 @@ public enum NoticeType {
     /**
      * 画面设计提醒
      */
-    PICTURE(3, "画面设计");
+    PICTURE(3, "画面设计"),
+    /**
+     * 画面设计提醒
+     */
+    GOODS(4, "物料费用签报"),
+    /**
+     * 画面设计提醒
+     */
+    CHECKER(4, "物料审核");
     private final Integer key;
     private final String value;
 
