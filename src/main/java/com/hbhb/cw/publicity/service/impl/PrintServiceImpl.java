@@ -249,6 +249,9 @@ public class PrintServiceImpl implements PrintService {
             materials.setType(type.get());
             materialsList.add(materials);
         }
+        if (isEmpty(materialsList)) {
+            throw new PublicityException(PublicityErrorCode.PLEASE_ADD_SECONDARY_DIRECTORY);
+        }
         // 将读取到的数据存放入mongodb中
         String uuId = UUID.randomUUID().toString();
         PrintMaterialsImportDataVO data = new PrintMaterialsImportDataVO();

@@ -31,6 +31,8 @@ public enum PublicityErrorCode {
     IMPORT_DATA_TYPE_ERROR("80013", "import.data.type.error"),
     // 非申请人无权限进行操作
     NO_OPERATION_PERMISSION("80014", "no.operation.permission"),
+    // 导入数据不可以为空
+    IMPORT_DATA_NULL_ERROR("80015", "import.data.nul.error"),
 
 
     // 无营业厅!

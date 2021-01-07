@@ -274,6 +274,9 @@ public class MaterialsServiceImpl implements MaterialsService {
             materials.setDeliveryDate(DateUtil.string3DateYMD(importVo.getDeliveryDate()));
             materialsList.add(materials);
         }
+        if (isEmpty(materialsList)) {
+            throw new PublicityException(PublicityErrorCode.PLEASE_ADD_SECONDARY_DIRECTORY);
+        }
         // 将读取到的数据存放入mongodb中
         String uuId = UUID.randomUUID().toString();
         MaterialsInfoImportDataVO data = new MaterialsInfoImportDataVO();
