@@ -1,6 +1,5 @@
 package com.hbhb.cw.publicity.service;
 
-import com.hbhb.cw.publicity.model.Goods;
 import com.hbhb.cw.publicity.web.vo.CheckerVO;
 import com.hbhb.cw.publicity.web.vo.GoodsInfoVO;
 import com.hbhb.cw.publicity.web.vo.LibraryAddVO;
@@ -27,7 +26,7 @@ public interface LibraryService {
     /**
      * 修改名称
      */
-    void updateLibrary(Integer userId, Goods libraryAddVO);
+    void updateLibrary(Integer userId, LibraryAddVO libraryAddVO);
 
     /**
      * 批量修改物料审核员

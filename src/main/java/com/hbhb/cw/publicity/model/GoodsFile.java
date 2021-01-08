@@ -22,10 +22,6 @@ public class GoodsFile implements Serializable {
     private Long id;
     private Long goodsId;
     /**
-     * 是否必传0，1非必传
-     */
-    private Integer required;
-    /**
      * 作者
      */
     private String author;

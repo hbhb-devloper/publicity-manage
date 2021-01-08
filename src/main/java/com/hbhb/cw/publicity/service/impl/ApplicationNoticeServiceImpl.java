@@ -73,7 +73,6 @@ public class ApplicationNoticeServiceImpl implements ApplicationNoticeService {
 
     @Override
     public Long countNotice(Integer userId) {
-        userId = 27;
         return applicationNoticeMapper.createLambdaQuery()
                 .andEq(ApplicationNotice::getReceiver, userId)
                 .andEq(ApplicationNotice::getState, NoticeState.UN_READ.value())
@@ -82,7 +81,6 @@ public class ApplicationNoticeServiceImpl implements ApplicationNoticeService {
 
     @Override
     public List<ApplicationNoticeVO> listInvoiceNotice(Integer userId) {
-        userId = 27;
         UserInfo user = userApi.getUserInfoById(userId);
         List<ApplicationNotice> list = applicationNoticeMapper.createLambdaQuery()
                 .andEq(ApplicationNotice::getReceiver, userId)

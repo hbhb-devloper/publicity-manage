@@ -28,6 +28,10 @@ public class VerifyNotice implements Serializable {
      */
     private Integer receiver;
     /**
+     * 归属单位
+     */
+    private Integer unitId;
+    /**
      * 提醒内容
      */
     private String content;

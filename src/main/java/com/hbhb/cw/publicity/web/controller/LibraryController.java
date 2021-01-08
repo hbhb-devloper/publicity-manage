@@ -1,6 +1,5 @@
 package com.hbhb.cw.publicity.web.controller;
 
-import com.hbhb.cw.publicity.model.Goods;
 import com.hbhb.cw.publicity.service.LibraryService;
 import com.hbhb.cw.publicity.web.vo.CheckerVO;
 import com.hbhb.cw.publicity.web.vo.GoodsInfoVO;
@@ -53,7 +52,7 @@ public class LibraryController {
 
     @PutMapping("")
     @Operation(summary = "修改活动或产品")
-    public void library(@Parameter(hidden = true) @UserId Integer userId, @RequestBody Goods libraryAddVO) {
+    public void library(@Parameter(hidden = true) @UserId Integer userId, @RequestBody LibraryAddVO libraryAddVO) {
         libraryService.updateLibrary(userId, libraryAddVO);
     }
 

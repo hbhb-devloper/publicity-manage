@@ -12,6 +12,7 @@ import com.hbhb.cw.publicity.model.ApplicationDetail;
 import com.hbhb.cw.publicity.model.Goods;
 import com.hbhb.cw.publicity.model.GoodsSetting;
 import com.hbhb.cw.publicity.model.VerifyNotice;
+import com.hbhb.cw.publicity.rpc.SysUserApiExp;
 import com.hbhb.cw.publicity.rpc.UnitApiExp;
 import com.hbhb.cw.publicity.service.GoodsSettingService;
 import com.hbhb.cw.publicity.service.VerifyGoodsService;
@@ -22,6 +23,7 @@ import com.hbhb.cw.publicity.web.vo.SummaryCondVO;
 import com.hbhb.cw.publicity.web.vo.SummaryGoodsResVO;
 import com.hbhb.cw.publicity.web.vo.SummaryGoodsVO;
 import com.hbhb.cw.publicity.web.vo.VerifyGoodsExportVO;
+import com.hbhb.cw.systemcenter.vo.UserInfo;
 
 import org.springframework.stereotype.Service;
 
@@ -55,6 +57,8 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
     private VerifyNoticeMapper verifyNoticeMapper;
     @Resource
     private UnitApiExp unitApiExp;
+    @Resource
+    private SysUserApiExp sysUserApiExp;
 
     @Override
     public SummaryGoodsResVO getAuditList(GoodsReqVO goodsReqVO) {
@@ -125,6 +129,7 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
                 .andIn(ApplicationDetail::getId, detailIds)
                 .andIn(ApplicationDetail::getState, stateList)
                 .updateSelective(ApplicationDetail.builder().state(1).build());
+        // 发送提醒
         // 得到所有申请物料的物料审核员
         List<Long> goodsIdList = new ArrayList<>();
         List<GoodsChangerVO> list = goodsSaveGoodsVO.getList();
@@ -152,12 +157,14 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
         // 如果有则发送
         if (userIdList.size() != 0) {
             for (Integer userId : userIdList) {
+                UserInfo user = sysUserApiExp.getUserInfoById(userId);
                 verifyNoticeMapper.insertTemplate(
                         VerifyNotice.builder()
                                 .batchNum(batchNum)
                                 .content("您还有宣传物料需要审批")
                                 .createTime(new Date())
                                 .receiver(userId)
+                                .unitId(user.getUnitId())
                                 .state(0)
                                 .build()
                 );

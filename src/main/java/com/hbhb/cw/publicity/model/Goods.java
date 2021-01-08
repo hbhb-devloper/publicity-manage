@@ -1,5 +1,7 @@
 package com.hbhb.cw.publicity.model;
 
+import org.beetl.sql.annotation.entity.AutoID;
+
 import java.io.Serializable;
 import java.util.Date;
 
@@ -18,6 +20,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class Goods implements Serializable {
     private static final long serialVersionUID = -8654911652867204277L;
+    @AutoID
     private Long id;
     /**
      * 分公司

@@ -1,6 +1,5 @@
 package com.hbhb.cw.publicity.service.impl;
 
-import com.hbhb.core.bean.BeanConverter;
 import com.hbhb.core.utils.DateUtil;
 import com.hbhb.cw.publicity.enums.PublicityErrorCode;
 import com.hbhb.cw.publicity.exception.PublicityException;
@@ -8,6 +7,7 @@ import com.hbhb.cw.publicity.mapper.GoodsFileMapper;
 import com.hbhb.cw.publicity.mapper.GoodsMapper;
 import com.hbhb.cw.publicity.model.Goods;
 import com.hbhb.cw.publicity.model.GoodsFile;
+import com.hbhb.cw.publicity.rpc.FileApiExp;
 import com.hbhb.cw.publicity.rpc.SysUserApiExp;
 import com.hbhb.cw.publicity.service.LibraryService;
 import com.hbhb.cw.publicity.web.vo.CheckerVO;
@@ -15,6 +15,7 @@ import com.hbhb.cw.publicity.web.vo.GoodsInfoVO;
 import com.hbhb.cw.publicity.web.vo.LibraryAddVO;
 import com.hbhb.cw.publicity.web.vo.LibraryVO;
 import com.hbhb.cw.publicity.web.vo.PublicityPictureVO;
+import com.hbhb.cw.systemcenter.model.SysFile;
 import com.hbhb.cw.systemcenter.vo.UserInfo;
 
 import org.springframework.beans.BeanUtils;
@@ -44,6 +45,8 @@ public class LibraryServiceImpl implements LibraryService {
     private GoodsMapper goodsMapper;
     @Resource
     private GoodsFileMapper goodsFileMapper;
+    @Resource
+    private FileApiExp fileApi;
 
     @Override
     public List<LibraryVO> getTreeList(Integer userId,Integer unitId) {
@@ -130,16 +133,18 @@ public class LibraryServiceImpl implements LibraryService {
             if (libraryAddVO.getUnitId() == null || libraryAddVO.getGoodsName() == null) {
                 throw new PublicityException(PublicityErrorCode.NOT_FILLED_IN);
             }
-            // 得到其父类
-            List<Goods> actGoods = goodsMapper.createLambdaQuery()
-                    .andEq(Goods::getId, libraryAddVO.getParentId()).select();
-            // 判断父类是否禁用
-            if (actGoods != null && actGoods.size() != 0 && !actGoods.get(0).getState()) {
-                throw new PublicityException(PublicityErrorCode.DO_NOT_OPERATE);
-            }
-            // 判断物料所在位置是否为第三层
-            if (actGoods != null && actGoods.size() != 0 && actGoods.get(0).getParentId() != null) {
-                throw new PublicityException(PublicityErrorCode.NOT_ADD_SECONDARY_DIRECTORY);
+            if (libraryAddVO.getParentId()!=null){
+                // 得到其父类
+                List<Goods> actGoods = goodsMapper.createLambdaQuery()
+                        .andEq(Goods::getId, libraryAddVO.getParentId()).select();
+                // 判断父类是否禁用
+                if (actGoods != null && actGoods.size() != 0 && !actGoods.get(0).getState()) {
+                    throw new PublicityException(PublicityErrorCode.DO_NOT_OPERATE);
+                }
+                // 判断物料所在位置是否为第三层
+                if (actGoods != null && actGoods.size() != 0 && actGoods.get(0).getParentId() != null) {
+                    throw new PublicityException(PublicityErrorCode.NOT_ADD_SECONDARY_DIRECTORY);
+                }
             }
         }
         // 如果为产品
@@ -157,6 +162,10 @@ public class LibraryServiceImpl implements LibraryService {
             if (actGoods == null || actGoods.size() == 0 || actGoods.get(0).getParentId() == null) {
                 throw new PublicityException(PublicityErrorCode.PLEASE_ADD_SECONDARY_DIRECTORY);
             }
+            // 判断物料所在位置是否为类别
+            if (!actGoods.get(0).getMold()) {
+                throw new PublicityException(PublicityErrorCode.PLEASE_ADD_SECONDARY_DIRECTORY);
+            }
             // 判断必填项是否添加
             if (libraryAddVO.getType() == null
                     || libraryAddVO.getChecker() == null || libraryAddVO.getUnit() == null
@@ -167,26 +176,26 @@ public class LibraryServiceImpl implements LibraryService {
         }
         libraryAddVO.setUpdateTime(new Date());
         libraryAddVO.setState(true);
+        libraryAddVO.setUpdateBy(userId);
         goodsMapper.insert(libraryAddVO);
-        List<PublicityPictureVO> files = cond.getFiles();
-        if (files != null && files.size() != 0) {
-            List<PublicityPictureVO> fileList = new ArrayList<>();
-            for (PublicityPictureVO file : files) {
-                fileList.add(PublicityPictureVO.builder()
-                        .author(user.getNickName())
-                        .createTime(DateUtil.dateToString(new Date()))
-                        .required(file.getRequired())
-                        .goodsId(libraryAddVO.getId())
-                        .fileId(file.getFileId())
-                        .build());
-            }
-            List<GoodsFile> goodsFiles = BeanConverter.copyBeanList(fileList, GoodsFile.class);
-            goodsFileMapper.insertBatch(goodsFiles);
+        PublicityPictureVO file = cond.getFile();
+        if (file != null) {
+            PublicityPictureVO goodsFileVO = PublicityPictureVO.builder()
+                    .author(user.getNickName())
+                    .createTime(DateUtil.dateToString(new Date()))
+                    .goodsId(libraryAddVO.getId())
+                    .fileId(file.getFileId())
+                    .build();
+            GoodsFile goodsFile = new GoodsFile();
+            BeanUtils.copyProperties(goodsFileVO,goodsFile);
+            goodsFileMapper.insert(goodsFile);
         }
     }
 
     @Override
-    public void updateLibrary(Integer userId, Goods libraryAddVO) {
+    public void updateLibrary(Integer userId, LibraryAddVO libraryVO) {
+        Goods libraryAddVO = new Goods();
+        BeanUtils.copyProperties(libraryVO,libraryAddVO);
         // 通过flag判断修改的是活动还是产品，启用
         // 如果为活动
         if (libraryAddVO.getMold()) {
@@ -238,6 +247,19 @@ public class LibraryServiceImpl implements LibraryService {
         // 修改
         libraryAddVO.setUpdateTime(new Date());
         goodsMapper.createLambdaQuery().andEq(Goods::getId, libraryAddVO.getId()).updateSelective(libraryAddVO);
+        // 如果图片替换修改file关联id
+        if (libraryVO.getFile()!=null){
+            List<GoodsFile> goodsFiles = goodsFileMapper.createLambdaQuery()
+                    .andEq(GoodsFile::getGoodsId, libraryVO.getId())
+                    .select();
+            if (goodsFiles.size()!=0){
+                GoodsFile goodsFile = goodsFiles.get(0);
+                fileApi.deleteFile(goodsFile.getFileId());
+            }
+            goodsFileMapper.createLambdaQuery().andEq(GoodsFile::getGoodsId,libraryVO.getId())
+                    .updateSelective(GoodsFile.builder().fileId(libraryVO.getFile().getFileId())
+                    .build());
+        }
     }
 
     @Override
@@ -252,13 +274,25 @@ public class LibraryServiceImpl implements LibraryService {
         Goods goods = goodsMapper.single(id);
         List<GoodsFile> files = goodsFileMapper.createLambdaQuery().andEq(GoodsFile::getGoodsId, id).select();
         GoodsInfoVO goodsInfo = new GoodsInfoVO();
-        goodsInfo.setFiles(files);
+        if (files.size()!=0){
+            GoodsFile goodsFile = files.get(0);
+            SysFile file = fileApi.getFileInfo(Math.toIntExact(files.get(0).getFileId()));
+            PublicityPictureVO fileVO = PublicityPictureVO.builder()
+                    .author(goodsFile.getAuthor())
+                    .id(goodsFile.getFileId())
+                    .fileName(file.getFileName())
+                    .filePath(file.getFilePath())
+                    .fileSize(file.getFileSize())
+                    .goodsId(id)
+                    .build();
+            goodsInfo.setFile(fileVO);
+        }
         BeanUtils.copyProperties(goods, goodsInfo);
         goodsInfo.setUpdateTime(DateUtil.dateToString(goods.getUpdateTime()));
         String checkerName = userApi.getUserInfoById(goods.getChecker()).getNickName();
-        String updateName = userApi.getUserInfoById(goods.getUpdateBy()).getNickName();
+        UserInfo user = userApi.getUserInfoById(goods.getUpdateBy());
         goodsInfo.setCheckerName(checkerName);
-        goodsInfo.setUpdateName(updateName);
+        goodsInfo.setUpdateName(user.getNickName());
         if (goods.getState()) {
             goodsInfo.setStateLable("是");
         } else {

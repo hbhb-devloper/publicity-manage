@@ -1,9 +1,6 @@
 package com.hbhb.cw.publicity.web.vo;
 
-import com.hbhb.cw.publicity.model.GoodsFile;
-
 import java.io.Serializable;
-import java.util.List;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -157,5 +154,5 @@ public class GoodsInfoVO implements Serializable {
     private Boolean mold;
 
     @Schema(description = "图片")
-    private List<GoodsFile> files;
+    private PublicityPictureVO file;
 }

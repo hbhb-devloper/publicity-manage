@@ -13,10 +13,12 @@ import com.hbhb.cw.publicity.exception.PublicityException;
 import com.hbhb.cw.publicity.mapper.ApplicationDetailMapper;
 import com.hbhb.cw.publicity.mapper.ApplicationMapper;
 import com.hbhb.cw.publicity.mapper.GoodsMapper;
+import com.hbhb.cw.publicity.mapper.VerifyNoticeMapper;
 import com.hbhb.cw.publicity.model.Application;
 import com.hbhb.cw.publicity.model.ApplicationDetail;
 import com.hbhb.cw.publicity.model.ApplicationFlow;
 import com.hbhb.cw.publicity.model.GoodsSetting;
+import com.hbhb.cw.publicity.model.VerifyNotice;
 import com.hbhb.cw.publicity.rpc.FlowApiExp;
 import com.hbhb.cw.publicity.rpc.FlowNodePropApiExp;
 import com.hbhb.cw.publicity.rpc.FlowNoticeApiExp;
@@ -108,6 +110,8 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
     private FlowApiExp flowApiExp;
     @Resource
     private MailService mailService;
+    @Resource
+    private VerifyNoticeMapper verifyNoticeMapper;
     @Value("${mail.enable}")
     private Boolean mailEnable;
 
@@ -473,6 +477,11 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
                         .build());
         // 修改批次状态
         goodsSettingService.updateByBatchNum(batchNum);
+        // 修改审核状态
+        verifyNoticeMapper.createLambdaQuery()
+                .andEq(VerifyNotice::getBatchNum,batchNum)
+                .andEq(VerifyNotice::getUnitId,goodsApproveVO.getUnderUnitId())
+                .updateSelective(VerifyNotice.builder().state(1).build());
     }
 
     @Override
@@ -567,6 +576,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
                     .andIn(ApplicationDetail::getApplicationId, applicationIdList)
                     .andEq(ApplicationDetail::getUnderUnitId, approveVO.getUnderUnitId())
                     .updateSelective(ApplicationDetail.builder()
+                            .state(operation)
                             .approvedState(projectState)
                             .build());
         }
@@ -722,6 +732,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
                                 .promoter(userId)
                                 .content(inform)
                                 .flowTypeId(flowTypeId)
+                                .state(0)
                                 .build());
                 // 推送邮件
                 if (mailEnable) {
@@ -748,6 +759,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
                             .promoter(userId)
                             .content(inform)
                             .flowTypeId(flowTypeId)
+                            .state(0)
                             .build());
         }
         // 拒绝
@@ -766,6 +778,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
                             .promoter(userId)
                             .content(inform)
                             .flowTypeId(flowTypeId)
+                            .state(0)
                             .build());
 
         }

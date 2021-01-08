@@ -35,9 +35,6 @@ public class PublicityPictureVO implements Serializable {
     @Schema(description = "文件大小")
     private String fileSize;
 
-    @Schema(description = "是否为毕传")
-    private Boolean required;
-
     @Schema(description = "作者")
     private String author;
 

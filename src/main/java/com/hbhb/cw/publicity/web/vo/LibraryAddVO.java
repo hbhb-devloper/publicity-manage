@@ -2,7 +2,6 @@ package com.hbhb.cw.publicity.web.vo;
 
 import java.io.Serializable;
 import java.util.Date;
-import java.util.List;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -122,5 +121,5 @@ public class LibraryAddVO implements Serializable {
     private Boolean mold;
 
     @Schema(description = "附件")
-    private List<PublicityPictureVO> files;
+    private PublicityPictureVO file;
 }
