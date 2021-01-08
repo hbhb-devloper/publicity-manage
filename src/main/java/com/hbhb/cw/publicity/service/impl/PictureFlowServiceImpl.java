@@ -43,6 +43,7 @@ import org.springframework.util.StringUtils;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -97,8 +98,8 @@ public class PictureFlowServiceImpl implements PictureFlowService {
         // 所有审批人
         List<NodeApproverReqVO> approvers = approveVO.getApprovers();
         // 审批人map（节点id <=> 审批人id）
-        Map<String, Integer> approverMap = approvers.stream()
-                .collect(Collectors.toMap(NodeApproverReqVO::getFlowNodeId, NodeApproverReqVO::getUserId));
+        Map<String, Integer> approverMap = new HashMap<>(10);
+        approvers.forEach(item -> approverMap.put(item.getFlowNodeId(), item.getUserId()));
         // 所有节点id
         List<String> nodeIds = approvers.stream()
                 .map(NodeApproverReqVO::getFlowNodeId).collect(Collectors.toList());

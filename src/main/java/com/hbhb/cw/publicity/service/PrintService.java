@@ -61,10 +61,11 @@ public interface PrintService {
     /**
      * 批量导入
      *
-     * @param dataList 导入列表
-     * @param type 类型
+     * @param dataList   导入列表
+     * @param type       类型
+     * @param headerList 表头
      */
-    void savePrint(List<PrintImportVO> dataList, AtomicInteger type);
+    void savePrint(List<PrintImportVO> dataList, AtomicInteger type, List<String> headerList);
 
     /**
      * 删除附件
@@ -117,4 +118,11 @@ public interface PrintService {
      * @param printId 印刷物品id
      */
     void deletePrintMaterials(Long printId);
+
+    /**
+     * 判断导入文件是否为excel
+     *
+     * @param fileName 文件名
+     */
+    void judgeFileName(String fileName);
 }

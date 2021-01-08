@@ -61,9 +61,10 @@ public interface MaterialsService {
     /**
      * 批量导入
      *
-     * @param dataList 导入列表
+     * @param dataList   导入列表
+     * @param headerList 表头
      */
-    void saveMaterials(List<MaterialsImportVO> dataList);
+    void saveMaterials(List<MaterialsImportVO> dataList, List<String> headerList);
 
     /**
      * 删除附件
@@ -130,4 +131,11 @@ public interface MaterialsService {
      * @param materialsId
      */
     void deleteMaterialsInfo(Long materialsId);
+
+    /**
+     * 判断导入文件是否为excel
+     *
+     * @param fileName 文件名
+     */
+    void judgeFileName(String fileName);
 }

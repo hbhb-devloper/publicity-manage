@@ -8,18 +8,19 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author wangxiaogang
  */
 @Slf4j
-@SuppressWarnings(value = {"rawtypes"})
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class MaterialsListener extends AnalysisEventListener {
     /**
      * 批处理条数，每隔多少条清理一次list ，方便内存回收
      */
     private static final int BATCH_COUNT = 5000;
-
+    private final List<String> headerList = new ArrayList<>();
 
     /**
      * 数据行
@@ -60,10 +61,20 @@ public class MaterialsListener extends AnalysisEventListener {
      */
     private void saveData() {
 
-        materialsService.saveMaterials(dataList);
+        materialsService.saveMaterials(dataList, headerList);
 
     }
 
+    /**
+     * 获取表头
+     */
+    @Override
+    public void invokeHeadMap(Map headMap, AnalysisContext context) {
+        if (!headMap.isEmpty()) {
+            // 收集表头值
+            headMap.values().forEach(value -> headerList.add((String) value));
+        }
+    }
 
 
 }

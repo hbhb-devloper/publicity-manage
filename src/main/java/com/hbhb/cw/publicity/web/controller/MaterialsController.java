@@ -97,7 +97,8 @@ public class MaterialsController {
     @PostMapping(value = "/import", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public String materialsImport(@RequestPart(required = false, value = "file") MultipartFile file) {
         long begin = System.currentTimeMillis();
-
+        String fileName = file.getOriginalFilename();
+        materialsService.judgeFileName(fileName);
         try {
             EasyExcel.read(file.getInputStream(), MaterialsImportVO.class,
                     new MaterialsListener(materialsService)).sheet().headRowNumber(2).doRead();

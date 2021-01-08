@@ -179,7 +179,7 @@ public class PictureServiceImpl implements PictureService {
     @Transactional(rollbackFor = Exception.class)
     public void updatePicture(PictureInfoVO infoVO, Integer userId) {
         Picture single = pictureMapper.single(infoVO.getId());
-        if (userId.equals(single.getUserId())) {
+        if (!userId.equals(single.getUserId())) {
             throw new PublicityException(PublicityErrorCode.NO_OPERATION_PERMISSION);
         }
         // 修改宣传画面

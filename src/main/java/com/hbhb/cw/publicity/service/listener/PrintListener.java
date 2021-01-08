@@ -8,18 +8,20 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author wangxiaogang
  */
 @Slf4j
-@SuppressWarnings(value = {"rawtypes"})
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class PrintListener extends AnalysisEventListener {
     /**
      * 批处理条数，每隔多少条清理一次list ，方便内存回收
      */
     private static final int BATCH_COUNT = 5000;
+    private final List<String> headerList = new ArrayList<>();
 
     /**
      * 数据行
@@ -61,7 +63,18 @@ public class PrintListener extends AnalysisEventListener {
      * 保存预算数据
      */
     private void saveData() {
-        printService.savePrint(dataList, type);
+        printService.savePrint(dataList, type, headerList);
+    }
+
+    /**
+     * 获取表头
+     */
+    @Override
+    public void invokeHeadMap(Map headMap, AnalysisContext context) {
+        if (!headMap.isEmpty()) {
+            // 收集表头值
+            headMap.values().forEach(value -> headerList.add((String) value));
+        }
     }
 
 }

@@ -1,5 +1,6 @@
 package com.hbhb.cw.publicity.service.impl;
 
+import com.alibaba.excel.support.ExcelTypeEnum;
 import com.hbhb.api.core.bean.SelectVO;
 import com.hbhb.core.utils.DateUtil;
 import com.hbhb.cw.flowcenter.enums.FlowNodeNoticeTemp;
@@ -212,7 +213,7 @@ public class PrintServiceImpl implements PrintService {
     @Transactional(rollbackFor = Exception.class)
     public void updatePrint(PrintInfoVO infoVO, Integer userId) {
         Print single = printMapper.single(infoVO.getId());
-        if (userId.equals(single.getUserId())) {
+        if (!userId.equals(single.getUserId())) {
             throw new PublicityException(PublicityErrorCode.NO_OPERATION_PERMISSION);
         }
         Print print = new Print();
@@ -237,7 +238,10 @@ public class PrintServiceImpl implements PrintService {
     }
 
     @Override
-    public void savePrint(List<PrintImportVO> dataList, AtomicInteger type) {
+    public void savePrint(List<PrintImportVO> dataList, AtomicInteger type, List<String> headerList) {
+        if (headerList.size() != 11) {
+            throw new PublicityException(PublicityErrorCode.IMPORT_DATE_TEMPLATE_ERROR);
+        }
         //导入
         List<PrintMaterials> materialsList = new ArrayList<>();
         Map<String, Integer> unitNameMap = unitApi.getUnitMapByUnitName();
@@ -353,6 +357,16 @@ public class PrintServiceImpl implements PrintService {
         printMaterialsMapper.createLambdaQuery().
                 andEq(PrintMaterials::getPrintId, printId)
                 .delete();
+    }
+
+    @Override
+    public void judgeFileName(String fileName) {
+        int i = fileName.lastIndexOf(".");
+        String name = fileName.substring(i);
+        if (!(ExcelTypeEnum.XLS.getValue().equals(name) || ExcelTypeEnum.XLSX.getValue()
+                .equals(name))) {
+            throw new PublicityException(PublicityErrorCode.IMPORT_DATA_NULL_ERROR);
+        }
     }
 
     private List<PrintFile> setPrintFile(List<PrintFileVO> fileVOList, Integer userId,

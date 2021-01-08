@@ -112,6 +112,9 @@ public class PrintController {
     @PostMapping(value = "/import", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public String printImport(@RequestPart(required = false, value = "file") MultipartFile file,
                               @Parameter(description = "类型") Integer type) {
+
+        String fileName = file.getOriginalFilename();
+        printService.judgeFileName(fileName);
         if (isEmpty(type)) {
             throw new PublicityException(PublicityErrorCode.IMPORT_DATA_TYPE_ERROR);
         }

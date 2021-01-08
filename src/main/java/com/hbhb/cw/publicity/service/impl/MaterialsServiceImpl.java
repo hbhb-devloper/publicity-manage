@@ -1,5 +1,6 @@
 package com.hbhb.cw.publicity.service.impl;
 
+import com.alibaba.excel.support.ExcelTypeEnum;
 import com.hbhb.core.utils.DateUtil;
 import com.hbhb.cw.flowcenter.enums.FlowNodeNoticeTemp;
 import com.hbhb.cw.flowcenter.model.Flow;
@@ -237,7 +238,7 @@ public class MaterialsServiceImpl implements MaterialsService {
     @Override
     public void updateMaterials(MaterialsInfoVO infoVO, Integer userId) {
         Materials single = materialsMapper.single(infoVO.getId());
-        if (userId.equals(single.getUserId())) {
+        if (!userId.equals(single.getUserId())) {
             throw new PublicityException(PublicityErrorCode.NO_OPERATION_PERMISSION);
         }
         Materials materials = new Materials();
@@ -263,7 +264,11 @@ public class MaterialsServiceImpl implements MaterialsService {
     }
 
     @Override
-    public void saveMaterials(List<MaterialsImportVO> dataList) {
+    public void saveMaterials(List<MaterialsImportVO> dataList, List<String> headerList) {
+        // 判断导入表是否正确
+        if (headerList.size() != 12) {
+            throw new PublicityException(PublicityErrorCode.IMPORT_DATE_TEMPLATE_ERROR);
+        }
         //导入
         List<MaterialsInfo> materialsList = new ArrayList<>();
         Map<String, Integer> unitNameMap = unitApi.getUnitMapByUnitName();
@@ -389,6 +394,16 @@ public class MaterialsServiceImpl implements MaterialsService {
         materialsInfoMapper.createLambdaQuery().
                 andEq(MaterialsInfo::getMaterialsId, materialsId)
                 .delete();
+    }
+
+    @Override
+    public void judgeFileName(String fileName) {
+        int i = fileName.lastIndexOf(".");
+        String name = fileName.substring(i);
+        if (!(ExcelTypeEnum.XLS.getValue().equals(name) || ExcelTypeEnum.XLSX.getValue()
+                .equals(name))) {
+            throw new PublicityException(PublicityErrorCode.IMPORT_DATA_NULL_ERROR);
+        }
     }
 
     private List<MaterialsFile> setMaterialsFile(List<MaterialsFileVO> fileVOList, Integer userId, Long materialsId) {
