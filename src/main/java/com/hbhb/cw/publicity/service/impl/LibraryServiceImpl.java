@@ -227,6 +227,8 @@ public class LibraryServiceImpl implements LibraryService {
             goodsMapper.createLambdaQuery()
                     .andIn(Goods::getParentId, goodsIds)
                     .updateSelective(Goods.builder().state(libraryAddVO.getState()).build());
+            libraryAddVO.setUpdateTime(new Date());
+            goodsMapper.createLambdaQuery().andEq(Goods::getId, libraryAddVO.getId()).updateSelective(libraryAddVO);
         }
         // 如果为产品
         else {
@@ -243,22 +245,22 @@ public class LibraryServiceImpl implements LibraryService {
                     || libraryAddVO.getUpdateBy() == null) {
                 throw new PublicityException(PublicityErrorCode.NOT_FILLED_IN);
             }
-        }
-        // 修改
-        libraryAddVO.setUpdateTime(new Date());
-        goodsMapper.createLambdaQuery().andEq(Goods::getId, libraryAddVO.getId()).updateSelective(libraryAddVO);
-        // 如果图片替换修改file关联id
-        if (libraryVO.getFile()!=null){
-            List<GoodsFile> goodsFiles = goodsFileMapper.createLambdaQuery()
-                    .andEq(GoodsFile::getGoodsId, libraryVO.getId())
-                    .select();
-            if (goodsFiles.size()!=0){
-                GoodsFile goodsFile = goodsFiles.get(0);
-                fileApi.deleteFile(goodsFile.getFileId());
+            // 修改
+            libraryAddVO.setUpdateTime(new Date());
+            goodsMapper.createLambdaQuery().andEq(Goods::getId, libraryAddVO.getId()).updateSelective(libraryAddVO);
+            // 如果图片替换修改file关联id
+            if (libraryVO.getFile()!=null){
+                List<GoodsFile> goodsFiles = goodsFileMapper.createLambdaQuery()
+                        .andEq(GoodsFile::getGoodsId, libraryVO.getId())
+                        .select();
+                if (goodsFiles.size()!=0){
+                    GoodsFile goodsFile = goodsFiles.get(0);
+                    fileApi.deleteFile(goodsFile.getFileId());
+                }
+                goodsFileMapper.createLambdaQuery().andEq(GoodsFile::getGoodsId,libraryVO.getId())
+                        .updateSelective(GoodsFile.builder().fileId(libraryVO.getFile().getFileId())
+                                .build());
             }
-            goodsFileMapper.createLambdaQuery().andEq(GoodsFile::getGoodsId,libraryVO.getId())
-                    .updateSelective(GoodsFile.builder().fileId(libraryVO.getFile().getFileId())
-                    .build());
         }
     }
 
