@@ -63,6 +63,7 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
     @Override
     public SummaryGoodsResVO getAuditList(GoodsReqVO goodsReqVO) {
         Map<Integer, String> unitMap = unitApiExp.getUnitMapById();
+        String time = goodsReqVO.getTime();
         // todo
         // 得到该单位下所有营业厅map
         String batchNum = getBatchNum(goodsReqVO);
@@ -78,6 +79,7 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
             singList.get(i).setUnitName(unitMap.get(singList.get(i).getUnitId()));
             singList.get(i).setHallName(singList.get(i).getHallId().toString());
         }
+        goodsReqVO.setTime(time);
         return new SummaryGoodsResVO(simList, singList, getFlag(goodsReqVO), getCheckerState(goodsReqVO));
     }
 

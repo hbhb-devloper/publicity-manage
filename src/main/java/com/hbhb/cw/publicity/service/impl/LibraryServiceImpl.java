@@ -175,7 +175,7 @@ public class LibraryServiceImpl implements LibraryService {
             // 添加产品
         }
         libraryAddVO.setUpdateTime(new Date());
-        libraryAddVO.setState(true);
+        libraryAddVO.setState(cond.getState());
         libraryAddVO.setUpdateBy(userId);
         goodsMapper.insert(libraryAddVO);
         PublicityPictureVO file = cond.getFile();
@@ -249,7 +249,7 @@ public class LibraryServiceImpl implements LibraryService {
             libraryAddVO.setUpdateTime(new Date());
             goodsMapper.createLambdaQuery().andEq(Goods::getId, libraryAddVO.getId()).updateSelective(libraryAddVO);
             // 如果图片替换修改file关联id
-            if (libraryVO.getFile()!=null){
+            if (libraryVO.getFile().getFileId()!=null){
                 List<GoodsFile> goodsFiles = goodsFileMapper.createLambdaQuery()
                         .andEq(GoodsFile::getGoodsId, libraryVO.getId())
                         .select();
