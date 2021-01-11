@@ -576,7 +576,6 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
                     .andIn(ApplicationDetail::getApplicationId, applicationIdList)
                     .andEq(ApplicationDetail::getUnderUnitId, approveVO.getUnderUnitId())
                     .updateSelective(ApplicationDetail.builder()
-                            .state(operation)
                             .approvedState(projectState)
                             .build());
         }
