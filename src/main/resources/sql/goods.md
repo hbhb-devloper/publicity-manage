@@ -123,7 +123,7 @@ selectPurchaseGoods
              left join application_detail ad on g.id = ad.goods_id
              left join application a on a.id = ad.application_id
              left join goods_setting gs on CONCAT(date_format(gs.deadline,'%y%m%d'),gs.goods_index) = a.batch_num
-     where ad.state = 2
+     where ad.state = 1
         and ad.approved_state  = 31
                 -- @if(isNotEmpty(batchNum)){
                     and a.batch_num = #{batchNum}
