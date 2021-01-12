@@ -4,6 +4,7 @@ import com.hbhb.cw.publicity.model.MaterialsBudget;
 import com.hbhb.cw.publicity.model.MaterialsInfo;
 import com.hbhb.cw.publicity.web.vo.MaterialsBudgetResVO;
 import com.hbhb.cw.publicity.web.vo.MaterialsBudgetVO;
+import com.hbhb.cw.publicity.web.vo.MaterialsExportVO;
 import com.hbhb.cw.publicity.web.vo.MaterialsImportVO;
 import com.hbhb.cw.publicity.web.vo.MaterialsInfoVO;
 import com.hbhb.cw.publicity.web.vo.MaterialsInitVO;
@@ -138,4 +139,12 @@ public interface MaterialsService {
      * @param fileName 文件名
      */
     void judgeFileName(String fileName);
+
+    /**
+     * 物料制作导出
+     *
+     * @param reqVO 条件
+     * @return 列表
+     */
+    List<MaterialsExportVO> export(MaterialsReqVO reqVO);
 }

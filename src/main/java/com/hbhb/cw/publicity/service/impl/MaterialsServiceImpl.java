@@ -1,6 +1,7 @@
 package com.hbhb.cw.publicity.service.impl;
 
 import com.alibaba.excel.support.ExcelTypeEnum;
+import com.hbhb.core.bean.BeanConverter;
 import com.hbhb.core.utils.DateUtil;
 import com.hbhb.cw.flowcenter.enums.FlowNodeNoticeTemp;
 import com.hbhb.cw.flowcenter.model.Flow;
@@ -32,15 +33,7 @@ import com.hbhb.cw.publicity.rpc.UnitApiExp;
 import com.hbhb.cw.publicity.service.MaterialsFlowService;
 import com.hbhb.cw.publicity.service.MaterialsNoticeService;
 import com.hbhb.cw.publicity.service.MaterialsService;
-import com.hbhb.cw.publicity.web.vo.MaterialsBudgetResVO;
-import com.hbhb.cw.publicity.web.vo.MaterialsBudgetVO;
-import com.hbhb.cw.publicity.web.vo.MaterialsFileVO;
-import com.hbhb.cw.publicity.web.vo.MaterialsImportVO;
-import com.hbhb.cw.publicity.web.vo.MaterialsInfoImportDataVO;
-import com.hbhb.cw.publicity.web.vo.MaterialsInfoVO;
-import com.hbhb.cw.publicity.web.vo.MaterialsInitVO;
-import com.hbhb.cw.publicity.web.vo.MaterialsReqVO;
-import com.hbhb.cw.publicity.web.vo.MaterialsResVO;
+import com.hbhb.cw.publicity.web.vo.*;
 import com.hbhb.cw.systemcenter.enums.DictCode;
 import com.hbhb.cw.systemcenter.enums.TypeCode;
 import com.hbhb.cw.systemcenter.enums.UnitEnum;
@@ -114,7 +107,8 @@ public class MaterialsServiceImpl implements MaterialsService {
 
 
     @Override
-    public PageResult<MaterialsResVO> getMaterialsList(MaterialsReqVO reqVO, Integer pageNum, Integer pageSize) {
+    public PageResult<MaterialsResVO> getMaterialsList(MaterialsReqVO reqVO, Integer pageNum,
+                                                       Integer pageSize) {
         // 获取所有下属单位
         List<Integer> unitIds = unitApi.getSubUnit(reqVO.getUnitId());
         PageRequest<MaterialsResVO> request = DefaultPageRequest.of(pageNum, pageSize);
@@ -406,7 +400,18 @@ public class MaterialsServiceImpl implements MaterialsService {
         }
     }
 
-    private List<MaterialsFile> setMaterialsFile(List<MaterialsFileVO> fileVOList, Integer userId, Long materialsId) {
+    @Override
+    public List<MaterialsExportVO> export(MaterialsReqVO reqVO) {
+        PageResult<MaterialsResVO> page = this.getMaterialsList(reqVO, 1, Integer.MAX_VALUE);
+        return Optional.ofNullable(page.getList())
+                .orElse(new ArrayList<>())
+                .stream()
+                .map(vo -> BeanConverter.convert(vo, MaterialsExportVO.class))
+                .collect(Collectors.toList());
+    }
+
+    private List<MaterialsFile> setMaterialsFile(List<MaterialsFileVO> fileVOList, Integer userId,
+                                                 Long materialsId) {
         //获取用户姓名
         UserInfo user = userApi.getUserInfoById(userId);
         List<MaterialsFile> fileList = new ArrayList<>();

@@ -12,6 +12,7 @@ import com.hbhb.cw.publicity.service.MaterialsService;
 import com.hbhb.cw.publicity.service.listener.MaterialsListener;
 import com.hbhb.cw.publicity.web.vo.MaterialsBudgetResVO;
 import com.hbhb.cw.publicity.web.vo.MaterialsBudgetVO;
+import com.hbhb.cw.publicity.web.vo.MaterialsExportVO;
 import com.hbhb.cw.publicity.web.vo.MaterialsImportVO;
 import com.hbhb.cw.publicity.web.vo.MaterialsInfoVO;
 import com.hbhb.cw.publicity.web.vo.MaterialsInitVO;
@@ -167,5 +168,12 @@ public class MaterialsController {
         return materialsService.getMaterialsBudget(unitId);
     }
 
-
+    @Operation(summary = "物料制作导出")
+    @PostMapping("/export/list")
+    public void export(HttpServletRequest request, HttpServletResponse response,
+                       @Parameter(description = "查询参数") @RequestBody MaterialsReqVO reqVO) {
+        List<MaterialsExportVO> list = materialsService.export(reqVO);
+        String fileName = ExcelUtil.encodingFileName(request, "宣传物料制作");
+        ExcelUtil.export2Web(response, fileName, "宣传物料制作", MaterialsExportVO.class, list);
+    }
 }
