@@ -55,30 +55,18 @@ select
 selectMaterialsBudgetByUnitId
 ===
 ```sql
-select t1.*, t2.declaration, t3.amountPaid
-    from (
-             select sum(predict_amount)                   as useAmount,
-                    m.unit_id                             as unitId,
-                    mb.budget                             as budget,
-                   ROUND(budget - sum(predict_amount),4)  as balance,
-                    ROUND(sum(predict_amount)/budget,4)*100   as proportion
-             from materials m
-                      left join materials_budget mb on m.unit_id = mb.unit_id
-             where state in (10, 20, 31)
-         ) t1
-             left join (
-        select sum(predict_amount) as declaration,
-               unit_id
-        from materials
-        where state in (10, 20)
-    ) t2 on t1.unitId = t2.unit_id
-             left join (
-        select sum(predict_amount) as amountPaid,
-               unit_id
-        from materials
-        where state = 31
-    ) t3 on t1.unitId = t3.unit_id
-where unitId = #{unitId}
+select mb.unit_id                                                              as unitId,
+       budget                                                                  as budget,
+       IFNULL(predict_amount, 0)                                               as predictAmount,
+       IFNULL(sum(case when state in (10, 20, 31) then predict_amount end), 0) as useAmount,
+       IFNULL(sum(case when state in (10, 20) then predict_amount end), 0)     as declaration,
+       IFNULL(sum(case when state in (31) then predict_amount end), 0)         as amountPaid,
+       ROUND(budget - IFNULL(sum(predict_amount), 0), 4)                       as balance,
+       ROUND(IFNULL(sum(predict_amount) / budget, 0.00), 4) * 100                 as proportion
+from materials_budget mb
+         left join materials m on mb.unit_id = m.unit_id
+where mb.unit_id = #{unitId}
+group by mb.unit_id
 ```
 
 selectPictureNumCountByUnitId

@@ -180,10 +180,14 @@ public class MaterialsServiceImpl implements MaterialsService {
         if (!isEmpty(materialsBudget)) {
             MaterialsBudget single = budgetMapper.createLambdaQuery()
                     .andEq(MaterialsBudget::getUnitId, user.getUnitId()).single();
+            if (materialsBudget.getBalance().compareTo(BigDecimal.ZERO) < 0) {
+                throw new PublicityException(PublicityErrorCode.BUDGET_INSUFFICIENT);
+            }
             i = single.getBudget().compareTo(infoVO.getPredictAmount());
         } else {
             i = materialsBudget.getBalance().compareTo(infoVO.getPredictAmount());
         }
+
         if (i < 0) {
             throw new PublicityException(PublicityErrorCode.BUDGET_INSUFFICIENT);
         }
