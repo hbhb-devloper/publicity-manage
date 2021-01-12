@@ -101,7 +101,7 @@ public class MaterialsController {
         materialsService.judgeFileName(fileName);
         try {
             EasyExcel.read(file.getInputStream(), MaterialsImportVO.class,
-                    new MaterialsListener(materialsService)).sheet().headRowNumber(2).doRead();
+                    new MaterialsListener(materialsService)).sheet().doRead();
         } catch (IOException | NumberFormatException | NullPointerException e) {
             log.error(e.getMessage(), e);
             throw new PublicityException(PublicityErrorCode.INPUT_DATA_ERROR);

@@ -239,7 +239,7 @@ public class PrintServiceImpl implements PrintService {
 
     @Override
     public void savePrint(List<PrintImportVO> dataList, AtomicInteger type, List<String> headerList) {
-        if (headerList.size() != 11) {
+        if (headerList.size() != 12) {
             throw new PublicityException(PublicityErrorCode.IMPORT_DATE_TEMPLATE_ERROR);
         }
         //导入

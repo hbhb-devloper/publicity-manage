@@ -266,7 +266,7 @@ public class MaterialsServiceImpl implements MaterialsService {
     @Override
     public void saveMaterials(List<MaterialsImportVO> dataList, List<String> headerList) {
         // 判断导入表是否正确
-        if (headerList.size() != 12) {
+        if (headerList.size() != 11) {
             throw new PublicityException(PublicityErrorCode.IMPORT_DATE_TEMPLATE_ERROR);
         }
         //导入
