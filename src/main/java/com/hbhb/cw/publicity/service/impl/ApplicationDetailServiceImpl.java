@@ -442,7 +442,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         String batchNum = DateUtil.dateToString(DateUtil.stringToDate(setInfo.getDeadline()), "yyyyMM")
                 + setInfo.getGoodsIndex();
         //  4.同步节点属性
-        syncBudgetProjectFlow(flowProps, batchNum, userId, user.getUnitId());
+        syncAppliactionFlow(flowProps, batchNum, userId, user.getUnitId());
         // 得到推送模板
         String inform = getInform(flowProps.get(0).getFlowNodeId()
                 , FlowNodeNoticeState.DEFAULT_REMINDER.value());
@@ -474,6 +474,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
                 .andEq(ApplicationDetail::getUnderUnitId, goodsApproveVO.getUnderUnitId())
                 .updateSelective(ApplicationDetail.builder()
                         .approvedState(NodeState.APPROVING.value())
+                        .state(2)
                         .build());
         // 修改批次状态
         goodsSettingService.updateByBatchNum(batchNum);
@@ -627,7 +628,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
     /**
      * 同步节点属性
      */
-    private void syncBudgetProjectFlow(List<FlowNodePropVO> flowProps, String batchNum, Integer userId, Integer unitId) {
+    private void syncAppliactionFlow(List<FlowNodePropVO> flowProps, String batchNum, Integer userId, Integer unitId) {
 
         // 用来存储同步节点的list
         List<ApplicationFlow> list = new ArrayList<>();
