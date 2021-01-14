@@ -460,6 +460,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
                         .promoter(userId)
                         .content(inform)
                         .flowTypeId(goodsApproveVO.getFlowTypeId())
+                        .state(0)
                         .build());
         // 修改申领审批状态
         List<Application> applicationList = applicationMapper.createLambdaQuery()
@@ -786,7 +787,6 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
 
     /**
      * 获取汇总
-     * @return
      */
     private List<SummaryUnitApplicationVO> getApplicationSum(String batchNum,Integer unitId, Integer type){
         // 展示该次该单位下的申请汇总。
