@@ -58,7 +58,9 @@ public enum PublicityErrorCode {
     // 本月已无审批次数
     NOT_NUMBER_IN_MONTH("84009","not.number.in.month"),
     // 无法在禁用的类别中操作
-    DO_NOT_OPERATE("84010","do.mot.operate")
+    DO_NOT_OPERATE("84010","do.mot.operate"),
+    // 本月已无审批次数
+    ALREADY_LAUNCH_APPLY("84011","already.launch.apply"),
     ;
 
 
