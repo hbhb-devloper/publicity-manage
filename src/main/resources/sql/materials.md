@@ -55,14 +55,26 @@ select
 selectMaterialsBudgetByUnitId
 ===
 ```sql
-select mb.unit_id                                                              as unitId,
-       budget                                                                  as budget,
-       IFNULL(predict_amount, 0)                                               as predictAmount,
-       IFNULL(sum(case when state in (10, 20, 31) then predict_amount end), 0) as useAmount,
-       IFNULL(sum(case when state in (10, 20) then predict_amount end), 0)     as declaration,
-       IFNULL(sum(case when state in (31) then predict_amount end), 0)         as amountPaid,
-       ROUND(budget - IFNULL(sum(predict_amount), 0), 4)                       as balance,
-       ROUND(IFNULL(sum(predict_amount) / budget, 0.00), 4) * 100                 as proportion
+select mb.unit_id                                                                                        as unitId,
+       budget                                                                                            as budget,
+       IFNULL(predict_amount, 0)                                                                         as predictAmount,
+       IFNULL(sum(case
+                      when state in (10, 20, 31)
+                          and delete_flag = 1 then predict_amount end),0)                                as useAmount,
+       IFNULL(sum(case
+                      when state in (10, 20)
+                          and delete_flag = 1 then predict_amount end), 0)                               as declaration,
+       IFNULL(sum(case
+                      when state in (31)
+                          and delete_flag = 1 then predict_amount end), 0)                               as amountPaid,
+       ROUND(budget -
+             IFNULL(sum(case
+                            when state in (10, 20, 31)
+                                and delete_flag = 1 then predict_amount end), 0), 4)                     as balance,
+       ROUND(
+               IFNULL(sum(case
+                              when state in (10, 20, 31)
+                                  and delete_flag = 1 then predict_amount end) / budget, 0.00), 4) * 100 as proportion
 from materials_budget mb
          left join materials m on mb.unit_id = m.unit_id
 where mb.unit_id = #{unitId}

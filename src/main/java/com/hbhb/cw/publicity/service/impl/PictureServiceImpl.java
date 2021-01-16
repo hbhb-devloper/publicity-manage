@@ -154,7 +154,7 @@ public class PictureServiceImpl implements PictureService {
         BeanUtils.copyProperties(infoVO, picture);
         // 印刷单号 = ”HM +单位简称+四位年份+ 自增序号“
         // 获取增长序号
-        Integer count = pictureMapper.selectPictureNumCountByUnitId(new Date(), infoVO.getUnitId());
+        Integer count = pictureMapper.selectPictureNumCountByUnitId(new Date(), unit.getId());
         String num = String.format("%0" + 4 + "d", (count + 1));
         picture.setPictureNum("HM" + unit.getAbbr() + DateUtil.dateToStringY(new Date()) + num);
         // 印刷单名称 = 单位名称+临时申请+时间（yyyy/mm/dd）

@@ -195,7 +195,7 @@ public class MaterialsServiceImpl implements MaterialsService {
         BeanUtils.copyProperties(infoVO, materials);
         // 印刷单号 = ”WL +单位简称+四位年份+ 自增序号“
         // 获取增长序号
-        Integer count = materialsMapper.selectPictureNumCountByUnitId(new Date(), infoVO.getUnitId());
+        Integer count = materialsMapper.selectPictureNumCountByUnitId(new Date(), unit.getId());
         String num = String.format("%0" + 4 + "d", (count + 1));
         materials.setMaterialsNum("WL" + unit.getAbbr() + DateUtil.dateToStringY(new Date()) + num);
         // 印刷单名称 = 单位名称+临时申请+时间（yyyy/mm/dd）
