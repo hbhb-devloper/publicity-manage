@@ -129,7 +129,7 @@ selectPurchaseGoods
                     and a.batch_num = #{batchNum}
                 -- @}
                 -- @if(isNotEmpty(unitId)){
-                    and g.unit_id = #{unitId}
+                    and ad.under_unit_id = #{unitId}
                 -- @}
                 -- @pageIgnoreTag(){
                     group by g.id
