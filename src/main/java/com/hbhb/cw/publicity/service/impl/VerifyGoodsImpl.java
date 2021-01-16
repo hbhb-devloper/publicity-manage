@@ -12,6 +12,7 @@ import com.hbhb.cw.publicity.model.ApplicationDetail;
 import com.hbhb.cw.publicity.model.Goods;
 import com.hbhb.cw.publicity.model.GoodsSetting;
 import com.hbhb.cw.publicity.model.VerifyNotice;
+import com.hbhb.cw.publicity.rpc.HallApiExp;
 import com.hbhb.cw.publicity.rpc.SysUserApiExp;
 import com.hbhb.cw.publicity.rpc.UnitApiExp;
 import com.hbhb.cw.publicity.service.GoodsSettingService;
@@ -59,25 +60,27 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
     private UnitApiExp unitApiExp;
     @Resource
     private SysUserApiExp sysUserApiExp;
+    @Resource
+    private HallApiExp hallApiExp;
 
     @Override
     public SummaryGoodsResVO getAuditList(GoodsReqVO goodsReqVO) {
         Map<Integer, String> unitMap = unitApiExp.getUnitMapById();
         String time = goodsReqVO.getTime();
-        // todo
         // 得到该单位下所有营业厅map
+        Map<Integer, String> map = hallApiExp.selectHallByUnitId(goodsReqVO.getUnitId());
         String batchNum = getBatchNum(goodsReqVO);
         List<SummaryGoodsVO> simList = getSummaryList(batchNum ,goodsReqVO, GoodsType.BUSINESS_SIMPLEX.getValue());
         for (int i = 0; i < simList.size(); i++) {
             simList.get(i).setLineNum(i + 1L);
             simList.get(i).setUnitName(unitMap.get(simList.get(i).getUnitId()));
-            simList.get(i).setHallName(simList.get(i).getHallId().toString());
+            simList.get(i).setHallName(map.get(Math.toIntExact(simList.get(i).getHallId())));
         }
         List<SummaryGoodsVO> singList = getSummaryList(batchNum ,goodsReqVO, GoodsType.FLYER_PAGE.getValue());
         for (int i = 0; i < singList.size(); i++) {
             singList.get(i).setLineNum(i + 1L);
             singList.get(i).setUnitName(unitMap.get(singList.get(i).getUnitId()));
-            singList.get(i).setHallName(singList.get(i).getHallId().toString());
+            singList.get(i).setHallName(map.get(Math.toIntExact(singList.get(i).getHallId())));
         }
         goodsReqVO.setTime(time);
         return new SummaryGoodsResVO(simList, singList, getFlag(goodsReqVO), getCheckerState(goodsReqVO));

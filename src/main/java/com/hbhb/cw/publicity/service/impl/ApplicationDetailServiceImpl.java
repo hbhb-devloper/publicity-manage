@@ -24,6 +24,7 @@ import com.hbhb.cw.publicity.rpc.FlowNodePropApiExp;
 import com.hbhb.cw.publicity.rpc.FlowNoticeApiExp;
 import com.hbhb.cw.publicity.rpc.FlowRoleUserApiExp;
 import com.hbhb.cw.publicity.rpc.FlowTypeApiExp;
+import com.hbhb.cw.publicity.rpc.HallApiExp;
 import com.hbhb.cw.publicity.rpc.SysDictApiExp;
 import com.hbhb.cw.publicity.rpc.SysUserApiExp;
 import com.hbhb.cw.publicity.rpc.UnitApiExp;
@@ -112,6 +113,8 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
     private MailService mailService;
     @Resource
     private VerifyNoticeMapper verifyNoticeMapper;
+    @Resource
+    private HallApiExp hallApiExp;
     @Value("${mail.enable}")
     private Boolean mailEnable;
 
@@ -341,11 +344,11 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
                 .build()
         );
         Map<Integer, String> unitMap = unitApiExp.getUnitMapById();
-        // todo
         // 得到该单位下所有营业厅map
+        Map<Integer, String> map = hallApiExp.selectHallByUnitId(goodsCheckerVO.getUnitId());
         for (VerifyHallGoodsVO verifyHallGoodsVO : list) {
             verifyHallGoodsVO.setUnitName(unitMap.get(verifyHallGoodsVO.getUnitId()));
-            verifyHallGoodsVO.setHallName(verifyHallGoodsVO.getHallId().toString());
+            verifyHallGoodsVO.setHallName(map.get(Math.toIntExact(verifyHallGoodsVO.getHallId())));
         }
         return list;
     }
