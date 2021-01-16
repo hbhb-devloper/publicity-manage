@@ -52,6 +52,12 @@ public class GoodsSettingController implements PublicitySettingApi {
         return goodsSettingService.getGoodsSetting(time);
     }
 
+    @GetMapping("/move")
+    @Operation(summary = "验证是否能删除")
+    public void moveGoodsSetting(Integer goodsIndex) {
+         goodsSettingService.moveGoodsSetting(goodsIndex);
+    }
+
     @Override
     public void addGoodsSetting() {
         goodsSettingService.addNextMonthSetting();
