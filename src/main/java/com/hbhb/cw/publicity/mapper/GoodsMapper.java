@@ -1,5 +1,6 @@
 package com.hbhb.cw.publicity.mapper;
 
+import com.hbhb.api.core.bean.SelectVO;
 import com.hbhb.beetlsql.BaseMapper;
 import com.hbhb.cw.publicity.model.Goods;
 import com.hbhb.cw.publicity.web.vo.GoodsReqVO;
@@ -35,7 +36,11 @@ public interface GoodsMapper extends BaseMapper<Goods> {
 
     PageResult<PurchaseGoodsResVO> selectPurchaseGoods( PageRequest<PurchaseGoodsResVO> request,GoodsReqVO goodsReqVO,String batchNum);
 
-    List<PurchaseGoodsVO> selectGoodsByHallId(GoodsReqVO goodsReqVO);
+    List<PurchaseGoodsVO> selectGoodsByHallId(GoodsReqVO goodsReqVO,String batchNum);
+
+    List<PurchaseGoodsVO> selectIdGoodsByHallId(GoodsReqVO goodsReqVO,String batchNum);
+
+    List<SelectVO> sumGoodsByHallId(String batchNum);
 
     List<VerifyGoodsVO> selectVerifyList(Integer userId, String batchNum);
 

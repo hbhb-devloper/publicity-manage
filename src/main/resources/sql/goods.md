@@ -142,26 +142,69 @@ selectGoodsByHallId
     select  g.id  as `goodsId`,
             g.goods_name as `goodsName`,
             g.unit as `unit`,
-            ad.modify_amount as `modifyAmount`,
+            ifnull(sum(ad.modify_amount), 0) as `modifyAmount`,
             g.size  as  `size`,
             g.attribute as `attribute`,
             g.paper as `paper`,
-            g.checker as `checker`
+            g.checker as `checker`,
+            a.hall_id as hallId
     from goods g
              left join application_detail ad on g.id = ad.goods_id
              left join application a on a.id = ad.application_id
              left join goods_setting gs on CONCAT(date_format(gs.deadline,'%y%m%d'),gs.goods_index) = a.batch_num
-     where ad.state = 2
-                -- @if(isNotEmpty(time)){
-                    and gs.deadline like concat(#{time},'%')
-                -- @}
-                -- @if(isNotEmpty(goodsIndex)){
-                    and gs.goods_index = #{goodsIndex}
-                -- @}
-                -- @if(isNotEmpty(unitId)){
-                    and g.unit_id = #{unitId}
-                -- @}
-    group by g.id,a.id;
+    where ad.state = 2
+            and ad.approved_state  = 31
+                    -- @if(isNotEmpty(batchNum)){
+                        and a.batch_num = #{batchNum}
+                    -- @}
+                    -- @if(isNotEmpty(unitId)){
+                        and g.unit_id = #{unitId}
+                    -- @}
+    group by g.id,a.hall_id;
+```
+
+selectIdGoodsByHallId
+===
+```sql
+    select  g.id  as `goodsId`,
+            g.goods_name as `goodsName`,
+            g.unit as `unit`,
+            ifnull(sum(ad.modify_amount), 0) as `modifyAmount`,
+            g.size  as  `size`,
+            g.attribute as `attribute`,
+            g.paper as `paper`,
+            g.checker as `checker`,
+            a.hall_id as hallId
+    from goods g
+             left join application_detail ad on g.id = ad.goods_id
+             left join application a on a.id = ad.application_id
+             left join goods_setting gs on CONCAT(date_format(gs.deadline,'%y%m%d'),gs.goods_index) = a.batch_num
+    where ad.state = 2
+            and ad.approved_state  = 31
+                    -- @if(isNotEmpty(batchNum)){
+                        and a.batch_num = #{batchNum}
+                    -- @}
+                    -- @if(isNotEmpty(unitId)){
+                        and g.unit_id = #{unitId}
+                    -- @}
+    group by a.hall_id;
+```
+
+sumGoodsByHallId
+===
+```sql
+    select  g.id  as `id`,
+            ifnull(sum(ad.modify_amount), 0) as `label`
+    from goods g
+             left join application_detail ad on g.id = ad.goods_id
+             left join application a on a.id = ad.application_id
+             left join goods_setting gs on CONCAT(date_format(gs.deadline,'%y%m%d'),gs.goods_index) = a.batch_num
+    where ad.state = 2
+            and ad.approved_state  = 31
+                    -- @if(isNotEmpty(batchNum)){
+                        and a.batch_num = #{batchNum}
+                    -- @}
+    group by g.id;
 ```
 
 selectVerifyList
