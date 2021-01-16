@@ -112,7 +112,7 @@ selectPurchaseGoods
             g.id  as `goodsId`,
             g.goods_name as `goodsName`,
             g.unit as `unit`,
-            ad.modify_amount as `modifyAmount`,
+            ifnull(sum(ad.modify_amount), 0)  as `modifyAmount`,
             g.size  as  `size`,
             g.attribute as `attribute`,
             g.paper as `paper`,
@@ -122,14 +122,16 @@ selectPurchaseGoods
     from goods g
              left join application_detail ad on g.id = ad.goods_id
              left join application a on a.id = ad.application_id
-             left join goods_setting gs on CONCAT(date_format(gs.deadline,'%y%m%d'),gs.goods_index) = a.batch_num
      where ad.state = 2
         and ad.approved_state  = 31
                 -- @if(isNotEmpty(batchNum)){
                     and a.batch_num = #{batchNum}
                 -- @}
-                -- @if(isNotEmpty(unitId)){
-                    and ad.under_unit_id = #{unitId}
+                -- @if(isNotEmpty(cond.unitId)){
+                    and ad.under_unit_id = #{cond.unitId}
+                -- @}
+                -- @if(isNotEmpty(cond.hallId)){
+                    and a.hall_id = #{cond.hallId}
                 -- @}
                 -- @pageIgnoreTag(){
                     group by g.id
