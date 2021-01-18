@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Resource;
@@ -64,8 +65,13 @@ public class GoodsController {
             cond.setUnitId(sysUserApiExp.getUserInfoById(userId).getUnitId());
         }
         List<List<String>> list = goodsService.getPurchaseGoodsExport(cond);
-        List<List<String>> head = goodsService.getHead(cond);
+        List<List<String>> headList = goodsService.getHead(cond);
+        List<List<String>> heads = new ArrayList<>();
+        List<String> head = new ArrayList<>();
+        head.add("物料名称");
+        heads.add(head);
+        heads.addAll(headList);
         String fileName = ExcelUtil.encodingFileName(request, "采购需求");
-        ExcelUtil.export2WebWithHead(response, fileName, fileName, head, list);
+        ExcelUtil.export2WebWithHead(response, fileName, fileName, heads, list);
     }
 }

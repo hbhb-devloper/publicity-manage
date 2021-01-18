@@ -9,9 +9,6 @@ selectApplicationByUnitId
            -- @if(isNotEmpty(batchNum)){
                 and batch_num = #{batchNum}
            -- @}
-           -- @if(isNotEmpty(hallId)){
-                and hall_id = #{hallId}
-           -- @}
        -- @}
 ```
 

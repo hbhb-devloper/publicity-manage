@@ -147,7 +147,6 @@ public class ApplicationServiceImpl implements ApplicationService {
         String batchNum = DateUtil.dateToString(DateUtil.stringToDate(setting.getDeadline()), "yyyyMM") + goodsSetting.getGoodsIndex();
         // 3.判断本月此次下该分公司是否已保存
         List<Application> applications = applicationMapper.selectApplicationByUnitId(goodsCondVO.getUnitId(),
-                goodsCondVO.getHallId(),
                 batchNum);
         if (applications != null && applications.size() != 0 && applications.get(0).getEditable()) {
             return new GoodsResVO(list, false, contents);

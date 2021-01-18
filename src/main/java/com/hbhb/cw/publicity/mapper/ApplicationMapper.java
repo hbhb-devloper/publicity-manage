@@ -16,7 +16,7 @@ public interface ApplicationMapper extends BaseMapper<Application> {
 
     Application selectByHall(Integer unitId, String batchNum, Long hallId);
 
-    List<Application> selectApplicationByUnitId(Integer unitId, Long hallId, String batchNum);
+    List<Application> selectApplicationByUnitId(Integer unitId, String batchNum);
 
     List<ApplicationByUnitVO> selectByUnit(Integer unitId,String batchNum);
 

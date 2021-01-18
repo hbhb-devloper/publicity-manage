@@ -1,5 +1,6 @@
 package com.hbhb.cw.publicity.mapper;
 
+import com.hbhb.api.core.bean.SelectVO;
 import com.hbhb.beetlsql.BaseMapper;
 import com.hbhb.cw.publicity.model.Goods;
 import com.hbhb.cw.publicity.web.vo.GoodsReqVO;
@@ -15,6 +16,7 @@ import com.hbhb.cw.publicity.web.vo.VerifyHallGoodsVO;
 
 import org.beetl.sql.core.page.PageRequest;
 import org.beetl.sql.core.page.PageResult;
+import org.beetl.sql.mapper.annotation.Param;
 
 import java.util.List;
 
@@ -33,9 +35,13 @@ public interface GoodsMapper extends BaseMapper<Goods> {
 
     List<Long> selectIdsByCond(SummaryCondVO cond);
 
-    PageResult<PurchaseGoodsResVO> selectPurchaseGoods( PageRequest<PurchaseGoodsResVO> request,GoodsReqVO goodsReqVO,String batchNum);
+    PageResult<PurchaseGoodsResVO> selectPurchaseGoods(PageRequest<PurchaseGoodsResVO> request, @Param("cond")GoodsReqVO goodsReqVO, @Param("batchNum")String batchNum);
 
-    List<PurchaseGoodsVO> selectGoodsByHallId(GoodsReqVO goodsReqVO);
+    List<PurchaseGoodsVO> selectGoodsByHallId(GoodsReqVO goodsReqVO,String batchNum);
+
+    List<PurchaseGoodsVO> selectIdGoodsByHallId(GoodsReqVO goodsReqVO,String batchNum);
+
+    List<SelectVO> sumGoodsByHallId(String batchNum);
 
     List<VerifyGoodsVO> selectVerifyList(Integer userId, String batchNum);
 

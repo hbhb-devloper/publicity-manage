@@ -24,6 +24,7 @@ import com.hbhb.cw.publicity.rpc.FlowNodePropApiExp;
 import com.hbhb.cw.publicity.rpc.FlowNoticeApiExp;
 import com.hbhb.cw.publicity.rpc.FlowRoleUserApiExp;
 import com.hbhb.cw.publicity.rpc.FlowTypeApiExp;
+import com.hbhb.cw.publicity.rpc.HallApiExp;
 import com.hbhb.cw.publicity.rpc.SysDictApiExp;
 import com.hbhb.cw.publicity.rpc.SysUserApiExp;
 import com.hbhb.cw.publicity.rpc.UnitApiExp;
@@ -112,6 +113,8 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
     private MailService mailService;
     @Resource
     private VerifyNoticeMapper verifyNoticeMapper;
+    @Resource
+    private HallApiExp hallApiExp;
     @Value("${mail.enable}")
     private Boolean mailEnable;
 
@@ -147,22 +150,27 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         // 宣传单页
         List<SummaryUnitApplicationVO> singleList = getApplicationSum(batchNum, goodsReqVO.getUnitId(), GoodsType.FLYER_PAGE.getValue());
         // 通过goodsId得到unitName
-        Map<String, SummaryUnitApplicationVO> map = new HashMap<>();
-        for (SummaryUnitApplicationVO summaryUnitGoodsVO : simplexList) {
-            // 业务单式下宣传单页因都为0
-            summaryUnitGoodsVO.setSingleAmount(0L);
-            map.put(summaryUnitGoodsVO.getUnitName(), summaryUnitGoodsVO);
+        Map<Integer, SummaryUnitApplicationVO> map = new HashMap<>();
+        if (simplexList.size()==0){
+            simplexList.addAll(singleList);
+        }else {
+            for (SummaryUnitApplicationVO summaryUnitGoodsVO : simplexList) {
+                // 业务单式下宣传单页因都为0
+                summaryUnitGoodsVO.setSingleAmount(0L);
+                map.put(summaryUnitGoodsVO.getUnitId(), summaryUnitGoodsVO);
+            }
         }
         if (singleList.size()==0){
             simplexList.addAll(singleList);
-        }
-        for (SummaryUnitApplicationVO cond : singleList) {
-            // 宣传单页下业务单式因都为0
-            cond.setSimplexAmount(0L);
-            if (map.get(cond.getUnitName()) == null) {
-                simplexList.add(cond);
-            } else {
-                map.get(cond.getUnitName()).setSingleAmount(cond.getSingleAmount());
+        }else {
+            for (SummaryUnitApplicationVO cond : singleList) {
+                // 宣传单页下业务单式因都为0
+                cond.setSimplexAmount(0L);
+                if (map.get(cond.getUnitId()) == null) {
+                    simplexList.add(cond);
+                } else {
+                    map.get(cond.getUnitId()).setSingleAmount(cond.getSingleAmount());
+                }
             }
         }
         goodsReqVO.setTime(goodsSetting.getDeadline());
@@ -341,11 +349,11 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
                 .build()
         );
         Map<Integer, String> unitMap = unitApiExp.getUnitMapById();
-        // todo
         // 得到该单位下所有营业厅map
+        Map<Integer, String> map = hallApiExp.selectHallByUnitId(goodsCheckerVO.getUnitId());
         for (VerifyHallGoodsVO verifyHallGoodsVO : list) {
             verifyHallGoodsVO.setUnitName(unitMap.get(verifyHallGoodsVO.getUnitId()));
-            verifyHallGoodsVO.setHallName(verifyHallGoodsVO.getHallId().toString());
+            verifyHallGoodsVO.setHallName(map.get(Math.toIntExact(verifyHallGoodsVO.getHallId())));
         }
         return list;
     }

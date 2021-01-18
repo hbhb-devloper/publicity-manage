@@ -14,10 +14,9 @@ import java.util.List;
 public interface VerifyGoodsService {
 
     /**
-     *
      * 获取用户产品（审核）
-     * @return 营业厅产品申请信息
      *
+     * @return 营业厅产品申请信息
      */
     SummaryGoodsResVO getAuditList(GoodsReqVO goodsReqVO);
 
@@ -34,5 +33,5 @@ public interface VerifyGoodsService {
     /**
      * 导出列表
      */
-    List<List<VerifyGoodsExportVO>>  getExportList(GoodsReqVO goodsReqVO);
+    List<List<VerifyGoodsExportVO>> getExportList(GoodsReqVO goodsReqVO);
 }

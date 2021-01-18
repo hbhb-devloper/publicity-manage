@@ -58,7 +58,7 @@ public class VerifyGoodsController {
 
     @PostMapping("/export")
     @Operation(summary = "分公司提交物料导出")
-    public void summaryExport(HttpServletRequest request, HttpServletResponse response,@RequestBody GoodsReqVO goodsReqVO) {
+    public void summaryExport(HttpServletRequest request, HttpServletResponse response, @RequestBody GoodsReqVO goodsReqVO) {
         List<List<VerifyGoodsExportVO>> list = verifyGoodsService.getExportList(goodsReqVO);
         List<List> exportList = new ArrayList<>();
         for (List<VerifyGoodsExportVO> verifyGoods : list) {
