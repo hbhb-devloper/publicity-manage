@@ -20,7 +20,7 @@ public class PrintMaterialsVO implements Serializable {
     private Integer applyCount;
 
     @Schema(description = "计量单位")
-    private Integer units;
+    private String units;
 
     @Schema(description = "纸张样式")
     private String style;
