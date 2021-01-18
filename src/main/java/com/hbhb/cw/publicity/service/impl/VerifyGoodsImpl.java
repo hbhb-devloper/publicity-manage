@@ -169,7 +169,7 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
                 verifyNoticeMapper.insertTemplate(
                         VerifyNotice.builder()
                                 .batchNum(batchNum)
-                                .content("您还有宣传物料需要审批")
+                                .content("您还有宣传物料需要审批  批次号为"+batchNum)
                                 .createTime(new Date())
                                 .receiver(userId)
                                 .unitId(user.getUnitId())
