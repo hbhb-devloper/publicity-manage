@@ -32,7 +32,6 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -124,7 +123,7 @@ public class PrintController {
         try {
             EasyExcel.read(file.getInputStream(), PrintImportVO.class,
                     new PrintListener(printService, types)).sheet().doRead();
-        } catch (IOException | NumberFormatException | NullPointerException e) {
+        } catch (Exception e) {
             log.error(e.getMessage(), e);
             throw new PublicityException(PublicityErrorCode.INPUT_DATA_ERROR);
         }
