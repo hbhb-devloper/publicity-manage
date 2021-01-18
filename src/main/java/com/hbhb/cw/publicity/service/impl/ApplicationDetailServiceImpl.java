@@ -122,7 +122,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
     public SummaryUnitGoodsResVO getUnitGoodsList(GoodsReqVO goodsReqVO) {
         Integer hangzhou = UnitEnum.HANGZHOU.value();
         // 如果为杭州则能看全部
-        if (hangzhou.equals(goodsReqVO.getUnitId())){
+        if (hangzhou.equals(goodsReqVO.getUnitId())) {
             goodsReqVO.setUnitId(null);
         }
         GoodsSetting goodsSetting = null;
@@ -141,7 +141,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
             }
             goodsReqVO.setTime(goodsSetting.getDeadline());
         }
-        if (goodsSetting.getDeadline()==null) {
+        if (goodsSetting.getDeadline() == null) {
             return new SummaryUnitGoodsResVO();
         }
         String batchNum = DateUtil.dateToString(DateUtil.stringToDate(goodsSetting.getDeadline()), "yyyyMM") + goodsReqVO.getGoodsIndex();
@@ -151,18 +151,18 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         List<SummaryUnitApplicationVO> singleList = getApplicationSum(batchNum, goodsReqVO.getUnitId(), GoodsType.FLYER_PAGE.getValue());
         // 通过goodsId得到unitName
         Map<Integer, SummaryUnitApplicationVO> map = new HashMap<>();
-        if (simplexList.size()==0){
+        if (simplexList.size() == 0) {
             simplexList.addAll(singleList);
-        }else {
+        } else {
             for (SummaryUnitApplicationVO summaryUnitGoodsVO : simplexList) {
                 // 业务单式下宣传单页因都为0
                 summaryUnitGoodsVO.setSingleAmount(0L);
                 map.put(summaryUnitGoodsVO.getUnitId(), summaryUnitGoodsVO);
             }
         }
-        if (singleList.size()==0){
+        if (singleList.size() == 0) {
             simplexList.addAll(singleList);
-        }else {
+        } else {
             for (SummaryUnitApplicationVO cond : singleList) {
                 // 宣传单页下业务单式因都为0
                 cond.setSimplexAmount(0L);
@@ -175,7 +175,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         }
         goodsReqVO.setTime(goodsSetting.getDeadline());
         boolean flag = false;
-        if (simplexList.size()!=0){
+        if (simplexList.size() != 0) {
             for (SummaryUnitApplicationVO summaryUnitGoodsVO : simplexList) {
                 if (summaryUnitGoodsVO.getApprovedState().equals(NodeState.NOT_APPROVED.value())
                         || summaryUnitGoodsVO.getApprovedState().equals(NodeState.APPROVE_REJECTED.value())) {
@@ -188,7 +188,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         String time = goodsReqVO.getTime();
         // 得到第几次，判断此次是否结束。
         if (goodsSetting.getIsEnd() != null ||
-                DateUtil.stringToDate(deadline).getTime()<DateUtil.stringToDate(time).getTime()) {
+                DateUtil.stringToDate(deadline).getTime() < DateUtil.stringToDate(time).getTime()) {
             // 如果结束审核提交置灰
             return new SummaryUnitGoodsResVO(simplexList, flag, batchNum);
         }
@@ -226,7 +226,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         // 通过流程角色名称得到该角色用户
         List<Integer> userVOList = flowRoleUserApiExp.getUserIdByRoleName("物料审核员");
         List<Integer> userList = new ArrayList<>();
-        for (Integer userId: userVOList) {
+        for (Integer userId : userVOList) {
             userList.add(Math.toIntExact(userId));
         }
         List<UserInfo> userInfoList = sysUserApiExp.getUserInfoBatch(userList);
@@ -280,8 +280,32 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
                 UnitGoodsStateVO vo = new UnitGoodsStateVO();
                 vo.setUnitName(unitMap.get(unitId));
                 StringBuilder state = new StringBuilder();
+                Map<String, Integer> checkerMap = new HashMap<>();
+                // 判断state是否有拒绝
+                // 判断state是否有未审批
                 for (ApplicationByUnitVO appVO : list) {
-                    state.append(userMap.get(appVO.getChecker())).append((dictMap.get(appVO.getState().toString()))).append(" ");
+                    if (3 == appVO.getState() && checkerMap.get(userMap.get(appVO.getChecker())) == null) {
+                        checkerMap.put(userMap.get(appVO.getChecker()), appVO.getState());
+                        state.append(userMap.get(appVO.getChecker())).append((dictMap.get(appVO.getState().toString()))).append(" ");
+                    }
+                }
+                for (ApplicationByUnitVO appVO : list) {
+                    if (0 == appVO.getState() && checkerMap.get(userMap.get(appVO.getChecker())) == null) {
+                        checkerMap.put(userMap.get(appVO.getChecker()), appVO.getState());
+                        state.append(userMap.get(appVO.getChecker())).append((dictMap.get(appVO.getState().toString()))).append(" ");
+                    }
+                }
+                for (ApplicationByUnitVO appVO : list) {
+                    if (1 == appVO.getState() && checkerMap.get(userMap.get(appVO.getChecker())) == null) {
+                        checkerMap.put(userMap.get(appVO.getChecker()), appVO.getState());
+                        state.append(userMap.get(appVO.getChecker())).append((dictMap.get(appVO.getState().toString()))).append(" ");
+                    }
+                }
+                for (ApplicationByUnitVO appVO : list) {
+                    if (2 == appVO.getState() && checkerMap.get(userMap.get(appVO.getChecker())) == null) {
+                        checkerMap.put(userMap.get(appVO.getChecker()), appVO.getState());
+                        state.append(userMap.get(appVO.getChecker())).append((dictMap.get(appVO.getState().toString()))).append(" ");
+                    }
                 }
                 vo.setState(state.toString());
                 unitGoodsStateVOS.add(vo);
@@ -301,9 +325,8 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
             // 通过时间判断批次
             goodsSetting = goodsSettingService.getSetByDate(DateUtil.dateToString(new Date()));
             goodsReqVO.setTime(goodsSetting.getDeadline());
-        }
-        else {
-            goodsSetting = goodsSettingService.getByCond(DateUtil.dateToString(DateUtil.stringToDate(goodsReqVO.getTime()),"yyyy-MM"), goodsReqVO.getGoodsIndex());
+        } else {
+            goodsSetting = goodsSettingService.getByCond(DateUtil.dateToString(DateUtil.stringToDate(goodsReqVO.getTime()), "yyyy-MM"), goodsReqVO.getGoodsIndex());
         }
         if (goodsSetting == null) {
             return new ArrayList<SummaryUnitGoodsVO>();
@@ -423,7 +446,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         if (goodsApproveVO.getTime() == null) {
             // 通过时间判断批次
             goodsSetting = goodsSettingService.getSetByDate(DateUtil.dateToString(new Date()));
-        }  else {
+        } else {
             goodsSetting = goodsSettingService.getByCond(goodsApproveVO.getTime(), goodsApproveVO.getGoodsIndex());
         }
         goodsApproveVO.setTime(goodsSetting.getDeadline());
@@ -477,10 +500,14 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         for (Application application : applicationList) {
             applicationIdList.add(application.getId());
         }
-        // 该批次下归属于该单位的物料申请审批状态修改
+        List<Integer> stateList = new ArrayList<>();
+        stateList.add(1);
+        stateList.add(2);
+        // 该批次下归属于该单位的物料申请审批状态修改,待审核都变为同意
         applicationDetailMapper.createLambdaQuery()
                 .andIn(ApplicationDetail::getApplicationId, applicationIdList)
                 .andEq(ApplicationDetail::getUnderUnitId, goodsApproveVO.getUnderUnitId())
+                .andIn(ApplicationDetail::getState,stateList)
                 .updateSelective(ApplicationDetail.builder()
                         .approvedState(NodeState.APPROVING.value())
                         .state(2)
@@ -489,8 +516,8 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         goodsSettingService.updateByBatchNum(batchNum);
         // 修改审核状态
         verifyNoticeMapper.createLambdaQuery()
-                .andEq(VerifyNotice::getBatchNum,batchNum)
-                .andEq(VerifyNotice::getUnitId,goodsApproveVO.getUnderUnitId())
+                .andEq(VerifyNotice::getBatchNum, batchNum)
+                .andEq(VerifyNotice::getUnitId, goodsApproveVO.getUnderUnitId())
                 .updateSelective(VerifyNotice.builder().state(1).build());
     }
 
@@ -796,7 +823,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
     /**
      * 获取汇总
      */
-    private List<SummaryUnitApplicationVO> getApplicationSum(String batchNum,Integer unitId, Integer type){
+    private List<SummaryUnitApplicationVO> getApplicationSum(String batchNum, Integer unitId, Integer type) {
         // 展示该次该单位下的申请汇总。
         return applicationDetailMapper.selectApplicationSumByType(SummaryCondVO.builder()
                 .batchNum(batchNum)
