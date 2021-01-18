@@ -69,6 +69,9 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
         String time = goodsReqVO.getTime();
         // 得到该单位下所有营业厅map
         Map<Integer, String> map = hallApiExp.selectHallByUnitId(goodsReqVO.getUnitId());
+        if (map==null||map.keySet().size()==0){
+            return new SummaryGoodsResVO();
+        }
         String batchNum = getBatchNum(goodsReqVO);
         List<SummaryGoodsVO> simList = getSummaryList(batchNum ,goodsReqVO, GoodsType.BUSINESS_SIMPLEX.getValue());
         for (int i = 0; i < simList.size(); i++) {
