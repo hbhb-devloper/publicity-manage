@@ -35,13 +35,13 @@ public class PrintMaterialsVO implements Serializable {
     private String unitName;
 
     @Schema(description = "分配地方（地址）")
-    private Integer address;
+    private String address;
 
     @Schema(description = "是否加盖合同分公司印章")
     private Integer isSeal;
 
     @Schema(description = "接收人/电话")
-    private Integer receivedBy;
+    private String receivedBy;
 
     @Schema(description = "是否有合同编号")
     private Integer isNum;
