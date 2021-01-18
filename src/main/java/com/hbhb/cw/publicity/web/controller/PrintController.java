@@ -7,13 +7,13 @@ import com.hbhb.api.core.bean.SelectVO;
 import com.hbhb.core.utils.ExcelUtil;
 import com.hbhb.cw.publicity.enums.PublicityErrorCode;
 import com.hbhb.cw.publicity.exception.PublicityException;
-import com.hbhb.cw.publicity.model.PrintMaterials;
 import com.hbhb.cw.publicity.rpc.FileApiExp;
 import com.hbhb.cw.publicity.service.PrintService;
 import com.hbhb.cw.publicity.service.listener.PrintListener;
 import com.hbhb.cw.publicity.web.vo.PrintImportVO;
 import com.hbhb.cw.publicity.web.vo.PrintInfoVO;
 import com.hbhb.cw.publicity.web.vo.PrintInitVO;
+import com.hbhb.cw.publicity.web.vo.PrintMaterialsVO;
 import com.hbhb.cw.publicity.web.vo.PrintReqVO;
 import com.hbhb.cw.publicity.web.vo.PrintResVO;
 import com.hbhb.cw.systemcenter.enums.FileType;
@@ -160,7 +160,7 @@ public class PrintController {
 
     @Operation(summary = "获取excel导入数据")
     @GetMapping("/materials")
-    List<PrintMaterials> getMaterialsList(@Parameter(description = "id") String uuid) {
+    List<PrintMaterialsVO> getMaterialsList(@Parameter(description = "id") String uuid) {
         return printService.getPrintMaterialsList(uuid);
     }
 

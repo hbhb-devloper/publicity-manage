@@ -6,7 +6,6 @@ import com.hbhb.core.utils.ExcelUtil;
 import com.hbhb.cw.publicity.enums.PublicityErrorCode;
 import com.hbhb.cw.publicity.exception.PublicityException;
 import com.hbhb.cw.publicity.model.MaterialsBudget;
-import com.hbhb.cw.publicity.model.MaterialsInfo;
 import com.hbhb.cw.publicity.rpc.FileApiExp;
 import com.hbhb.cw.publicity.service.MaterialsService;
 import com.hbhb.cw.publicity.service.listener.MaterialsListener;
@@ -18,6 +17,7 @@ import com.hbhb.cw.publicity.web.vo.MaterialsInfoVO;
 import com.hbhb.cw.publicity.web.vo.MaterialsInitVO;
 import com.hbhb.cw.publicity.web.vo.MaterialsReqVO;
 import com.hbhb.cw.publicity.web.vo.MaterialsResVO;
+import com.hbhb.cw.publicity.web.vo.MaterialsVO;
 import com.hbhb.cw.systemcenter.enums.FileType;
 import com.hbhb.web.annotation.UserId;
 import io.swagger.v3.oas.annotations.Operation;
@@ -67,22 +67,22 @@ public class MaterialsController {
 
     @Operation(summary = "跟据id查看详情")
     @GetMapping("/{id}")
-    public MaterialsInfoVO getMaterials(@PathVariable Long id) {
+    public MaterialsVO getMaterials(@PathVariable Long id) {
         return materialsService.getMaterials(id);
     }
 
     @Operation(summary = "添加宣传物料设计制作")
     @PostMapping("")
-    private void addMaterials(@RequestBody MaterialsInfoVO materialsInfoVO,
+    private void addMaterials(@RequestBody MaterialsVO materialsVO,
                               @Parameter(hidden = true) @UserId Integer userId) {
-        materialsService.addMaterials(materialsInfoVO, userId);
+        materialsService.addMaterials(materialsVO, userId);
     }
 
     @Operation(summary = "修改宣传物料设计制作")
     @PutMapping("")
-    private void updateMaterials(@RequestBody MaterialsInfoVO materialsInfoVO,
+    private void updateMaterials(@RequestBody MaterialsVO materialsVO,
                                  @Parameter(hidden = true) @UserId Integer userId) {
-        materialsService.updateMaterials(materialsInfoVO, userId);
+        materialsService.updateMaterials(materialsVO, userId);
     }
 
     @Operation(summary = "宣传物料导入模板下载")
@@ -125,7 +125,7 @@ public class MaterialsController {
 
     @Operation(summary = "获取excel导入数据")
     @GetMapping("/materials")
-    List<MaterialsInfo> getMaterialsList(@Parameter(description = "id") String uuid) {
+    List<MaterialsInfoVO> getMaterialsList(@Parameter(description = "id") String uuid) {
         return materialsService.getMaterialsInfoList(uuid);
     }
 

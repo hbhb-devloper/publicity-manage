@@ -2,7 +2,6 @@ package com.hbhb.cw.publicity.web.vo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -15,19 +14,13 @@ import java.util.Date;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
-public class MaterialsInfoVO implements Serializable {
-    private static final long serialVersionUID = -4925013973478233876L;
-    private Long id;
-
-    @Schema(description = "物料名称")
-    private String materialsName;
-
+public class PrintMaterialsVO implements Serializable {
+    private static final long serialVersionUID = -1586909602654261432L;
     @Schema(description = "申请数量")
     private Integer applyCount;
 
     @Schema(description = "计量单位")
-    private String units;
+    private Integer units;
 
     @Schema(description = "纸张样式")
     private String style;
@@ -36,23 +29,32 @@ public class MaterialsInfoVO implements Serializable {
     private String craft;
 
     @Schema(description = "部门")
-    private String unitName;
-
-    @Schema(description = "部门")
     private Integer unitId;
 
+    @Schema(description = "部门")
+    private String unitName;
+
     @Schema(description = "分配地方（地址）")
-    private String address;
+    private Integer address;
 
-    @Schema(description = "接收人")
-    private String receivedBy;
+    @Schema(description = "是否加盖合同分公司印章")
+    private Integer isSeal;
 
-    @Schema(description = "电话")
-    private String receivedPhone;
+    @Schema(description = "接收人/电话")
+    private Integer receivedBy;
+
+    @Schema(description = "是否有合同编号")
+    private Integer isNum;
 
     @Schema(description = "需送达日期")
     private Date deliveryDate;
 
     @Schema(description = "备注")
-    private String remark;
+    private String remake;
+
+    @Schema(description = "物料名称")
+    private String materialsName;
+
+    @Schema(description = "类型（1-业务单式、2-宣传单页）")
+    private Integer type;
 }

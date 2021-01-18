@@ -2,6 +2,7 @@ package com.hbhb.cw.publicity.service.impl;
 
 import com.alibaba.excel.support.ExcelTypeEnum;
 import com.hbhb.api.core.bean.SelectVO;
+import com.hbhb.core.bean.BeanConverter;
 import com.hbhb.core.utils.DateUtil;
 import com.hbhb.cw.flowcenter.enums.FlowNodeNoticeTemp;
 import com.hbhb.cw.flowcenter.model.Flow;
@@ -33,6 +34,7 @@ import com.hbhb.cw.publicity.web.vo.PrintImportVO;
 import com.hbhb.cw.publicity.web.vo.PrintInfoVO;
 import com.hbhb.cw.publicity.web.vo.PrintInitVO;
 import com.hbhb.cw.publicity.web.vo.PrintMaterialsImportDataVO;
+import com.hbhb.cw.publicity.web.vo.PrintMaterialsVO;
 import com.hbhb.cw.publicity.web.vo.PrintNoticeVO;
 import com.hbhb.cw.publicity.web.vo.PrintReqVO;
 import com.hbhb.cw.publicity.web.vo.PrintResVO;
@@ -158,7 +160,10 @@ public class PrintServiceImpl implements PrintService {
         List<PrintMaterials> materialsList = printMaterialsMapper.createLambdaQuery()
                 .andEq(PrintMaterials::getPrintId, id)
                 .select();
-        info.setPrintMaterials(materialsList);
+        Map<Integer, String> unitMapById = unitApi.getUnitMapById();
+        List<PrintMaterialsVO> materialsVo = BeanConverter.copyBeanList(materialsList, PrintMaterialsVO.class);
+        materialsVo.forEach(item -> item.setUnitName(unitMapById.get(item.getUnitId())));
+        info.setPrintMaterials(materialsVo);
         return info;
     }
 
@@ -191,7 +196,8 @@ public class PrintServiceImpl implements PrintService {
         }
         // 新增印刷用品导入业务单式或宣传单页数据
         if (!isEmpty(infoVO.getImportDateId())) {
-            List<PrintMaterials> materialsList = getPrintMaterialsList(infoVO.getImportDateId());
+            List<PrintMaterialsVO> importList = getPrintMaterialsList(infoVO.getImportDateId());
+            List<PrintMaterials> materialsList = BeanConverter.copyBeanList(importList, PrintMaterials.class);
             materialsList.forEach(item -> item.setPrintId(print.getId()));
             printMaterialsMapper.insertBatch(materialsList);
         }
@@ -231,7 +237,8 @@ public class PrintServiceImpl implements PrintService {
         fileMapper.insertBatch(fileList);
         // 新增印刷用品导入业务单式或宣传单页数据
         if (!isEmpty(infoVO.getImportDateId())) {
-            List<PrintMaterials> materialsList = getPrintMaterialsList(infoVO.getImportDateId());
+            List<PrintMaterialsVO> importList = getPrintMaterialsList(infoVO.getImportDateId());
+            List<PrintMaterials> materialsList = BeanConverter.copyBeanList(importList, PrintMaterials.class);
             materialsList.forEach(item -> item.setPrintId(print.getId()));
             printMaterialsMapper.insertBatch(materialsList);
         }
@@ -243,10 +250,10 @@ public class PrintServiceImpl implements PrintService {
             throw new PublicityException(PublicityErrorCode.IMPORT_DATE_TEMPLATE_ERROR);
         }
         //导入
-        List<PrintMaterials> materialsList = new ArrayList<>();
+        List<PrintMaterialsVO> materialsList = new ArrayList<>();
         Map<String, Integer> unitNameMap = unitApi.getUnitMapByUnitName();
         for (PrintImportVO importVo : dataList) {
-            PrintMaterials materials = new PrintMaterials();
+            PrintMaterialsVO materials = new PrintMaterialsVO();
             BeanUtils.copyProperties(importVo, materials);
             materials.setUnitId(unitNameMap.get(importVo.getUnitName()));
             materials.setDeliveryDate(DateUtil.string3DateYMD(importVo.getDeliveryDate()));
@@ -275,7 +282,7 @@ public class PrintServiceImpl implements PrintService {
     public void toApprove(PrintInitVO initVO, Integer userId) {
         Print print = printMapper.single(initVO.getPrintId());
         //  1.判断登录用户是否与申请人一致
-        UserInfo user = userApi.getUserInfoById(initVO.getUserId());
+        UserInfo user = userApi.getUserInfoById(userId);
         UserInfo userInfo = userApi.getUserInfoById(print.getUserId());
         if (!user.getNickName().equals(userInfo.getNickName())) {
             throw new PublicityException(PublicityErrorCode.LOCK_OF_APPROVAL_ROLE);
@@ -326,7 +333,7 @@ public class PrintServiceImpl implements PrintService {
     }
 
     @Override
-    public List<PrintMaterials> getPrintMaterialsList(String uuId) {
+    public List<PrintMaterialsVO> getPrintMaterialsList(String uuId) {
         Query query = new Query(Criteria.where("id").is(uuId));
         PrintMaterialsImportDataVO data = mongoTemplate.findOne(query, PrintMaterialsImportDataVO.class);
         if (data != null) {

@@ -1,10 +1,10 @@
 package com.hbhb.cw.publicity.service;
 
 import com.hbhb.api.core.bean.SelectVO;
-import com.hbhb.cw.publicity.model.PrintMaterials;
 import com.hbhb.cw.publicity.web.vo.PrintImportVO;
 import com.hbhb.cw.publicity.web.vo.PrintInfoVO;
 import com.hbhb.cw.publicity.web.vo.PrintInitVO;
+import com.hbhb.cw.publicity.web.vo.PrintMaterialsVO;
 import com.hbhb.cw.publicity.web.vo.PrintReqVO;
 import com.hbhb.cw.publicity.web.vo.PrintResVO;
 import org.beetl.sql.core.page.PageResult;
@@ -96,7 +96,7 @@ public interface PrintService {
      * @param uuId id
      * @return 列表
      */
-    List<PrintMaterials> getPrintMaterialsList(String uuId);
+    List<PrintMaterialsVO> getPrintMaterialsList(String uuId);
 
     /**
      * 获取导入id

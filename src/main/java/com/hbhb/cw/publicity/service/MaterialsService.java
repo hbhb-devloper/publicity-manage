@@ -1,7 +1,6 @@
 package com.hbhb.cw.publicity.service;
 
 import com.hbhb.cw.publicity.model.MaterialsBudget;
-import com.hbhb.cw.publicity.model.MaterialsInfo;
 import com.hbhb.cw.publicity.web.vo.MaterialsBudgetResVO;
 import com.hbhb.cw.publicity.web.vo.MaterialsBudgetVO;
 import com.hbhb.cw.publicity.web.vo.MaterialsExportVO;
@@ -10,6 +9,7 @@ import com.hbhb.cw.publicity.web.vo.MaterialsInfoVO;
 import com.hbhb.cw.publicity.web.vo.MaterialsInitVO;
 import com.hbhb.cw.publicity.web.vo.MaterialsReqVO;
 import com.hbhb.cw.publicity.web.vo.MaterialsResVO;
+import com.hbhb.cw.publicity.web.vo.MaterialsVO;
 import org.beetl.sql.core.page.PageResult;
 
 import java.util.List;
@@ -34,7 +34,7 @@ public interface MaterialsService {
      * @param id id
      * @return 详情
      */
-    MaterialsInfoVO getMaterials(Long id);
+    MaterialsVO getMaterials(Long id);
 
     /**
      * 添加物料设计
@@ -42,7 +42,7 @@ public interface MaterialsService {
      * @param infoVO 物料设计实体
      * @param userId 用户id
      */
-    void addMaterials(MaterialsInfoVO infoVO, Integer userId);
+    void addMaterials(MaterialsVO infoVO, Integer userId);
 
     /**
      * 跟据id删除物料设计
@@ -57,7 +57,7 @@ public interface MaterialsService {
      * @param infoVO 物料设计实体
      * @param userId 用户id
      */
-    void updateMaterials(MaterialsInfoVO infoVO, Integer userId);
+    void updateMaterials(MaterialsVO infoVO, Integer userId);
 
     /**
      * 批量导入
@@ -117,7 +117,7 @@ public interface MaterialsService {
      * @param uuId id
      * @return 列表
      */
-    List<MaterialsInfo> getMaterialsInfoList(String uuId);
+    List<MaterialsInfoVO> getMaterialsInfoList(String uuId);
 
     /**
      * 获取导入id
@@ -129,7 +129,7 @@ public interface MaterialsService {
     /**
      * 删除导入物料详情
      *
-     * @param materialsId
+     * @param materialsId materialsId
      */
     void deleteMaterialsInfo(Long materialsId);
 

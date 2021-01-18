@@ -30,7 +30,7 @@ public class PrintMaterialsImportVO implements Serializable {
     private String craft;
 
     @ExcelProperty(value = "部门", index = 4)
-    private Integer unitId;
+    private String unitName;
 
     @ExcelProperty(value = "分配地方（地址）", index = 5)
     private Integer address;

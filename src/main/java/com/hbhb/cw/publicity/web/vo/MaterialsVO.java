@@ -1,8 +1,8 @@
 package com.hbhb.cw.publicity.web.vo;
 
+import com.hbhb.cw.publicity.model.MaterialsInfo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.beetl.sql.annotation.entity.ResultProvider;
@@ -17,24 +17,19 @@ import java.util.List;
  * @author wangxiaogang
  */
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@NoArgsConstructor
 @ResultProvider(AutoJsonMapper.class)
-public class PrintInfoVO implements Serializable {
-    private static final long serialVersionUID = 1254866564949328907L;
+public class MaterialsVO implements Serializable {
+    private static final long serialVersionUID = -4925013973478233876L;
 
-    @Schema(description = "id")
     private Long id;
 
-    @Schema(description = "申请单号")
-    private String printNum;
-
     @Schema(description = "申请单名称")
-    private String printName;
+    private String materialsName;
 
-    @Schema(description = "申请部门单位id")
-    private Integer unitId;
+    @Schema(description = "申请单号")
+    private String materialsNum;
 
     @Schema(description = "申请部门单位名称")
     private String unitName;
@@ -48,27 +43,31 @@ public class PrintInfoVO implements Serializable {
     @Schema(description = "申请时间")
     private Date applyTime;
 
+    @Schema(description = "是否有宽带")
+    private Integer wideBand;
+
+    @Schema(description = "单位id")
+    private Integer unitId;
+
     @Schema(description = "流程状态")
     private Integer state;
 
-    @Schema(description = "材料类型（0 业务单式/1 宣传单页）")
-    private Integer materialType;
+    @Schema(description = "制作商")
+    private String producers;
 
-    @Schema(description = "市场部审核员")
-    private Integer roleUserId;
-
-    @Schema(description = "预估金额")
+    @Schema(description = "预算费用（元）")
     private BigDecimal predictAmount;
 
     @Schema(description = "备注")
     private String remark;
 
-    @Schema(description = "导入业务单式或宣传单页excel数据id")
-    private String importDateId;
-
-    @Schema(description = "附件列表")
-    private List<PrintFileVO> files;
+    @Schema(description = "文件")
+    private List<MaterialsFileVO> files;
 
     @Schema(description = "物料列表")
-    private List<PrintMaterialsVO> printMaterials;
+    private List<MaterialsInfo> materialsInfo;
+
+
+    @Schema(description = "导入物料详单excel数据id")
+    private String importDateId;
 }

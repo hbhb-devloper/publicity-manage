@@ -127,13 +127,13 @@ public class MaterialsServiceImpl implements MaterialsService {
     }
 
     @Override
-    public MaterialsInfoVO getMaterials(Long id) {
+    public MaterialsVO getMaterials(Long id) {
         Materials materials = materialsMapper.single(id);
         List<MaterialsFile> files = fileMapper
                 .createLambdaQuery()
                 .andEq(MaterialsFile::getMaterialsId, id)
                 .select();
-        MaterialsInfoVO info = new MaterialsInfoVO();
+        MaterialsVO info = new MaterialsVO();
         BeanUtils.copyProperties(materials, info);
         // 转换用户信息
         UserInfo user = userApi.getUserInfoById(materials.getUserId());
@@ -171,7 +171,7 @@ public class MaterialsServiceImpl implements MaterialsService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void addMaterials(MaterialsInfoVO infoVO, Integer userId) {
+    public void addMaterials(MaterialsVO infoVO, Integer userId) {
         // 判断该用户所属单位下物料制作费用是否充足
         UserInfo user = userApi.getUserInfoById(userId);
         Unit unit = unitApi.getUnitInfo(user.getUnitId());
@@ -215,9 +215,10 @@ public class MaterialsServiceImpl implements MaterialsService {
         }
         // 新增印刷用品导入业务单式或宣传单页数据
         if (!isEmpty(infoVO.getImportDateId())) {
-            List<MaterialsInfo> materialsList = getMaterialsInfoList(infoVO.getImportDateId());
-            materialsList.forEach(item -> item.setMaterialsId(materials.getId()));
-            materialsInfoMapper.insertBatch(materialsList);
+            List<MaterialsInfoVO> materialsList = getMaterialsInfoList(infoVO.getImportDateId());
+            List<MaterialsInfo> materialsInfos = BeanConverter.copyBeanList(materialsList, MaterialsInfo.class);
+            materialsInfos.forEach(item -> item.setMaterialsId(materials.getId()));
+            materialsInfoMapper.insertBatch(materialsInfos);
         }
     }
 
@@ -234,7 +235,7 @@ public class MaterialsServiceImpl implements MaterialsService {
     }
 
     @Override
-    public void updateMaterials(MaterialsInfoVO infoVO, Integer userId) {
+    public void updateMaterials(MaterialsVO infoVO, Integer userId) {
         Materials single = materialsMapper.single(infoVO.getId());
         if (!userId.equals(single.getUserId())) {
             throw new PublicityException(PublicityErrorCode.NO_OPERATION_PERMISSION);
@@ -255,9 +256,10 @@ public class MaterialsServiceImpl implements MaterialsService {
         fileMapper.insertBatch(fileList);
         //
         if (!isEmpty(infoVO.getImportDateId())) {
-            List<MaterialsInfo> materialsList = getMaterialsInfoList(infoVO.getImportDateId());
-            materialsList.forEach(item -> item.setMaterialsId(materials.getId()));
-            materialsInfoMapper.insertBatch(materialsList);
+            List<MaterialsInfoVO> materialsList = getMaterialsInfoList(infoVO.getImportDateId());
+            List<MaterialsInfo> materialsInfos = BeanConverter.copyBeanList(materialsList, MaterialsInfo.class);
+            materialsInfos.forEach(item -> item.setMaterialsId(materials.getId()));
+            materialsInfoMapper.insertBatch(materialsInfos);
         }
     }
 
@@ -268,10 +270,10 @@ public class MaterialsServiceImpl implements MaterialsService {
             throw new PublicityException(PublicityErrorCode.IMPORT_DATE_TEMPLATE_ERROR);
         }
         //导入
-        List<MaterialsInfo> materialsList = new ArrayList<>();
+        List<MaterialsInfoVO> materialsList = new ArrayList<>();
         Map<String, Integer> unitNameMap = unitApi.getUnitMapByUnitName();
         for (MaterialsImportVO importVo : dataList) {
-            MaterialsInfo materials = new MaterialsInfo();
+            MaterialsInfoVO materials = new MaterialsInfoVO();
             BeanUtils.copyProperties(importVo, materials);
             materials.setUnitId(unitNameMap.get(importVo.getUnitName()));
             materials.setDeliveryDate(DateUtil.string3DateYMD(importVo.getDeliveryDate()));
@@ -373,7 +375,7 @@ public class MaterialsServiceImpl implements MaterialsService {
     }
 
     @Override
-    public List<MaterialsInfo> getMaterialsInfoList(String uuId) {
+    public List<MaterialsInfoVO> getMaterialsInfoList(String uuId) {
         Query query = new Query(Criteria.where("id").is(uuId));
         MaterialsInfoImportDataVO data = mongoTemplate.findOne(query, MaterialsInfoImportDataVO.class);
         if (data != null) {
