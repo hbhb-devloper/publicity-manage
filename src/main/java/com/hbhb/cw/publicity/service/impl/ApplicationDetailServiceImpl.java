@@ -154,7 +154,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         for (SummaryUnitApplicationVO summaryUnitGoodsVO : simplexList) {
             // 业务单式下宣传单页因都为0
             summaryUnitGoodsVO.setSingleAmount(0L);
-            map.put(summaryUnitGoodsVO.getUnitId(), summaryUnitGoodsVO );
+            map.put(summaryUnitGoodsVO.getUnitId(), summaryUnitGoodsVO);
         }
         if (singleList.size() == 0) {
             simplexList.addAll(singleList);

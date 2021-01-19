@@ -254,7 +254,7 @@ selectVerifyHallList
                    and g.id = #{goodsId}
                 -- @}
                 -- @if(isNotEmpty(unitId)){
-                   and a.unit_id = #{unitId}
+                   and g.unit_id = #{unitId}
                 -- @}
     group by a.hall_id;
 ```
