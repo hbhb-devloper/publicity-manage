@@ -339,7 +339,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         );
         Map<Integer, String> unitMap = unitApiExp.getUnitMapById();
         // 得到该单位下所有营业厅map
-        Map<Integer, String> map = hallApiExp.selectHallByUnitId(goodsCheckerVO.getUnitId());
+        Map<Integer, String> map = hallApiExp.selectHallByUnitId(11);
         for (VerifyHallGoodsVO verifyHallGoodsVO : list) {
             verifyHallGoodsVO.setUnitName(unitMap.get(verifyHallGoodsVO.getUnitId()));
             verifyHallGoodsVO.setHallName(map.get(Math.toIntExact(verifyHallGoodsVO.getHallId())));
