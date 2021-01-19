@@ -30,7 +30,7 @@ public class ApplicationFlowController {
 
     @GetMapping("")
     @Operation(summary = "得到流程中各个节点")
-    public FlowWrapperApplicationVO getFlow(String batchNum, @Parameter(hidden = true)@UserId Integer userId){
-        return applicationFlowService.getInfoByBatchNum(batchNum,userId);
+    public FlowWrapperApplicationVO getFlow(String batchNum,Integer unitId, @Parameter(hidden = true)@UserId Integer userId){
+        return applicationFlowService.getInfoByBatchNum(batchNum,userId,unitId);
     }
 }

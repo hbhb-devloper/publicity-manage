@@ -41,5 +41,5 @@ public interface ApplicationFlowService {
     /**
      * 通过批次号得到流程详情
      */
-    FlowWrapperApplicationVO getInfoByBatchNum(String batchNum, Integer userId);
+    FlowWrapperApplicationVO getInfoByBatchNum(String batchNum, Integer userId, Integer unitId);
 }

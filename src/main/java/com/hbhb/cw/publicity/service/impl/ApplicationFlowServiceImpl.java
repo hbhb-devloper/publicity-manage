@@ -82,7 +82,7 @@ public class ApplicationFlowServiceImpl implements ApplicationFlowService {
     }
 
     @Override
-    public FlowWrapperApplicationVO getInfoByBatchNum(String batchNum, Integer userId) {
+    public FlowWrapperApplicationVO getInfoByBatchNum(String batchNum, Integer userId, Integer unitId) {
         FlowWrapperApplicationVO wrapper = new FlowWrapperApplicationVO();
         List<ApplicationFlowInfoVO> list = new ArrayList<>();
         // 通过userId得到nickName
@@ -90,7 +90,8 @@ public class ApplicationFlowServiceImpl implements ApplicationFlowService {
         // 查询流程的所有节点
         List<ApplicationFlow> applicationFlows= applicationFlowMapper.createLambdaQuery()
                 .andEq(ApplicationFlow::getBatchNum, batchNum)
-                .andEq(ApplicationFlow::getUnitId,userInfo.getUnitId()).select();
+                .andEq(ApplicationFlow::getUnitId,unitId)
+                .select();
         if (applicationFlows==null||applicationFlows.size()==0){
             return wrapper;
         }

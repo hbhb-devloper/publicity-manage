@@ -299,6 +299,11 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
             // 如果结束提交置灰
             return false;
         }
+        // 如果已发起审批则无法再提交
+        List<Application> flowList = applicationMapper.createLambdaQuery().andEq(Application::getBatchNum, batchNum).select();
+        if (flowList != null && flowList.size() != 0) {
+            return false;
+        }
         // 展示该次该单位下的申请汇总。
         List<SummaryGoodsVO> summaries = goodsMapper.selectSummaryByState(SummaryCondVO.builder()
                 .batchNum(batchNum)

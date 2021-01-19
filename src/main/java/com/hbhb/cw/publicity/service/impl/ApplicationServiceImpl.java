@@ -2,11 +2,13 @@ package com.hbhb.cw.publicity.service.impl;
 
 import com.hbhb.core.utils.DateUtil;
 import com.hbhb.cw.publicity.mapper.ApplicationDetailMapper;
+import com.hbhb.cw.publicity.mapper.ApplicationFlowMapper;
 import com.hbhb.cw.publicity.mapper.ApplicationMapper;
 import com.hbhb.cw.publicity.mapper.GoodsFileMapper;
 import com.hbhb.cw.publicity.mapper.GoodsMapper;
 import com.hbhb.cw.publicity.model.Application;
 import com.hbhb.cw.publicity.model.ApplicationDetail;
+import com.hbhb.cw.publicity.model.ApplicationFlow;
 import com.hbhb.cw.publicity.model.Goods;
 import com.hbhb.cw.publicity.model.GoodsFile;
 import com.hbhb.cw.publicity.model.GoodsSetting;
@@ -52,6 +54,8 @@ public class ApplicationServiceImpl implements ApplicationService {
     private GoodsFileMapper goodsFileMapper;
     @Resource
     private ApplicationDetailMapper applicationDetailMapper;
+    @Resource
+    private ApplicationFlowMapper applicationFlowMapper;
     @Resource
     private FileApiExp fileApi;
     @Value("${mail.enable}")
@@ -144,11 +148,18 @@ public class ApplicationServiceImpl implements ApplicationService {
         else if (setting.getIsEnd() != null) {
             return new GoodsResVO(list, false, contents);
         }
-        String batchNum = DateUtil.dateToString(DateUtil.stringToDate(setting.getDeadline()), "yyyyMM") + goodsSetting.getGoodsIndex();
+        String batchNum = DateUtil.dateToString(DateUtil.stringToDate(setting.getDeadline()), "yyyyMM")
+                + goodsSetting.getGoodsIndex();
         // 3.判断本月此次下该分公司是否已保存
-        List<Application> applications = applicationMapper.selectApplicationByUnitId(goodsCondVO.getUnitId(),
-                batchNum);
+        List<Application> applications = applicationMapper.selectApplicationByUnitId(goodsCondVO.getUnitId(), batchNum);
         if (applications != null && applications.size() != 0 && applications.get(0).getEditable()) {
+            return new GoodsResVO(list, false, contents);
+        }
+        // 4.判断是否发起审批
+        List<ApplicationFlow> flowList = applicationFlowMapper.createLambdaQuery()
+                .andEq(ApplicationFlow::getBatchNum, batchNum)
+                .select();
+        if (flowList != null && flowList.size() != 0) {
             return new GoodsResVO(list, false, contents);
         }
         return new GoodsResVO(list, true, contents);
