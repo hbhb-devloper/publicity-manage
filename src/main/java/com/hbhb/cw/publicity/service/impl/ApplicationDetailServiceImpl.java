@@ -151,14 +151,10 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         List<SummaryUnitApplicationVO> singleList = getApplicationSum(batchNum, goodsReqVO.getUnitId(), GoodsType.FLYER_PAGE.getValue());
         // 通过goodsId得到unitName
         Map<Integer, SummaryUnitApplicationVO> map = new HashMap<>();
-        if (simplexList.size() == 0) {
-            simplexList.addAll(singleList);
-        } else {
-            for (SummaryUnitApplicationVO summaryUnitGoodsVO : simplexList) {
-                // 业务单式下宣传单页因都为0
-                summaryUnitGoodsVO.setSingleAmount(0L);
-                map.put(summaryUnitGoodsVO.getUnitId(), summaryUnitGoodsVO);
-            }
+        for (SummaryUnitApplicationVO summaryUnitGoodsVO : simplexList) {
+            // 业务单式下宣传单页因都为0
+            summaryUnitGoodsVO.setSingleAmount(0L);
+            map.put(summaryUnitGoodsVO.getUnitId(), summaryUnitGoodsVO );
         }
         if (singleList.size() == 0) {
             simplexList.addAll(singleList);
@@ -214,7 +210,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
             singList.get(i).setLineNum(i + 1L);
             singList.get(i).setUnitName(unitMap.get(singList.get(i).getUnitId()));
         }
-        if (time!=null){
+        if (time != null) {
             goodsReqVO.setTime(time);
         }
         List<SummaryUnitGoodsVO> simList = getUnitSummaryList(goodsReqVO, GoodsType.BUSINESS_SIMPLEX.getValue());
@@ -241,7 +237,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
                 DictCode.PUBLICITY_APPLICATION_DETAIL_STATE.value());
         Map<String, String> dictMap = dict.stream().collect(Collectors.toMap(DictVO::getValue, DictVO::getLabel));
         String batchNum = getBatchNum(goodsReqVO);
-        if (batchNum==null){
+        if (batchNum == null) {
             return new ArrayList<>();
         }
         // 查询该公司是否申领
@@ -477,7 +473,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         applicationDetailMapper.createLambdaQuery()
                 .andIn(ApplicationDetail::getApplicationId, applicationIdList)
                 .andEq(ApplicationDetail::getUnderUnitId, goodsApproveVO.getUnderUnitId())
-                .andIn(ApplicationDetail::getState,stateList)
+                .andIn(ApplicationDetail::getState, stateList)
                 .updateSelective(ApplicationDetail.builder()
                         .approvedState(NodeState.APPROVING.value())
                         .state(2)
@@ -553,7 +549,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         }
 
         // 同意或者拒绝后对该签报的代办提醒进行删除
-        applicationNoticeService.updateByBatchNum(batchNum,approveVO.getUnderUnitId());
+        applicationNoticeService.updateByBatchNum(batchNum, approveVO.getUnderUnitId());
 
         // 推送提醒
         assert operation != null;
@@ -805,7 +801,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
                 .build());
     }
 
-    private String getBatchNum(GoodsReqVO goodsReqVO){
+    private String getBatchNum(GoodsReqVO goodsReqVO) {
         Integer hangzhou = UnitEnum.HANGZHOU.value();
         // 如果为杭州则能看全部
         if (hangzhou.equals(goodsReqVO.getUnitId())) {
