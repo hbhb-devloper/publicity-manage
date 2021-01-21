@@ -174,6 +174,5 @@ public class PrintController {
     List<SelectVO> getAssessorList() {
         return printService.getAssessor();
     }
-
 }
 
