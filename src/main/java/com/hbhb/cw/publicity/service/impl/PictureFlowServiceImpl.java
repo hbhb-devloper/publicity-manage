@@ -293,7 +293,8 @@ public class PictureFlowServiceImpl implements PictureFlowService {
                     // 用户的所有流程角色
                     List<Long> flowRoleIds = roleUserApi.getRoleIdByUserId(userId);
                     // 2-2-a.当前用户是分配者
-                    if (flowRoleIds.contains(currentNode.getAssigner())) {
+                    if (flowRoleIds.contains(currentNode.getAssigner())
+                            && currentNode.getFlowRoleId().equals(currentNode.getAssigner())) {
                         flowNodes.forEach(flowNode -> nodes.add(buildFlowNode(flowNode, currentNodeId, 2)));
                     }
                     // 2-2-b.当前用户不是分配者

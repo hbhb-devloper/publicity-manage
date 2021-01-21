@@ -141,7 +141,8 @@ class MaterialsFlowServiceImpl implements MaterialsFlowService {
                 Integer next = approverMap.get(getNextNode(currentNodeId, nodeIds));
                 // 2.判断当前用户是否为分配者
                 // 2-1.如果是分配者
-                if (flowRoleIds.contains(currentNode.getAssigner())) {
+                if (flowRoleIds.contains(currentNode.getAssigner())
+                        && currentNode.getFlowRoleId().equals(currentNode.getAssigner())) {
                     // 校验是否所有节点的审批人已指定
                     if (approvers.stream().anyMatch(vo -> vo.getUserId() == null)) {
                         throw new PublicityException(PublicityErrorCode.NOT_ALL_APPROVERS_ASSIGNED);
