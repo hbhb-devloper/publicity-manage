@@ -50,7 +50,7 @@ public class PrintMaterials implements Serializable {
     /**
      * 是否加盖合同分公司印章
      */
-    private Integer isSeal;
+    private String isSeal;
     /**
      * 接收人/电话
      */
@@ -58,7 +58,7 @@ public class PrintMaterials implements Serializable {
     /**
      * 是否有合同编号
      */
-    private Integer isNum;
+    private String isNum;
     /**
      * 需送达日期
      */

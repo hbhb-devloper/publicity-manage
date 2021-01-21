@@ -108,6 +108,7 @@ public class PictureServiceImpl implements PictureService {
         Picture picture = pictureMapper.single(id);
         PictureInfoVO info = new PictureInfoVO();
         BeanUtils.copyProperties(picture, info);
+        info.setApplyTime(DateUtil.dateToString(picture.getApplyTime()));
         // 转换用户信息
         UserInfo user = userApi.getUserInfoById(picture.getUserId());
         info.setNickName(user.getNickName());

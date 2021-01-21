@@ -135,6 +135,7 @@ public class MaterialsServiceImpl implements MaterialsService {
                 .select();
         MaterialsVO info = new MaterialsVO();
         BeanUtils.copyProperties(materials, info);
+        info.setApplyTime(DateUtil.dateToString(materials.getApplyTime()));
         // 转换用户信息
         UserInfo user = userApi.getUserInfoById(materials.getUserId());
         info.setNickName(user.getNickName());

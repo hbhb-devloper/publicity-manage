@@ -10,7 +10,6 @@ import org.beetl.sql.core.mapping.join.AutoJsonMapper;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -41,7 +40,7 @@ public class MaterialsVO implements Serializable {
     private String nickName;
 
     @Schema(description = "申请时间")
-    private Date applyTime;
+    private String applyTime;
 
     @Schema(description = "是否有宽带")
     private Integer wideBand;

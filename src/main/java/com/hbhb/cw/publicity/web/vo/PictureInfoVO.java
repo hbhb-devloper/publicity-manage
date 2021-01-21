@@ -8,7 +8,6 @@ import org.beetl.sql.annotation.entity.AutoID;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -36,7 +35,7 @@ public class PictureInfoVO implements Serializable {
     private Integer state;
 
     @Schema(description = "申请时间")
-    private Date applyTime;
+    private String applyTime;
 
     @Schema(description = "是否有宽带: (0-没有，1-有)")
     private Integer wideBand;

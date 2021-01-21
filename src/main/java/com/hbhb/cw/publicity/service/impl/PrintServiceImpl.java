@@ -129,6 +129,7 @@ public class PrintServiceImpl implements PrintService {
         Print print = printMapper.single(id);
         PrintInfoVO info = new PrintInfoVO();
         BeanUtils.copyProperties(print, info);
+        info.setApplyTime(DateUtil.dateToString(print.getApplyTime()));
         // 转换用户信息
         UserInfo user = userApi.getUserInfoById(print.getUserId());
         info.setNickName(user.getNickName());
