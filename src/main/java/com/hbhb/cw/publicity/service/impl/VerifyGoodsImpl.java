@@ -164,17 +164,24 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
         userIdList.removeAll(receiverList);
         // 如果有则发送
         if (userIdList.size() != 0) {
-            UserInfo user = sysUserApiExp.getUserInfoById(userIdList.get(0));
-            verifyNoticeMapper.insertTemplate(
-                    VerifyNotice.builder()
-                            .batchNum(batchNum)
-                            .content("您还有宣传物料需要审批  批次号为" + batchNum)
-                            .createTime(new Date())
-                            .receiver(userIdList.get(0))
-                            .unitId(user.getUnitId())
-                            .state(0)
-                            .build()
-            );
+            List<Integer> userIds = new ArrayList<>();
+            for (Integer userId : userIdList) {
+                if (userIds.contains(userId)){
+                    continue;
+                }
+                userIds.add(userId);
+                UserInfo user = sysUserApiExp.getUserInfoById(userId);
+                verifyNoticeMapper.insertTemplate(
+                        VerifyNotice.builder()
+                                .batchNum(batchNum)
+                                .content("您还有宣传物料需要审批  批次号为" + batchNum)
+                                .createTime(new Date())
+                                .receiver(userId)
+                                .unitId(user.getUnitId())
+                                .state(0)
+                                .build()
+                );
+            }
         }
     }
 
@@ -297,6 +304,11 @@ public class VerifyGoodsImpl implements VerifyGoodsService {
         if (goodsSetting.getIsEnd() != null
                 || DateUtil.stringToDate(goodsSetting.getDeadline()).getTime() < DateUtil.stringToDate(goodsReqVO.getTime()).getTime()) {
             // 如果结束提交置灰
+            return false;
+        }
+        // 如果已发起审批则无法再提交
+        List<Application> flowList = applicationMapper.createLambdaQuery().andEq(Application::getBatchNum, batchNum).select();
+        if (flowList != null && flowList.size() != 0) {
             return false;
         }
         // 展示该次该单位下的申请汇总。

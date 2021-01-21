@@ -31,6 +31,9 @@ public class ApplicationNoticeResVO implements Serializable {
     @Schema(description = "发起单位id")
     private Integer unitId;
 
+    @Schema(description = "归属单位id")
+    private Integer underUnitId;
+
     @Schema(description = "接收人id")
     private Integer receiver;
 

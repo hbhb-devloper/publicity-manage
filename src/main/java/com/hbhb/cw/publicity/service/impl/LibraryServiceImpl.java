@@ -205,7 +205,8 @@ public class LibraryServiceImpl implements LibraryService {
             if (libraryAddVO.getParentId()!=null) {
                 // 得到其父类
                 List<Goods> actGoods = goodsMapper.createLambdaQuery()
-                        .andEq(Goods::getId, libraryAddVO.getParentId()).select();
+                        .andEq(Goods::getId, libraryAddVO.getParentId())
+                        .select();
                 // 判断父类是否禁用
                 if (actGoods != null && actGoods.size() != 0 && !actGoods.get(0).getState() && libraryAddVO.getState()) {
                     throw new PublicityException(PublicityErrorCode.DO_NOT_OPERATE);
@@ -214,19 +215,23 @@ public class LibraryServiceImpl implements LibraryService {
             // 修改改活动下所有的子类状态
             goodsMapper.createLambdaQuery()
                     .andEq(Goods::getParentId, libraryAddVO.getId())
-                    .updateSelective(Goods.builder().state(libraryAddVO.getState()).build());
+                    .updateSelective(Goods.builder()
+                            .state(libraryAddVO.getState())
+                            .build());
             // 获取子类信息得到子类id
             List<Goods> goodsList = goodsMapper.createLambdaQuery()
                     .andEq(Goods::getParentId, libraryAddVO.getId())
                     .select();
             List<Long> goodsIds = new ArrayList<>();
-            for (Goods goods : goodsList) {
-                goodsIds.add(goods.getId());
+            if (goodsList!=null&& goodsList.size()!=0) {
+                for (Goods goods : goodsList) {
+                    goodsIds.add(goods.getId());
+                }
+                // 修改子类下所有状态
+                goodsMapper.createLambdaQuery()
+                        .andIn(Goods::getParentId, goodsIds)
+                        .updateSelective(Goods.builder().state(libraryAddVO.getState()).build());
             }
-            // 修改子类下所有状态
-            goodsMapper.createLambdaQuery()
-                    .andIn(Goods::getParentId, goodsIds)
-                    .updateSelective(Goods.builder().state(libraryAddVO.getState()).build());
             libraryAddVO.setUpdateTime(new Date());
             goodsMapper.createLambdaQuery().andEq(Goods::getId, libraryAddVO.getId()).updateSelective(libraryAddVO);
         }

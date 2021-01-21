@@ -16,7 +16,7 @@ public interface ApplicationNoticeService {
 
    void saveApplicationNotice(ApplicationNoticeResVO applicationNoticeVO);
 
-   void updateByBatchNum(String batchNum);
+   void updateByBatchNum(String batchNum,Integer underUnitId);
 
    /**
     * 获取提醒数量

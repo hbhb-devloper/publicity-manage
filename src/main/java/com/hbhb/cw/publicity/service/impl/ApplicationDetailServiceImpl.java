@@ -151,14 +151,10 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         List<SummaryUnitApplicationVO> singleList = getApplicationSum(batchNum, goodsReqVO.getUnitId(), GoodsType.FLYER_PAGE.getValue());
         // 通过goodsId得到unitName
         Map<Integer, SummaryUnitApplicationVO> map = new HashMap<>();
-        if (simplexList.size() == 0) {
-            simplexList.addAll(singleList);
-        } else {
-            for (SummaryUnitApplicationVO summaryUnitGoodsVO : simplexList) {
-                // 业务单式下宣传单页因都为0
-                summaryUnitGoodsVO.setSingleAmount(0L);
-                map.put(summaryUnitGoodsVO.getUnitId(), summaryUnitGoodsVO);
-            }
+        for (SummaryUnitApplicationVO summaryUnitGoodsVO : simplexList) {
+            // 业务单式下宣传单页因都为0
+            summaryUnitGoodsVO.setSingleAmount(0L);
+            map.put(summaryUnitGoodsVO.getUnitId(), summaryUnitGoodsVO);
         }
         if (singleList.size() == 0) {
             simplexList.addAll(singleList);
@@ -207,11 +203,15 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         if (hangzhou.equals(goodsReqVO.getUnitId())) {
             goodsReqVO.setUnitId(null);
         }
+        String time = goodsReqVO.getTime();
         Map<Integer, String> unitMap = unitApiExp.getUnitMapById();
         List<SummaryUnitGoodsVO> singList = getUnitSummaryList(goodsReqVO, GoodsType.FLYER_PAGE.getValue());
         for (int i = 0; i < singList.size(); i++) {
             singList.get(i).setLineNum(i + 1L);
             singList.get(i).setUnitName(unitMap.get(singList.get(i).getUnitId()));
+        }
+        if (time != null) {
+            goodsReqVO.setTime(time);
         }
         List<SummaryUnitGoodsVO> simList = getUnitSummaryList(goodsReqVO, GoodsType.BUSINESS_SIMPLEX.getValue());
         for (int i = 0; i < simList.size(); i++) {
@@ -236,26 +236,10 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         List<DictVO> dict = sysDictApiExp.getDict(TypeCode.PUBLICITY.value(),
                 DictCode.PUBLICITY_APPLICATION_DETAIL_STATE.value());
         Map<String, String> dictMap = dict.stream().collect(Collectors.toMap(DictVO::getValue, DictVO::getLabel));
-        GoodsSetting goodsSetting = null;
-        if (goodsReqVO.getTime() != null && goodsReqVO.getGoodsIndex() == null) {
+        String batchNum = getBatchNum(goodsReqVO);
+        if (batchNum == null) {
             return new ArrayList<>();
         }
-        if (goodsReqVO.getTime() == null) {
-            // 通过时间判断批次
-            goodsSetting = goodsSettingService.getSetByDate(DateUtil.dateToString(new Date()));
-            goodsReqVO.setTime(goodsSetting.getDeadline());
-            goodsReqVO.setGoodsIndex(goodsSetting.getGoodsIndex());
-        } else {
-            goodsSetting = goodsSettingService.getByCond(goodsReqVO.getTime(), goodsReqVO.getGoodsIndex());
-        }
-        if (goodsSetting == null) {
-            return new ArrayList<>();
-        }
-        if (goodsReqVO.getGoodsIndex() == null) {
-            goodsReqVO.setGoodsIndex(goodsSetting.getGoodsIndex());
-        }
-        goodsReqVO.setTime(goodsSetting.getDeadline());
-        String batchNum = DateUtil.dateToString(DateUtil.stringToDate(goodsSetting.getDeadline()), "yyyyMM") + goodsReqVO.getGoodsIndex();
         // 查询该公司是否申领
         List<ApplicationByUnitVO> applicationByUnitVOList = applicationMapper.selectByUnit(goodsReqVO.getUnitId(), batchNum);
         // 得到所有公司下所有货物（goodsId）
@@ -317,25 +301,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
 
     @Override
     public List<SummaryUnitGoodsVO> getUnitSummaryList(GoodsReqVO goodsReqVO, Integer type) {
-        GoodsSetting goodsSetting = null;
-        if (goodsReqVO.getTime() != null && goodsReqVO.getGoodsIndex() == null) {
-            return new ArrayList<>();
-        }
-        if (goodsReqVO.getTime() == null) {
-            // 通过时间判断批次
-            goodsSetting = goodsSettingService.getSetByDate(DateUtil.dateToString(new Date()));
-            goodsReqVO.setTime(goodsSetting.getDeadline());
-        } else {
-            goodsSetting = goodsSettingService.getByCond(DateUtil.dateToString(DateUtil.stringToDate(goodsReqVO.getTime()), "yyyy-MM"), goodsReqVO.getGoodsIndex());
-        }
-        if (goodsSetting == null) {
-            return new ArrayList<SummaryUnitGoodsVO>();
-        }
-        if (goodsReqVO.getGoodsIndex() == null) {
-            goodsReqVO.setGoodsIndex(goodsSetting.getGoodsIndex());
-        }
-        goodsReqVO.setTime(goodsSetting.getDeadline());
-        String batchNum = DateUtil.dateToString(DateUtil.stringToDate(goodsSetting.getDeadline()), "yyyyMM") + goodsReqVO.getGoodsIndex();
+        String batchNum = getBatchNum(goodsReqVO);
         // 展示该次该单位下的申请汇总。
         return applicationDetailMapper.selectSummaryUnitByType(SummaryCondVO.builder()
                 .batchNum(batchNum)
@@ -373,7 +339,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         );
         Map<Integer, String> unitMap = unitApiExp.getUnitMapById();
         // 得到该单位下所有营业厅map
-        Map<Integer, String> map = hallApiExp.selectHallByUnitId(goodsCheckerVO.getUnitId());
+        Map<Integer, String> map = hallApiExp.selectHallByUnitId(11);
         for (VerifyHallGoodsVO verifyHallGoodsVO : list) {
             verifyHallGoodsVO.setUnitName(unitMap.get(verifyHallGoodsVO.getUnitId()));
             verifyHallGoodsVO.setHallName(map.get(Math.toIntExact(verifyHallGoodsVO.getHallId())));
@@ -507,7 +473,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         applicationDetailMapper.createLambdaQuery()
                 .andIn(ApplicationDetail::getApplicationId, applicationIdList)
                 .andEq(ApplicationDetail::getUnderUnitId, goodsApproveVO.getUnderUnitId())
-                .andIn(ApplicationDetail::getState,stateList)
+                .andIn(ApplicationDetail::getState, stateList)
                 .updateSelective(ApplicationDetail.builder()
                         .approvedState(NodeState.APPROVING.value())
                         .state(2)
@@ -583,12 +549,12 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         }
 
         // 同意或者拒绝后对该签报的代办提醒进行删除
-        applicationNoticeService.updateByBatchNum(batchNum);
+        applicationNoticeService.updateByBatchNum(batchNum, approveVO.getUnderUnitId());
 
         // 推送提醒
         assert operation != null;
         toInform(operation, approvers, userId, batchNum, currentFlowNodeId, flowNodes,
-                approverMap, approveVO.getSuggestion());
+                approverMap, approveVO.getSuggestion(), approveVO.getUnderUnitId());
 
         // 更新项目节点信息
         applicationFlowService.updateById(ApplicationFlow.builder()
@@ -744,7 +710,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
      */
     private void toInform(Integer operation, List<ApplicationFlowNodeVO> approvers,
                           Integer userId, String batchNum, String currentFlowNodeId, List<String> flowNodes,
-                          Map<String, Integer> approverMap, String suggestion) {
+                          Map<String, Integer> approverMap, String suggestion, Integer underUnitId) {
         // 通过flowNodeId得到流程类型id
         Long flowTypeId = flowTypeApiExp.getTypeIdByNode(flowNodes.get(0));
         // 获取用户姓名
@@ -769,6 +735,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
                                 .content(inform)
                                 .flowTypeId(flowTypeId)
                                 .state(0)
+                                .underUnitId(underUnitId)
                                 .build());
                 // 推送邮件
                 if (mailEnable) {
@@ -795,6 +762,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
                             .promoter(userId)
                             .content(inform)
                             .flowTypeId(flowTypeId)
+                            .underUnitId(underUnitId)
                             .state(0)
                             .build());
         }
@@ -814,6 +782,7 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
                             .promoter(userId)
                             .content(inform)
                             .flowTypeId(flowTypeId)
+                            .underUnitId(underUnitId)
                             .state(0)
                             .build());
 
@@ -830,5 +799,33 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
                 .unitId(unitId)
                 .type(type)
                 .build());
+    }
+
+    private String getBatchNum(GoodsReqVO goodsReqVO) {
+        Integer hangzhou = UnitEnum.HANGZHOU.value();
+        // 如果为杭州则能看全部
+        if (hangzhou.equals(goodsReqVO.getUnitId())) {
+            goodsReqVO.setUnitId(null);
+        }
+        GoodsSetting goodsSetting = null;
+        if (goodsReqVO.getTime() != null && goodsReqVO.getGoodsIndex() == null) {
+            return null;
+        }
+        if (goodsReqVO.getTime() == null) {
+            // 通过时间判断批次
+            goodsSetting = goodsSettingService.getSetByDate(DateUtil.dateToString(new Date()));
+            goodsReqVO.setTime(goodsSetting.getDeadline());
+            goodsReqVO.setGoodsIndex(goodsSetting.getGoodsIndex());
+        } else {
+            goodsSetting = goodsSettingService.getByCond(goodsReqVO.getTime(), goodsReqVO.getGoodsIndex());
+            if (goodsSetting == null) {
+                return null;
+            }
+            goodsReqVO.setTime(goodsSetting.getDeadline());
+        }
+        if (goodsSetting.getDeadline() == null) {
+            return null;
+        }
+        return DateUtil.dateToString(DateUtil.stringToDate(goodsSetting.getDeadline()), "yyyyMM") + goodsReqVO.getGoodsIndex();
     }
 }

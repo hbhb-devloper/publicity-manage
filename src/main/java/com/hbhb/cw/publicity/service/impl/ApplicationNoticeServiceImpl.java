@@ -65,9 +65,10 @@ public class ApplicationNoticeServiceImpl implements ApplicationNoticeService {
     }
 
     @Override
-    public void updateByBatchNum(String batchNum) {
+    public void updateByBatchNum(String batchNum, Integer underUnitId) {
         applicationNoticeMapper.createLambdaQuery()
                 .andEq(ApplicationNotice::getBatchNum,batchNum)
+                .andEq(ApplicationNotice::getUnderUnitId,underUnitId)
                 .updateSelective(ApplicationNotice.builder().state(1).build());
     }
 
