@@ -537,35 +537,38 @@ public class MaterialsServiceImpl implements MaterialsService {
     }
 
     private boolean isEnableCond(BigDecimal amount, FlowNodePropVO propVO) {
-        Map<String, String> enableMap = enableCondMap();
-        String enable = enableMap.get(propVO.getEnableCond().toString());
-        boolean flag = false;
-        if (EnableCond.GREATER.value().equals(enable)) {
-            if (amount.compareTo(propVO.getAmount()) > 0) {
-                flag = true;
+        if (!isEmpty(propVO.getEnableCond())) {
+            Map<String, String> enableMap = enableCondMap();
+            String enable = enableMap.get(propVO.getEnableCond().toString());
+            boolean flag = false;
+            if (EnableCond.GREATER.value().equals(enable)) {
+                if (amount.compareTo(propVO.getAmount()) > 0) {
+                    flag = true;
+                }
             }
-        }
-        if (EnableCond.EQUAL_GREATER.value().equals(enable)) {
-            if (amount.compareTo(propVO.getAmount()) >= 0) {
-                flag = true;
+            if (EnableCond.EQUAL_GREATER.value().equals(enable)) {
+                if (amount.compareTo(propVO.getAmount()) >= 0) {
+                    flag = true;
+                }
             }
-        }
-        if (EnableCond.LESS.value().equals(enable)) {
-            if (amount.compareTo(propVO.getAmount()) < 0) {
-                flag = true;
+            if (EnableCond.LESS.value().equals(enable)) {
+                if (amount.compareTo(propVO.getAmount()) < 0) {
+                    flag = true;
+                }
             }
-        }
-        if (EnableCond.EQUAL_LESS.value().equals(enable)) {
-            if (amount.compareTo(propVO.getAmount()) <= 0) {
-                flag = true;
+            if (EnableCond.EQUAL_LESS.value().equals(enable)) {
+                if (amount.compareTo(propVO.getAmount()) <= 0) {
+                    flag = true;
+                }
             }
-        }
-        if (EnableCond.EQUAL.value().equals(enable)) {
-            if (amount.compareTo(propVO.getAmount()) == 0) {
-                flag = true;
+            if (EnableCond.EQUAL.value().equals(enable)) {
+                if (amount.compareTo(propVO.getAmount()) == 0) {
+                    flag = true;
+                }
             }
+            return flag;
         }
-        return flag;
+        return true;
     }
 
 
