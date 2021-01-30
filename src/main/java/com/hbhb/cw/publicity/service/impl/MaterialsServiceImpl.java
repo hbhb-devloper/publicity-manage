@@ -582,8 +582,9 @@ public class MaterialsServiceImpl implements MaterialsService {
                 }
             }
             return flag;
+        } else {
+            return true;
         }
-        return true;
     }
 
 
