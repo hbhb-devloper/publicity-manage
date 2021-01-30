@@ -54,7 +54,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
-import java.time.Year;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -426,7 +425,7 @@ public class MaterialsServiceImpl implements MaterialsService {
             MaterialsBudget build = MaterialsBudget.builder()
                     .budget(BigDecimal.ZERO)
                     .unitId(item)
-                    .budgetYear(Year.now())
+                    .budgetYear(DateUtil.dateToStringY(new Date()))
                     .build();
             materialsBudgets.add(build);
         }

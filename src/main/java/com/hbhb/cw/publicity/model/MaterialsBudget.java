@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.time.Year;
 
 /**
  * @author wangxiaogang
@@ -38,6 +37,6 @@ public class MaterialsBudget implements Serializable {
     /**
      * 预算年份
      */
-    private Year budgetYear;
+    private String budgetYear;
 
 }
