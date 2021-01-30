@@ -55,11 +55,11 @@ public class PrintImportVO implements Serializable {
 
     @Schema(description = "是否加盖合同分公司印章")
     @ExcelProperty(index = 8)
-    private Integer isSeal;
+    private String isSeal;
 
     @Schema(description = "是否有合同编号")
     @ExcelProperty(index = 9)
-    private Integer isNum;
+    private String isNum;
 
     @Schema(description = "需送达日期")
     @ExcelProperty(index = 10)

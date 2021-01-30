@@ -49,7 +49,7 @@ public interface PictureService {
      *
      * @param id id
      */
-    void deletePicture(Long id);
+    void deletePicture(Long id, Integer userId);
 
     /**
      * 删除附件
@@ -72,5 +72,5 @@ public interface PictureService {
      *
      * @param initVO 发起条件
      */
-    void toApprove(PictureInitVO initVO);
+    void toApprove(PictureInitVO initVO, Integer userId);
 }

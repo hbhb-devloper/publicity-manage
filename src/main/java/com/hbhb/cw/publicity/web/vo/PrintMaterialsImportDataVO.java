@@ -1,6 +1,5 @@
 package com.hbhb.cw.publicity.web.vo;
 
-import com.hbhb.cw.publicity.model.PrintMaterials;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,5 +18,5 @@ public class PrintMaterialsImportDataVO implements Serializable {
 
     private String id;
 
-    private List<PrintMaterials> materials;
+    private List<PrintMaterialsVO> materials;
 }

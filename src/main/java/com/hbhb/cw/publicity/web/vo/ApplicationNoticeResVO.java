@@ -1,5 +1,7 @@
 package com.hbhb.cw.publicity.web.vo;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.io.Serializable;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -16,7 +18,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class AppliactionNoticeReqVO implements Serializable {
+public class ApplicationNoticeResVO implements Serializable {
 
     private static final long serialVersionUID = -2963184819678898269L;
 
@@ -24,6 +26,13 @@ public class AppliactionNoticeReqVO implements Serializable {
 
     @Schema(description = "项目签报id")
     private String batchNum;
+
+    @JsonIgnore
+    @Schema(description = "发起单位id")
+    private Integer unitId;
+
+    @Schema(description = "归属单位id")
+    private Integer underUnitId;
 
     @Schema(description = "接收人id")
     private Integer receiver;
@@ -42,4 +51,16 @@ public class AppliactionNoticeReqVO implements Serializable {
 
     @Schema(description = "流程类型id")
     private Long flowTypeId;
+
+    @Schema(description = "状态名称")
+    private String stateLabel;
+
+    @Schema(description = "提醒类型")
+    private String noticeType;
+
+    @Schema(description = "流程类型名称")
+    private String flowType;
+
+    @Schema(description = "发起单位名称")
+    private String unitName;
 }

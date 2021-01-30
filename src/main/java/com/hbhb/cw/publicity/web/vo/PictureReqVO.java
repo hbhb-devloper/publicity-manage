@@ -21,15 +21,19 @@ public class PictureReqVO implements Serializable {
     @Schema(description = "单位id")
     private Integer unitId;
 
-    @Schema(description = "年份")
-    private String year;
-
-    @Schema(description = "月份")
-    private String month;
+    @Schema(description = "申请时间:年-月")
+    private String applyTime;
 
     @Schema(description = "审批状态")
     private Integer state;
 
     @Schema(description = "画面类型")
     private Integer pictureType;
+
+    @Schema(description = "申请单名称")
+    private String pictureName;
+
+    @Schema(description = "申请单号")
+    private String pictureNum;
+
 }

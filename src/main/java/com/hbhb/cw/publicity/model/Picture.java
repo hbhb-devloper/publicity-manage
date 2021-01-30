@@ -61,7 +61,7 @@ public class Picture implements Serializable {
     /**
      * 原因
      */
-    private Integer reason;
+    private String reason;
     /**
      * 创建时间
      */

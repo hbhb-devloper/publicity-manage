@@ -20,7 +20,7 @@ import lombok.NoArgsConstructor;
 public class ApplicationApproveVO implements Serializable {
     private static final long serialVersionUID = 6308905364605992433L;
 
-    @Schema(description = "项目签报流程信息id")
+    @Schema(description = "流程节点属性id")
     private Long id;
 
     @Schema(description = "操作")

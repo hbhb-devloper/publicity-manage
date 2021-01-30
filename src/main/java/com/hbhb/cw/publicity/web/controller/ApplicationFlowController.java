@@ -1,14 +1,12 @@
 package com.hbhb.cw.publicity.web.controller;
 
 import com.hbhb.cw.publicity.service.ApplicationFlowService;
-import com.hbhb.cw.publicity.web.vo.ApplicationFlowInfoVO;
+import com.hbhb.cw.publicity.web.vo.FlowWrapperApplicationVO;
 import com.hbhb.web.annotation.UserId;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 import javax.annotation.Resource;
 
@@ -32,7 +30,7 @@ public class ApplicationFlowController {
 
     @GetMapping("")
     @Operation(summary = "得到流程中各个节点")
-    public List<ApplicationFlowInfoVO> getFlow(String batchNum, @Parameter(hidden = true)@UserId Integer userId){
-        return applicationFlowService.getInfoByBatchNum(batchNum,userId);
+    public FlowWrapperApplicationVO getFlow(String batchNum,Integer unitId, @Parameter(hidden = true)@UserId Integer userId){
+        return applicationFlowService.getInfoByBatchNum(batchNum,userId,unitId);
     }
 }

@@ -1,8 +1,12 @@
 package com.hbhb.cw.publicity.service;
 
 import com.hbhb.api.core.bean.SelectVO;
-import com.hbhb.cw.publicity.model.PrintMaterials;
-import com.hbhb.cw.publicity.web.vo.*;
+import com.hbhb.cw.publicity.web.vo.PrintImportVO;
+import com.hbhb.cw.publicity.web.vo.PrintInfoVO;
+import com.hbhb.cw.publicity.web.vo.PrintInitVO;
+import com.hbhb.cw.publicity.web.vo.PrintMaterialsVO;
+import com.hbhb.cw.publicity.web.vo.PrintReqVO;
+import com.hbhb.cw.publicity.web.vo.PrintResVO;
 import org.beetl.sql.core.page.PageResult;
 
 import java.util.List;
@@ -41,9 +45,10 @@ public interface PrintService {
     /**
      * 跟据id删除印刷用品
      *
-     * @param id id
+     * @param id     id
+     * @param userId 用户id
      */
-    void deletePrint(Long id);
+    void deletePrint(Long id, Integer userId);
 
     /**
      * 修改印刷用品
@@ -56,9 +61,11 @@ public interface PrintService {
     /**
      * 批量导入
      *
-     * @param dataList 导入列表
+     * @param dataList   导入列表
+     * @param type       类型
+     * @param headerList 表头
      */
-    void savePrint(List<PrintImportVO> dataList, AtomicInteger type);
+    void savePrint(List<PrintImportVO> dataList, AtomicInteger type, List<String> headerList);
 
     /**
      * 删除附件
@@ -89,7 +96,7 @@ public interface PrintService {
      * @param uuId id
      * @return 列表
      */
-    List<PrintMaterials> getPrintMaterialsList(String uuId);
+    List<PrintMaterialsVO> getPrintMaterialsList(String uuId);
 
     /**
      * 获取导入id
@@ -111,4 +118,11 @@ public interface PrintService {
      * @param printId 印刷物品id
      */
     void deletePrintMaterials(Long printId);
+
+    /**
+     * 判断导入文件是否为excel
+     *
+     * @param fileName 文件名
+     */
+    void judgeFileName(String fileName);
 }

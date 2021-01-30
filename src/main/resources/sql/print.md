@@ -15,23 +15,26 @@ select
     -- @}
     from print
     -- @where(){
-    -- @if(!isEmpty(cond.unitId)){
-      and unit_id = #{cond.unitId}
+    -- @if(isNotEmpty(list)){
+       and unit_id in (#{join(list)})
     -- @}
-    -- @if(!isEmpty(cond.applyTime)){
+    -- @if(isNotEmpty(cond.applyTime)){
       and apply_time like concat('%', #{cond.applyTime}, '%')
     -- @}
-    -- @if(!isEmpty(cond.state)){
+    -- @if(isNotEmpty(cond.state)){
       and state = #{cond.state}
     -- @}
-    -- @if(!isEmpty(cond.printName)){
+    -- @if(isNotEmpty(cond.printName)){
       and print_name = #{cond.printName}
     -- @}
-    -- @if(!isEmpty(cond.printNum)){
+    -- @if(isNotEmpty(cond.printNum)){
       and print_num = #{cond.printNum}
     -- @}
       and delete_flag =1
     -- @}
+  -- @pageIgnoreTag(){
+      order by  apply_time desc
+ -- @}
 ```
 
 selectPrintInfoById

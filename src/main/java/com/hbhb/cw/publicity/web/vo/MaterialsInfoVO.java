@@ -1,16 +1,13 @@
 package com.hbhb.cw.publicity.web.vo;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.beetl.sql.annotation.entity.ResultProvider;
-import org.beetl.sql.core.mapping.join.AutoJsonMapper;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
-import java.util.List;
+import java.util.Date;
 
 /**
  * @author wangxiaogang
@@ -18,43 +15,44 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ResultProvider(AutoJsonMapper.class)
+@Builder
 public class MaterialsInfoVO implements Serializable {
     private static final long serialVersionUID = -4925013973478233876L;
-
     private Long id;
 
-    @Schema(description = "申请单名称")
+    @Schema(description = "物料名称")
     private String materialsName;
 
-    @Schema(description = "申请单号")
-    private String materialsNum;
+    @Schema(description = "申请数量")
+    private Integer applyCount;
 
-    @Schema(description = "用户id")
-    private Integer userId;
+    @Schema(description = "计量单位")
+    private String units;
 
-    @Schema(description = "申请时间")
-    private String applyTime;
+    @Schema(description = "纸张样式")
+    private String style;
 
-    @Schema(description = "是否有宽带")
-    private Integer wideBand;
+    @Schema(description = "制作工艺")
+    private String craft;
 
-    @Schema(description = "单位id")
+    @Schema(description = "部门")
+    private String unitName;
+
+    @Schema(description = "部门")
     private Integer unitId;
 
-    @Schema(description = "制作商")
-    private String producers;
+    @Schema(description = "分配地方（地址）")
+    private String address;
 
-    @Schema(description = "预算费用（元）")
-    private BigDecimal predictAmount;
+    @Schema(description = "接收人")
+    private String receivedBy;
+
+    @Schema(description = "电话")
+    private String receivedPhone;
+
+    @Schema(description = "需送达日期")
+    private Date deliveryDate;
 
     @Schema(description = "备注")
     private String remark;
-
-    @Schema(description = "文件")
-    private List<MaterialsFileVO> files;
-
-    @JsonIgnore
-    @Schema(description = "导入物料详单excel数据id")
-    private String importDateId;
 }

@@ -30,5 +30,5 @@ public class GoodsVO implements Serializable {
     private Long applyAmount;
 
     @Schema(description = "图片")
-    private String pic;
+    private PublicityPictureVO pic;
 }

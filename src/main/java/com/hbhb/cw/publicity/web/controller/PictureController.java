@@ -1,6 +1,7 @@
 
 package com.hbhb.cw.publicity.web.controller;
 
+import com.hbhb.api.core.bean.FileVO;
 import com.hbhb.cw.publicity.rpc.FileApiExp;
 import com.hbhb.cw.publicity.service.PictureService;
 import com.hbhb.cw.publicity.web.vo.PictureInfoVO;
@@ -8,12 +9,13 @@ import com.hbhb.cw.publicity.web.vo.PictureInitVO;
 import com.hbhb.cw.publicity.web.vo.PictureReqVO;
 import com.hbhb.cw.publicity.web.vo.PictureResVO;
 import com.hbhb.cw.systemcenter.enums.FileType;
-import com.hbhb.cw.systemcenter.vo.FileVO;
 import com.hbhb.web.annotation.UserId;
+import com.hbhb.web.util.FileUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
+import org.beetl.sql.core.page.DefaultPageResult;
 import org.beetl.sql.core.page.PageResult;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +23,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
-
 
 /**
  * @author wangxiaogang
@@ -37,15 +38,17 @@ public class PictureController {
     @Resource
     private PictureService pictureService;
 
-    @Operation(summary = "印刷用品管理列表")
+    @Operation(summary = "宣传画面管理列表")
     @GetMapping("/list")
     public PageResult<PictureResVO> getPictureList(
             @Parameter(description = "页码，默认为1") @RequestParam(required = false) Integer pageNum,
             @Parameter(description = "每页数量，默认为10") @RequestParam(required = false) Integer pageSize,
-            @Parameter(description = "查询参数") PictureReqVO reqVO,
-            @Parameter(hidden = false) @UserId Integer userId) {
+            @Parameter(description = "查询参数") PictureReqVO reqVO) {
         pageNum = pageNum == null ? 1 : pageNum;
         pageSize = pageSize == null ? 10 : pageSize;
+        if (reqVO.getUnitId() == null) {
+            return new DefaultPageResult<>();
+        }
         return pictureService.getPictureList(reqVO, pageNum, pageSize);
     }
 
@@ -66,12 +69,13 @@ public class PictureController {
     @PostMapping("/export")
     public void exportPicture(HttpServletResponse response) {
         String path = fileApi.getTemplatePath() + "/宣传画面设计需求单模板v2.doc";
-        fileApi.download(response, path, false);
+        FileUtil.download(response, path, false);
     }
 
     @Operation(summary = "修改宣传画面")
     @PutMapping("")
-    public void updatePicture(@RequestBody PictureInfoVO pictureInfoVO, @Parameter(hidden = true) @UserId Integer userId) {
+    public void updatePicture(@RequestBody PictureInfoVO pictureInfoVO,
+                              @Parameter(hidden = true) @UserId Integer userId) {
         pictureService.updatePicture(pictureInfoVO, userId);
     }
 
@@ -79,6 +83,7 @@ public class PictureController {
     @PostMapping(value = "/import", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public FileVO pictureImport(@RequestPart(required = false, value = "file") MultipartFile file) {
         return fileApi.upload(file, 64);
+
     }
 
     @Operation(summary = "上传附件")
@@ -90,15 +95,16 @@ public class PictureController {
 
     @Operation(summary = "删除宣传画面")
     @DeleteMapping("/{id}")
-    public void deletePicture(@PathVariable("id") Long id) {
-        pictureService.deletePicture(id);
+    public void deletePicture(@PathVariable("id") Long id,
+                              @Parameter(hidden = true) @UserId Integer userId) {
+        pictureService.deletePicture(id, userId);
     }
 
     @Operation(summary = "发起审批")
     @PostMapping("/to-approve")
-    public void toApprove(@RequestBody PictureInitVO initVO, @Parameter(hidden = true) @UserId Integer userId) {
-        initVO.setUserId(userId);
-        pictureService.toApprove(initVO);
+    public void toApprove(@RequestBody PictureInitVO initVO,
+                          @Parameter(hidden = true) @UserId Integer userId) {
+        pictureService.toApprove(initVO, userId);
     }
 
     @Operation(summary = "删除附件")

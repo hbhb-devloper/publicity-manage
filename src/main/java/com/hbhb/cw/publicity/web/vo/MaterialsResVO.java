@@ -18,12 +18,16 @@ import java.util.Date;
 public class MaterialsResVO implements Serializable {
     private static final long serialVersionUID = 6972467700655170579L;
 
+    private Long id;
 
     @Schema(description = "申请单名称")
     private String materialsName;
 
     @Schema(description = "用户id")
     private Integer userId;
+
+    @Schema(description = "申请单号")
+    private String materialsNum;
 
     @Schema(description = "用户id")
     private String nickName;
@@ -45,6 +49,9 @@ public class MaterialsResVO implements Serializable {
 
     @Schema(description = "预算费用（元）")
     private BigDecimal predictAmount;
+
+    @Schema(description = "流程状态")
+    private Integer state;
 
     @Schema(description = "备注")
     private String remark;

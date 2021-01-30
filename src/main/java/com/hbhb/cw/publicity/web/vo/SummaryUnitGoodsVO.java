@@ -35,12 +35,15 @@ public class SummaryUnitGoodsVO implements Serializable {
     @Schema(description = "计量单位")
     private String unit;
 
-    @Schema(description = "业务单式申请数量")
-    private Long simplexAmount;
-
-    @Schema(description = "宣传单页申请数量")
-    private Long singleAmount;
+    @Schema(description = "申请数量")
+    private Long amount;
 
     @Schema(description = "业务单式/宣传单页(0/1)")
     private Integer type;
+
+    /**
+     * 审批状态
+     */
+    @Schema(description = "审批状态")
+    private Integer approvedState;
 }

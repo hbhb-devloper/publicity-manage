@@ -15,11 +15,21 @@ import com.hbhb.cw.publicity.model.Picture;
 import com.hbhb.cw.publicity.model.PictureFile;
 import com.hbhb.cw.publicity.model.PictureFlow;
 import com.hbhb.cw.publicity.model.PictureNotice;
-import com.hbhb.cw.publicity.rpc.*;
+import com.hbhb.cw.publicity.rpc.FileApiExp;
+import com.hbhb.cw.publicity.rpc.FlowApiExp;
+import com.hbhb.cw.publicity.rpc.FlowNodeApiExp;
+import com.hbhb.cw.publicity.rpc.FlowNodePropApiExp;
+import com.hbhb.cw.publicity.rpc.FlowRoleUserApiExp;
+import com.hbhb.cw.publicity.rpc.SysUserApiExp;
+import com.hbhb.cw.publicity.rpc.UnitApiExp;
 import com.hbhb.cw.publicity.service.PictureFlowService;
 import com.hbhb.cw.publicity.service.PictureNoticeService;
 import com.hbhb.cw.publicity.service.PictureService;
-import com.hbhb.cw.publicity.web.vo.*;
+import com.hbhb.cw.publicity.web.vo.PictureFileVO;
+import com.hbhb.cw.publicity.web.vo.PictureInfoVO;
+import com.hbhb.cw.publicity.web.vo.PictureInitVO;
+import com.hbhb.cw.publicity.web.vo.PictureReqVO;
+import com.hbhb.cw.publicity.web.vo.PictureResVO;
 import com.hbhb.cw.systemcenter.enums.UnitEnum;
 import com.hbhb.cw.systemcenter.model.SysFile;
 import com.hbhb.cw.systemcenter.model.Unit;
@@ -33,7 +43,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -72,8 +87,10 @@ public class PictureServiceImpl implements PictureService {
 
     @Override
     public PageResult<PictureResVO> getPictureList(PictureReqVO reqVO, Integer pageNum, Integer pageSize) {
+        // 获取所有下属单位
+        List<Integer> unitIds = unitApi.getSubUnit(reqVO.getUnitId());
         PageRequest<PictureResVO> request = DefaultPageRequest.of(pageNum, pageSize);
-        PageResult<PictureResVO> list = pictureMapper.selectPictureListByCond(reqVO, request);
+        PageResult<PictureResVO> list = pictureMapper.selectPictureListByCond(reqVO, unitIds, request);
         List<Integer> userIds = new ArrayList<>();
         Map<Integer, String> unitMapById = unitApi.getUnitMapById();
         list.getList().forEach(item -> userIds.add(item.getUserId()));
@@ -91,6 +108,13 @@ public class PictureServiceImpl implements PictureService {
         Picture picture = pictureMapper.single(id);
         PictureInfoVO info = new PictureInfoVO();
         BeanUtils.copyProperties(picture, info);
+        info.setApplyTime(DateUtil.dateToString(picture.getApplyTime()));
+        // 转换用户信息
+        UserInfo user = userApi.getUserInfoById(picture.getUserId());
+        info.setNickName(user.getNickName());
+        // 转换单位信息
+        Unit unit = unitApi.getUnitInfo(picture.getUnitId());
+        info.setUnitName(unit.getUnitName());
         // 获取文件列表信息
         List<PictureFile> files = fileMapper.createLambdaQuery().andEq(PictureFile::getPictureId, id).select();
         if (files.size() != 0) {
@@ -117,6 +141,7 @@ public class PictureServiceImpl implements PictureService {
         if (picture.getFileId() != null) {
             SysFile file = fileApi.getFileInfo(picture.getFileId());
             info.setFilePath(file.getFilePath());
+            info.setFileName(file.getFileName());
         }
         return info;
     }
@@ -130,7 +155,7 @@ public class PictureServiceImpl implements PictureService {
         BeanUtils.copyProperties(infoVO, picture);
         // 印刷单号 = ”HM +单位简称+四位年份+ 自增序号“
         // 获取增长序号
-        Integer count = pictureMapper.selectPictureNumCountByUnitId(new Date(), infoVO.getUnitId());
+        Integer count = pictureMapper.selectPictureNumCountByUnitId(new Date(), unit.getId());
         String num = String.format("%0" + 4 + "d", (count + 1));
         picture.setPictureNum("HM" + unit.getAbbr() + DateUtil.dateToStringY(new Date()) + num);
         // 印刷单名称 = 单位名称+临时申请+时间（yyyy/mm/dd）
@@ -145,7 +170,7 @@ public class PictureServiceImpl implements PictureService {
         pictureMapper.insert(picture);
         // 保存附件
         if (!isEmpty(infoVO.getFiles())) {
-            List<PictureFile> fileList = setPictureFile(infoVO.getFiles(), userId);
+            List<PictureFile> fileList = setPictureFile(infoVO.getFiles(), userId, picture.getId());
             fileMapper.insertBatch(fileList);
         }
 
@@ -154,10 +179,14 @@ public class PictureServiceImpl implements PictureService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updatePicture(PictureInfoVO infoVO, Integer userId) {
+        Picture single = pictureMapper.single(infoVO.getId());
+        if (!userId.equals(single.getUserId())) {
+            throw new PublicityException(PublicityErrorCode.NO_OPERATION_PERMISSION);
+        }
         // 修改宣传画面
         Picture picture = new Picture();
-        BeanUtils.copyProperties(picture, infoVO);
-        pictureMapper.updateById(picture);
+        BeanUtils.copyProperties(infoVO, picture);
+        pictureMapper.updateTemplateById(picture);
         // 修改保存附件
         if (infoVO.getFiles().size() != 0) {
             List<PictureFileVO> fileVOList = infoVO.getFiles();
@@ -167,13 +196,17 @@ public class PictureServiceImpl implements PictureService {
                     files.add(fileVo);
                 }
             }
-            List<PictureFile> fileList = setPictureFile(files, userId);
+            List<PictureFile> fileList = setPictureFile(files, userId, infoVO.getId());
             fileMapper.insertBatch(fileList);
         }
     }
 
     @Override
-    public void deletePicture(Long id) {
+    public void deletePicture(Long id, Integer userId) {
+        Picture single = pictureMapper.single(id);
+        if (!userId.equals(single.getUserId())) {
+            throw new PublicityException(PublicityErrorCode.NO_OPERATION_PERMISSION);
+        }
         Picture picture = new Picture();
         picture.setId(id);
         picture.setDeleteFlag(false);
@@ -181,7 +214,7 @@ public class PictureServiceImpl implements PictureService {
     }
 
 
-    private List<PictureFile> setPictureFile(List<PictureFileVO> fileVOList, Integer userId) {
+    private List<PictureFile> setPictureFile(List<PictureFileVO> fileVOList, Integer userId, Long pictureId) {
         //获取用户姓名
         UserInfo user = userApi.getUserInfoById(userId);
         List<PictureFile> fileList = new ArrayList<>();
@@ -189,7 +222,7 @@ public class PictureServiceImpl implements PictureService {
                 .createBy(user.getNickName())
                 .createTime(new Date())
                 .fileId(item.getFileId())
-                .pictureId(item.getPictureId())
+                .pictureId(pictureId)
                 .build()));
         return fileList;
     }
@@ -201,7 +234,7 @@ public class PictureServiceImpl implements PictureService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void toApprove(PictureInitVO initVO) {
+    public void toApprove(PictureInitVO initVO, Integer userId) {
         Picture picture = pictureMapper.single(initVO.getPictureId());
         //  1.判断登录用户是否与申请人一致
         UserInfo user = userApi.getUserInfoById(initVO.getUserId());
@@ -219,7 +252,7 @@ public class PictureServiceImpl implements PictureService {
             throw new PublicityException(PublicityErrorCode.LOCK_OF_APPROVAL_ROLE);
         }
         //  4.同步节点属性
-        syncPrintFlow(flowProps, picture.getId(), initVO.getUserId());
+        syncPrintFlow(flowProps, picture.getId(), userId);
         // 得到推送模板
         String inform = flowService.getInform(flowProps.get(0).getFlowNodeId(),
                 FlowNodeNoticeState.DEFAULT_REMINDER.value());
@@ -241,7 +274,7 @@ public class PictureServiceImpl implements PictureService {
         picture.setId(initVO.getPictureId());
         picture.setState(NodeState.APPROVING.value());
         picture.setUpdateBy(initVO.getUserId());
-
+        pictureMapper.updateTemplateById(picture);
     }
 
 
@@ -298,6 +331,7 @@ public class PictureServiceImpl implements PictureService {
                     .isJoin(flowPropVO.getIsJoin())
                     .assigner(flowPropVO.getAssigner())
                     .operation(OperationState.UN_EXECUTED.value())
+                    .createTime(new Date())
                     .build());
         }
         flowService.insertBatch(pictureFlowList);
@@ -314,9 +348,10 @@ public class PictureServiceImpl implements PictureService {
             throw new PublicityException(PublicityErrorCode.EXCEED_LIMIT_FLOW);
         }
         flowList.forEach(flow -> flowMap.put(nodeApi.getNodeNum(flow.getId()), flow.getId()));
-        // 预开发票流程默认为4个节点流程
+        // 画面设计
+        // 画面设计流程默认为4个节点流程
         Long flowId;
-        flowId = flowMap.get(2L);
+        flowId = flowMap.get(3L);
         if (flowId == null) {
             throw new PublicityException(PublicityErrorCode.LACK_OF_FLOW);
         }

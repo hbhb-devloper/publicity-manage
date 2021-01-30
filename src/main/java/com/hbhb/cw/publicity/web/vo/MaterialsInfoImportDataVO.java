@@ -1,6 +1,5 @@
 package com.hbhb.cw.publicity.web.vo;
 
-import com.hbhb.cw.publicity.model.MaterialsInfo;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,5 +18,5 @@ public class MaterialsInfoImportDataVO implements Serializable {
 
     private String id;
 
-    private List<MaterialsInfo> materialsInfo;
+    private List<MaterialsInfoVO> materialsInfo;
 }

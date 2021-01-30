@@ -24,6 +24,10 @@ public class ApplicationNotice implements Serializable {
      */
     private String batchNum;
     /**
+     * 归口单位id
+     */
+    private Integer underUnitId;
+    /**
      * 接收人id
      */
     private Integer receiver;

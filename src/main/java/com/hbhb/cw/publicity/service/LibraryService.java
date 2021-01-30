@@ -1,7 +1,8 @@
 package com.hbhb.cw.publicity.service;
 
-import com.hbhb.cw.publicity.model.Goods;
+import com.hbhb.cw.publicity.web.vo.CheckerVO;
 import com.hbhb.cw.publicity.web.vo.GoodsInfoVO;
+import com.hbhb.cw.publicity.web.vo.LibraryAddVO;
 import com.hbhb.cw.publicity.web.vo.LibraryVO;
 
 import java.util.List;
@@ -15,17 +16,22 @@ public interface LibraryService {
     /**
      * 通过登录用户得到物料产品库树形列表
      */
-    List<LibraryVO> getTreeList(Integer userId);
+    List<LibraryVO> getTreeList(Integer userId,Integer unitId);
 
     /**
      * 新增物料产品
      */
-    void addLibrary(Integer userId, Goods libraryAddVO);
+    void addLibrary(Integer userId, LibraryAddVO cond);
 
     /**
      * 修改名称
      */
-    void updateLibrary(Integer userId, Goods libraryAddVO);
+    void updateLibrary(Integer userId, LibraryAddVO libraryAddVO);
+
+    /**
+     * 批量修改物料审核员
+     */
+    void updateBatchChecker(CheckerVO checkerVO);
 
     /**
      * 通过id得到物料id

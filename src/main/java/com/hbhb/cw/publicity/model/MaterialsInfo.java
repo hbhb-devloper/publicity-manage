@@ -3,6 +3,7 @@ package com.hbhb.cw.publicity.model;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.beetl.sql.annotation.entity.AutoID;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -15,6 +16,7 @@ public class MaterialsInfo implements Serializable {
     /**
      * id
      */
+    @AutoID
     private Long id;
     /**
      * 申请数量
@@ -39,7 +41,7 @@ public class MaterialsInfo implements Serializable {
     /**
      * 分配地方（地址）
      */
-    private Integer address;
+    private String address;
     /**
      * 接收人
      */
@@ -55,7 +57,7 @@ public class MaterialsInfo implements Serializable {
     /**
      * 备注
      */
-    private String remake;
+    private String remark;
     /**
      * 物料名称
      */

@@ -2,12 +2,17 @@ package com.hbhb.cw.publicity.service.impl;
 
 import com.hbhb.core.utils.DateUtil;
 import com.hbhb.cw.publicity.mapper.ApplicationDetailMapper;
+import com.hbhb.cw.publicity.mapper.ApplicationFlowMapper;
 import com.hbhb.cw.publicity.mapper.ApplicationMapper;
+import com.hbhb.cw.publicity.mapper.GoodsFileMapper;
 import com.hbhb.cw.publicity.mapper.GoodsMapper;
 import com.hbhb.cw.publicity.model.Application;
 import com.hbhb.cw.publicity.model.ApplicationDetail;
+import com.hbhb.cw.publicity.model.ApplicationFlow;
 import com.hbhb.cw.publicity.model.Goods;
+import com.hbhb.cw.publicity.model.GoodsFile;
 import com.hbhb.cw.publicity.model.GoodsSetting;
+import com.hbhb.cw.publicity.rpc.FileApiExp;
 import com.hbhb.cw.publicity.service.ApplicationService;
 import com.hbhb.cw.publicity.service.GoodsSettingService;
 import com.hbhb.cw.publicity.web.vo.ApplicationVO;
@@ -15,6 +20,8 @@ import com.hbhb.cw.publicity.web.vo.GoodsCondAppVO;
 import com.hbhb.cw.publicity.web.vo.GoodsCondVO;
 import com.hbhb.cw.publicity.web.vo.GoodsResVO;
 import com.hbhb.cw.publicity.web.vo.GoodsVO;
+import com.hbhb.cw.publicity.web.vo.PublicityPictureVO;
+import com.hbhb.cw.systemcenter.model.SysFile;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -25,6 +32,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 
@@ -42,16 +51,22 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Resource
     private GoodsMapper goodsMapper;
     @Resource
+    private GoodsFileMapper goodsFileMapper;
+    @Resource
     private ApplicationDetailMapper applicationDetailMapper;
+    @Resource
+    private ApplicationFlowMapper applicationFlowMapper;
+    @Resource
+    private FileApiExp fileApi;
     @Value("${mail.enable}")
     private Boolean mailEnable;
 
     @Override
     public GoodsResVO getList(GoodsCondVO goodsCondVO) {
-//        if (goodsCondVO.getHallId() == null) {
-//            // 报异常
-//            throw new GoodsException(GoodsErrorCode.NOT_SERVICE_HALL);
-//        }
+        if (goodsCondVO.getHallId() == null) {
+            // 报异常
+            return new GoodsResVO();
+        }
         GoodsSetting goodsSetting = null;
         if (goodsCondVO.getTime() != null && goodsCondVO.getGoodsIndex() == null) {
             return new GoodsResVO();
@@ -71,8 +86,9 @@ public class ApplicationServiceImpl implements ApplicationService {
                     DateUtil.dateToString(DateUtil.stringToDate(goodsSetting.getDeadline()), "yyyyMM")
                             + goodsCondVO.getGoodsIndex());
         }
+        String contents = goodsSetting.getContents();
         // 通过营业厅得到该营业厅下该时间的申请详情
-        List<GoodsVO> goods = goodsMapper.selectByCond(goodsCondVO);
+        List<GoodsVO> goods = applicationMapper.selectByCond(goodsCondVO);
         // 得到所有产品
         List<GoodsVO> list = goodsMapper.selectGoodsList();
         for (GoodsVO goodsVO : list) {
@@ -88,25 +104,65 @@ public class ApplicationServiceImpl implements ApplicationService {
                 list.set(i, map.get(list.get(i).getGoodsId()));
             }
         }
+        // 得到所有货物的id，通过id得到所有货物的图片
+        List<Long> goodsIds = new ArrayList<>();
+        for (GoodsVO good : list) {
+            goodsIds.add(good.getGoodsId());
+        }
+        // 获取所有图片
+        List<GoodsFile> picList = goodsFileMapper.createLambdaQuery()
+                .andIn(GoodsFile::getGoodsId, goodsIds).select();
+        List<PublicityPictureVO> fileList = new ArrayList<>();
+        if (picList.size() != 0) {
+            List<Integer> fileIds = new ArrayList<>();
+            picList.forEach(item -> fileIds.add(Math.toIntExact(item.getFileId())));
+            List<SysFile> fileInfoList = fileApi.getFileInfoBatch(fileIds);
+            // fileId => sysFile
+            Map<Long, SysFile> fileInfoMap = fileInfoList.stream()
+                    .collect(Collectors.toMap(SysFile::getId, Function.identity()));
+            for (GoodsFile goodsFile : picList) {
+                fileList.add(PublicityPictureVO.builder()
+                        .goodsId(goodsFile.getGoodsId())
+                        .fileName(fileInfoMap.get(goodsFile.getFileId()).getFileName())
+                        .filePath(fileInfoMap.get(goodsFile.getFileId()).getFilePath())
+                        .fileSize(fileInfoMap.get(goodsFile.getFileId()).getFileSize())
+                        .author(goodsFile.getAuthor())
+                        .id(goodsFile.getFileId())
+                        .build());
+            }
+        }
+        // goodsId => pic
+        Map<Long, PublicityPictureVO> picMap = fileList.stream()
+                .collect(Collectors.toMap(PublicityPictureVO::getGoodsId, Function.identity()));
+        for (GoodsVO goodsVO : list) {
+            goodsVO.setPic(picMap.get(goodsVO.getGoodsId()));
+        }
         // 申请数量所需条件（置灰或者能使用）
         // 0.通过时间对比截止时间得到为
         // 1.得到此刻时间，通过截止时间，判断为几月的第几次。如何0的结果与1的结果不符则直接置灰。
         GoodsSetting setting = goodsSettingService.getSetByDate(DateUtil.dateToString(new Date()));
         if (setting == null || !goodsSetting.getId().equals(setting.getId())) {
-            return new GoodsResVO(list, false);
+            return new GoodsResVO(list, false, contents);
         }
         // 2.得到第几次，判断这次是否提前结束。
         else if (setting.getIsEnd() != null) {
-            return new GoodsResVO(list, false);
+            return new GoodsResVO(list, false, contents);
         }
+        String batchNum = DateUtil.dateToString(DateUtil.stringToDate(setting.getDeadline()), "yyyyMM")
+                + goodsSetting.getGoodsIndex();
         // 3.判断本月此次下该分公司是否已保存
-        List<Application> applications = applicationMapper.selectApplicationByUnitId(goodsCondVO.getUnitId(),
-                goodsCondVO.getHallId(),
-                DateUtil.dateToString(DateUtil.stringToDate(setting.getDeadline()), "yyyyMM") + setting.getGoodsIndex());
+        List<Application> applications = applicationMapper.selectApplicationByUnitId(goodsCondVO.getUnitId(), batchNum);
         if (applications != null && applications.size() != 0 && applications.get(0).getEditable()) {
-            return new GoodsResVO(list, false);
+            return new GoodsResVO(list, false, contents);
         }
-        return new GoodsResVO(list, true);
+        // 4.判断是否发起审批
+        List<ApplicationFlow> flowList = applicationFlowMapper.createLambdaQuery()
+                .andEq(ApplicationFlow::getBatchNum, batchNum)
+                .select();
+        if (flowList != null && flowList.size() != 0) {
+            return new GoodsResVO(list, false, contents);
+        }
+        return new GoodsResVO(list, true, contents);
     }
 
     @Override

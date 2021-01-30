@@ -2,22 +2,27 @@
 package com.hbhb.cw.publicity.web.controller;
 
 import com.alibaba.excel.EasyExcel;
+import com.hbhb.api.core.bean.FileVO;
 import com.hbhb.api.core.bean.SelectVO;
 import com.hbhb.core.utils.ExcelUtil;
 import com.hbhb.cw.publicity.enums.PublicityErrorCode;
 import com.hbhb.cw.publicity.exception.PublicityException;
-import com.hbhb.cw.publicity.model.PrintMaterials;
 import com.hbhb.cw.publicity.rpc.FileApiExp;
 import com.hbhb.cw.publicity.service.PrintService;
 import com.hbhb.cw.publicity.service.listener.PrintListener;
-import com.hbhb.cw.publicity.web.vo.*;
+import com.hbhb.cw.publicity.web.vo.PrintImportVO;
+import com.hbhb.cw.publicity.web.vo.PrintInfoVO;
+import com.hbhb.cw.publicity.web.vo.PrintInitVO;
+import com.hbhb.cw.publicity.web.vo.PrintMaterialsVO;
+import com.hbhb.cw.publicity.web.vo.PrintReqVO;
+import com.hbhb.cw.publicity.web.vo.PrintResVO;
 import com.hbhb.cw.systemcenter.enums.FileType;
-import com.hbhb.cw.systemcenter.vo.FileVO;
 import com.hbhb.web.annotation.UserId;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
+import org.beetl.sql.core.page.DefaultPageResult;
 import org.beetl.sql.core.page.PageResult;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -27,7 +32,6 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -56,10 +60,12 @@ public class PrintController {
     public PageResult<PrintResVO> getPrintList(
             @Parameter(description = "页码，默认为1") @RequestParam(required = false) Integer pageNum,
             @Parameter(description = "每页数量，默认为10") @RequestParam(required = false) Integer pageSize,
-            @Parameter(description = "查询参数") PrintReqVO reqVO,
-            @Parameter(hidden = true) @UserId Integer userId) {
+            @Parameter(description = "查询参数") PrintReqVO reqVO) {
         pageNum = pageNum == null ? 1 : pageNum;
         pageSize = pageSize == null ? 10 : pageSize;
+        if (reqVO.getUnitId() == null) {
+            return new DefaultPageResult<>();
+        }
         return printService.getPrintList(reqVO, pageNum, pageSize);
     }
 
@@ -72,8 +78,8 @@ public class PrintController {
 
     @Operation(summary = "删除印刷品")
     @DeleteMapping("/{id}")
-    public void deletePrint(@PathVariable Long id) {
-        printService.deletePrint(id);
+    public void deletePrint(@PathVariable Long id, @Parameter(hidden = true) @UserId Integer userId) {
+        printService.deletePrint(id, userId);
     }
 
     @Operation(summary = "修改印刷品")
@@ -105,6 +111,9 @@ public class PrintController {
     @PostMapping(value = "/import", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public String printImport(@RequestPart(required = false, value = "file") MultipartFile file,
                               @Parameter(description = "类型") Integer type) {
+
+        String fileName = file.getOriginalFilename();
+        printService.judgeFileName(fileName);
         if (isEmpty(type)) {
             throw new PublicityException(PublicityErrorCode.IMPORT_DATA_TYPE_ERROR);
         }
@@ -114,7 +123,7 @@ public class PrintController {
         try {
             EasyExcel.read(file.getInputStream(), PrintImportVO.class,
                     new PrintListener(printService, types)).sheet().doRead();
-        } catch (IOException | NumberFormatException | NullPointerException e) {
+        } catch (Exception e) {
             log.error(e.getMessage(), e);
             throw new PublicityException(PublicityErrorCode.INPUT_DATA_ERROR);
         }
@@ -150,13 +159,13 @@ public class PrintController {
 
     @Operation(summary = "获取excel导入数据")
     @GetMapping("/materials")
-    List<PrintMaterials> getMaterialsList(@Parameter(description = "id") String uuid) {
+    List<PrintMaterialsVO> getMaterialsList(@Parameter(description = "id") String uuid) {
         return printService.getPrintMaterialsList(uuid);
     }
 
     @Operation(summary = "删除导入数据")
-    @DeleteMapping("/materials")
-    public void deleteMaterials(Long printId) {
+    @DeleteMapping("/materials/{printId}")
+    public void deleteMaterials(@PathVariable("printId") Long printId) {
         printService.deletePrintMaterials(printId);
     }
 

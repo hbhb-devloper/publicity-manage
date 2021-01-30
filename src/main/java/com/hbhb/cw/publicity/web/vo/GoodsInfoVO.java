@@ -152,4 +152,7 @@ public class GoodsInfoVO implements Serializable {
 
     @Schema(description = "true为列别/false为物料")
     private Boolean mold;
+
+    @Schema(description = "图片")
+    private PublicityPictureVO file;
 }

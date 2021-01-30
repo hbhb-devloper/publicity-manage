@@ -24,6 +24,10 @@ public class ApplicationFlow implements Serializable {
      */
     private String batchNum;
     /**
+     * 单位
+     */
+    private Integer unitId;
+    /**
      * 流程节点id
      */
     private String flowNodeId;

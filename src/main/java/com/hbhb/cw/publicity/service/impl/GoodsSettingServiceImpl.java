@@ -3,7 +3,9 @@ package com.hbhb.cw.publicity.service.impl;
 import com.hbhb.core.utils.DateUtil;
 import com.hbhb.cw.publicity.enums.PublicityErrorCode;
 import com.hbhb.cw.publicity.exception.PublicityException;
+import com.hbhb.cw.publicity.mapper.ApplicationMapper;
 import com.hbhb.cw.publicity.mapper.GoodsSettingMapper;
+import com.hbhb.cw.publicity.model.Application;
 import com.hbhb.cw.publicity.model.GoodsSetting;
 import com.hbhb.cw.publicity.service.GoodsSettingService;
 import com.hbhb.cw.publicity.web.vo.GoodsSettingResVO;
@@ -32,13 +34,19 @@ public class GoodsSettingServiceImpl implements GoodsSettingService {
 
     @Resource
     private GoodsSettingMapper goodsSettingMapper;
+    @Resource
+    private ApplicationMapper applicationMapper;
 
     @Override
     public List<GoodsSetting> getList() {
         // 得到当前月份
         String time = DateUtil.formatDate(new Date(), "yyyy-MM");
         // 通过月份得到该产品当月的设置
-        return goodsSettingMapper.selectByDate(time);
+        List<GoodsSetting> goodsSettings = goodsSettingMapper.selectByDate(time);
+        if (goodsSettings==null||goodsSettings.size()==0){
+            return new ArrayList<>();
+        }
+        return goodsSettings;
     }
 
     @Override
@@ -57,7 +65,6 @@ public class GoodsSettingServiceImpl implements GoodsSettingService {
                 .delete();
         // 批量新增物料库相关设定
         goodsSettingMapper.insertBatch(goodsSettings);
-        System.out.println("结束");
     }
 
     @Override
@@ -119,7 +126,7 @@ public class GoodsSettingServiceImpl implements GoodsSettingService {
             throw new PublicityException(PublicityErrorCode.NOT_NUMBER_IN_MONTH);
         }
         List<GoodsSetting> goodsSetting = goodsSettingMapper.createLambdaQuery()
-                .andLike(GoodsSetting::getDeadline, DateUtil.dateToString(DateUtil.stringToDate(time),"yyyy-MM")+"%")
+                .andLike(GoodsSetting::getDeadline, time+"%")
                 .andEq(GoodsSetting::getGoodsIndex, goodsIndex)
                 .select();
         if (goodsSetting!=null&&goodsSetting.size()!=0){
@@ -155,5 +162,18 @@ public class GoodsSettingServiceImpl implements GoodsSettingService {
             goodsSetting.setDeadline(DateUtil.dateToString(date2));
         }
         goodsSettingMapper.insertBatch(goodsSettings);
+    }
+
+    @Override
+    public void moveGoodsSetting(Integer index) {
+        // 得到本月的此次是否有审批、
+        String month = DateUtil.getCurrentMonth();
+        String batchNum = month + index;
+        List<Application> applicationList = applicationMapper.createLambdaQuery()
+                .andEq(Application::getBatchNum, batchNum)
+                .select();
+        if (applicationList!=null&&applicationList.size()!=0){
+            throw new PublicityException(PublicityErrorCode.ALREADY_LAUNCH_APPLY);
+        }
     }
 }

@@ -29,6 +29,12 @@ public enum PublicityErrorCode {
     INPUT_DATA_ERROR("80012", "input.data.error"),
     // 导入类型错误
     IMPORT_DATA_TYPE_ERROR("80013", "import.data.type.error"),
+    // 非申请人无权限进行操作
+    NO_OPERATION_PERMISSION("80014", "no.operation.permission"),
+    // 导入数据不可以为空
+    IMPORT_DATA_NULL_ERROR("80015", "import.data.nul.error"),
+    //模板错误
+    IMPORT_DATE_TEMPLATE_ERROR("80016", "import.date.template.error"),
 
 
     // 无营业厅!
@@ -52,7 +58,9 @@ public enum PublicityErrorCode {
     // 本月已无审批次数
     NOT_NUMBER_IN_MONTH("84009","not.number.in.month"),
     // 无法在禁用的类别中操作
-    DO_NOT_OPERATE("84010","do.mot.operate")
+    DO_NOT_OPERATE("84010","do.mot.operate"),
+    // 本月已无审批次数
+    ALREADY_LAUNCH_APPLY("84011","already.launch.apply"),
     ;
 
 

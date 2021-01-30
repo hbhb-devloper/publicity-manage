@@ -47,4 +47,9 @@ public interface GoodsSettingService {
      * 每个月月初创建相关设定
      */
     void addNextMonthSetting();
+
+    /**
+     * 判断是否能删除相关设定
+     */
+    void moveGoodsSetting(Integer index);
 }

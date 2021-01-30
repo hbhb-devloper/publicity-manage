@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.beetl.sql.annotation.entity.AutoID;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -20,6 +21,7 @@ public class PrintMaterials implements Serializable {
     /**
      * id
      */
+    @AutoID
     private Long id;
     /**
      * 申请数量
@@ -48,7 +50,7 @@ public class PrintMaterials implements Serializable {
     /**
      * 是否加盖合同分公司印章
      */
-    private Integer isSeal;
+    private String isSeal;
     /**
      * 接收人/电话
      */
@@ -56,7 +58,7 @@ public class PrintMaterials implements Serializable {
     /**
      * 是否有合同编号
      */
-    private Integer isNum;
+    private String isNum;
     /**
      * 需送达日期
      */

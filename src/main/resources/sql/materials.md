@@ -15,64 +15,76 @@ where  m.id = #{id}
 selectMaterialsListByCond
 ====
 ```sql
-select id           as id,
+select 
+    -- @pageTag(){
+       id           as id,
        unit_id        as unitId,
+       user_id        as userId,
+       materials_num  as materialsNum,
        materials_name as materialsName,
        apply_time     as applyTime,
        wide_band      as wideBand,
        predict_amount as predictAmount,
        producers      as producers,
        state          as state
+    -- @}
        from materials
     -- @where(){
-        -- @if(!isEmpty(cond.applyTime)){
-          apply_time = concat('%', #{cond.applyTime}, '%')
+        -- @if(isNotEmpty(cond.applyTime)){
+          apply_time like concat('%', #{cond.applyTime}, '%')
         -- @}
-        -- @if(!isEmpty(cond.state)){
+        -- @if(isNotEmpty(cond.state)){
           and state = #{cond.state}
         -- @}
-        -- @if(!isEmpty(cond.materialsNum)){
+        -- @if(isNotEmpty(cond.materialsNum)){
           and materials_num  =#{cond.materialsNum}
         -- @}
-        -- @if(!isEmpty(cond.materialsName)){
+        -- @if(isNotEmpty(cond.materialsName)){
           and materials_name = #{materialsName}
         -- @}
+        -- @if(isNotEmpty(list)){
+           and unit_id in (#{join(list)})
+        -- @}
+           and delete_flag =1
+    -- @}
+    -- @pageIgnoreTag(){
+        order by  apply_time desc 
     -- @}
 ```
 
 selectMaterialsBudgetByUnitId
 ===
 ```sql
-select t1.*, t2.declaration, t3.amountPaid
-    from (
-             select sum(predict_amount)          as useAmount,
-                    m.unit_id                    as unitId,
-                    mb.budget                    as budget,
-                    budget - sum(predict_amount) as balance,
-                    sum(predict_amount)/budget   as proportion
-             from materials m
-                      left join materials_budget mb on m.unit_id = mb.unit_id
-             where state in (10, 20, 31)
-         ) t1
-             left join (
-        select sum(predict_amount) as declaration,
-               unit_id
-        from materials
-        where state in (10, 20)
-    ) t2 on t1.unitId = t2.unit_id
-             left join (
-        select sum(predict_amount) as amountPaid,
-               unit_id
-        from materials
-        where state = 31
-    ) t3 on t1.unitId = t3.unit_id
-where unitId = #{unitId}
+select mb.unit_id                                                                                        as unitId,
+       budget                                                                                            as budget,
+       IFNULL(predict_amount, 0)                                                                         as predictAmount,
+       IFNULL(sum(case
+                      when state in (10, 20, 31)
+                          and delete_flag = 1 then predict_amount end),0)                                as useAmount,
+       IFNULL(sum(case
+                      when state in (10, 20)
+                          and delete_flag = 1 then predict_amount end), 0)                               as declaration,
+       IFNULL(sum(case
+                      when state in (31)
+                          and delete_flag = 1 then predict_amount end), 0)                               as amountPaid,
+       ROUND(budget -
+             IFNULL(sum(case
+                            when state in (10, 20, 31)
+                                and delete_flag = 1 then predict_amount end), 0), 4)                     as balance,
+       ROUND(
+               IFNULL(sum(case
+                              when state in (10, 20, 31)
+                                  and delete_flag = 1 then predict_amount end) / budget, 0.00), 4) * 100 as proportion
+from materials_budget mb
+         left join materials m on mb.unit_id = m.unit_id
+where budget_year = year(now()) and mb.unit_id = #{unitId}
+group by mb.unit_id
 ```
 
-selectMaterialsNumCountByUnitId
+selectPictureNumCountByUnitId
 ===
 ```sql
-select IFNULL(max(right(print_num, 4)),0)
+select IFNULL(max(right(materials_num, 4)),0)
 from materials
 where year(create_time) = #{createTime}
   and delete_flag = 1

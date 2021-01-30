@@ -61,6 +61,6 @@ public class MaterialsImportVO implements Serializable {
 
     @Schema(description = "备注")
     @ExcelProperty(index = 10)
-    private String remake;
+    private String remark;
 
 }

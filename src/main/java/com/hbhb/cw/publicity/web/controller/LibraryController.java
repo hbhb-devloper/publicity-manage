@@ -1,8 +1,9 @@
 package com.hbhb.cw.publicity.web.controller;
 
-import com.hbhb.cw.publicity.model.Goods;
 import com.hbhb.cw.publicity.service.LibraryService;
+import com.hbhb.cw.publicity.web.vo.CheckerVO;
 import com.hbhb.cw.publicity.web.vo.GoodsInfoVO;
+import com.hbhb.cw.publicity.web.vo.LibraryAddVO;
 import com.hbhb.cw.publicity.web.vo.LibraryVO;
 import com.hbhb.web.annotation.UserId;
 
@@ -39,20 +40,27 @@ public class LibraryController {
 
     @GetMapping("/tree")
     @Operation(summary = "物料活动产品列表")
-    public List<LibraryVO> getTreeList(@Parameter(hidden = true) @UserId Integer userId) {
-        return libraryService.getTreeList(userId);
+    public List<LibraryVO> getTreeList(@Parameter(hidden = true) @UserId Integer userId,Integer unitId) {
+        return libraryService.getTreeList(userId,unitId);
     }
 
     @PostMapping("/add")
     @Operation(summary = "新增物料活动产品列表")
-    public void addLibrary(@Parameter(hidden = true) @UserId Integer userId, @RequestBody Goods libraryAddVO) {
+    public void addLibrary(@Parameter(hidden = true) @UserId Integer userId, @RequestBody LibraryAddVO libraryAddVO) {
         libraryService.addLibrary(userId, libraryAddVO);
     }
 
     @PutMapping("")
     @Operation(summary = "修改活动或产品")
-    public void library(@Parameter(hidden = true) @UserId Integer userId, @RequestBody Goods libraryAddVO) {
+    public void library(@Parameter(hidden = true) @UserId Integer userId, @RequestBody LibraryAddVO libraryAddVO) {
         libraryService.updateLibrary(userId, libraryAddVO);
+    }
+
+
+    @PutMapping("/batch")
+    @Operation(summary = "批量修改物料审核员")
+    public void updateBatchChecker(@RequestBody CheckerVO checkerVO) {
+        libraryService.updateBatchChecker(checkerVO);
     }
 
     @GetMapping("/{id}")
