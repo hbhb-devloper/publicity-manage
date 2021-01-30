@@ -1,6 +1,7 @@
 package com.hbhb.cw.publicity.web.controller;
 
 import com.hbhb.cw.publicity.service.MaterialsNoticeService;
+import com.hbhb.cw.publicity.service.MaterialsService;
 import com.hbhb.cw.publicity.web.vo.NoticeReqVO;
 import com.hbhb.cw.publicity.web.vo.NoticeResVO;
 import com.hbhb.cw.publicity.web.vo.NoticeVO;
@@ -30,6 +31,8 @@ public class MaterialsNoticeController implements MaterialsApi {
 
     @Resource
     private MaterialsNoticeService noticeService;
+    @Resource
+    private MaterialsService materialsService;
 
     @Operation(summary = "统计待办提醒数量")
     @Override
@@ -60,5 +63,11 @@ public class MaterialsNoticeController implements MaterialsApi {
     @PutMapping("/{id}")
     public void changeNoticeState(@Parameter(description = "id") @PathVariable Long id) {
         noticeService.changeNoticeState(id);
+    }
+
+    @Operation(summary = "定时任务新增每年预算")
+    @Override
+    public void saveBudget() {
+        materialsService.saveMaterialsBudget();
     }
 }

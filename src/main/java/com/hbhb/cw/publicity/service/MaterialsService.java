@@ -147,4 +147,9 @@ public interface MaterialsService {
      * @return 列表
      */
     List<MaterialsExportVO> export(MaterialsReqVO reqVO);
+
+    /**
+     * 添加每年预算金额
+     */
+    void saveMaterialsBudget();
 }

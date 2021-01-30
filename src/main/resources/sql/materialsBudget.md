@@ -14,6 +14,7 @@ select mb.id                                                                    
                                 and delete_flag = 1 then predict_amount end) / budget, 0.00), 4) * 100 as proportion
 from materials_budget mb
          left join materials m on mb.unit_id = m.unit_id
+  where budget_year = year(now())  
     -- @pageIgnoreTag(){
     group by mb.unit_id
     -- @}

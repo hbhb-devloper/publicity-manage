@@ -54,6 +54,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
+import java.time.Year;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -415,6 +416,21 @@ public class MaterialsServiceImpl implements MaterialsService {
                 .stream()
                 .map(vo -> BeanConverter.convert(vo, MaterialsExportVO.class))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public void saveMaterialsBudget() {
+        List<Integer> allUnitId = unitApi.getAllUnitId();
+        List<MaterialsBudget> materialsBudgets = new ArrayList<>();
+        for (Integer item : allUnitId) {
+            MaterialsBudget build = MaterialsBudget.builder()
+                    .budget(BigDecimal.ZERO)
+                    .unitId(item)
+                    .budgetYear(Year.now())
+                    .build();
+            materialsBudgets.add(build);
+        }
+        budgetMapper.insertBatch(materialsBudgets);
     }
 
     private List<MaterialsFile> setMaterialsFile(List<MaterialsFileVO> fileVOList, Integer userId,
