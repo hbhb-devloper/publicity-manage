@@ -496,12 +496,20 @@ public class MaterialsServiceImpl implements MaterialsService {
         Materials materials = materialsMapper.single(id);
         BigDecimal amount = materials.getPredictAmount();
         // 物料制作流程共4个节点，若预估金额对比第二、第三节点 点设置金额阀值条件为真则返回需审批节点数
-        int num = 1;
-        if (isEnableCond(amount, flowProps.get(2))) {
+        int num = 0;
+        FlowNodePropVO oneNode = flowProps.get(1);
+        FlowNodePropVO twoNode = flowProps.get(2);
+        FlowNodePropVO threeNode = flowProps.get(3);
+        if (isEnableCond(amount, oneNode)) {
+            num = 1;
+        }
+        if (isEnableCond(amount, twoNode)) {
             num = 2;
-        } else if (isEnableCond(amount, flowProps.get(3))) {
+        }
+        if (isEnableCond(amount, threeNode)) {
             num = 3;
         }
+
         for (int i = 0; i <= num; i++) {
             FlowNodePropVO flowPropVO = flowProps.get(i);
             materialsFlowList.add(MaterialsFlow.builder()
