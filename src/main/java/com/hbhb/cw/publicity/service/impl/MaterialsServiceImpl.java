@@ -501,10 +501,11 @@ public class MaterialsServiceImpl implements MaterialsService {
         boolean twoEnableCond = isEnableCond(amount, twoNode);
         FlowNodePropVO threeNode = flowProps.get(2);
         boolean threeEnableCond = isEnableCond(amount, threeNode);
-        if (threeEnableCond) {
-            num = 3;
-        } else if (twoEnableCond) {
+        if (twoEnableCond) {
             num = 2;
+        }
+        if (twoEnableCond && threeEnableCond) {
+            num = 3;
         }
         for (int i = 0; i <= num; i++) {
             FlowNodePropVO flowPropVO = flowProps.get(i);
