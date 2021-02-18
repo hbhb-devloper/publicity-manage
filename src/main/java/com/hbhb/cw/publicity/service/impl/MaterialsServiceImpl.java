@@ -497,10 +497,10 @@ public class MaterialsServiceImpl implements MaterialsService {
         BigDecimal amount = materials.getPredictAmount();
         // 物料制作流程共4个节点，若预估金额对比第二、第三节点 点设置金额阀值条件为真则返回需审批节点数
         int num = 1;
-        for (int a = 0; a < flowProps.size(); a++) {
-            if (isEnableCond(amount, flowProps.get(a))) {
-                num = a + 1;
-            }
+        if (isEnableCond(amount, flowProps.get(2))) {
+            num = 2;
+        } else if (isEnableCond(amount, flowProps.get(3))) {
+            num = 3;
         }
         for (int i = 0; i <= num; i++) {
             FlowNodePropVO flowPropVO = flowProps.get(i);
