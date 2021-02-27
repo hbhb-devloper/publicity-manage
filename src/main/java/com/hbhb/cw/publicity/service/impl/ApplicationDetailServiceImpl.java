@@ -315,6 +315,9 @@ public class ApplicationDetailServiceImpl implements ApplicationDetailService {
         Date date = new Date();
         // 通过此刻时间与截止时间对比，判断为第几月第几次
         GoodsSetting setting = goodsSettingService.getSetByDate(DateUtil.dateToString(date));
+        if (setting == null) {
+            throw new PublicityException(PublicityErrorCode.NOT_NUMBER_IN_MONTH);
+        }
         String batchNum = DateUtil.dateToString(DateUtil.stringToDate(setting.getDeadline()), "yyyyMM") + setting.getGoodsIndex();
         Map<Integer, String> unitMap = unitApiExp.getUnitMapById();
         // 通过时间 ，每次获取其列表
