@@ -37,6 +37,10 @@ public class PrintFlow implements Serializable {
      */
     private Integer userId;
     /**
+     * 角色范围
+     */
+    private Integer unitId;
+    /**
      * 角色详情
      */
     private String roleDesc;

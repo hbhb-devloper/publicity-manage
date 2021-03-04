@@ -451,8 +451,12 @@ public class PrintFlowServiceImpl implements PrintFlowService {
                 .andEq(PrintFlow::getFlowNodeId, flowNodeId)
                 .single();
         // 查询该节点的流程角色所对应的用户
+        if (flow.getUnitId() != 0 && flow.getUnitId() != null) {
+            return roleUserApi.getUserByRoleAndUnit(flow.getUnitId(), flow.getFlowRoleId());
+        }
         List<Integer> userIds = roleUserApi.getUserIdByRoleId(flow.getFlowRoleId());
         Map<Integer, String> userMap = userApi.getUserMapById(userIds);
+
         return userMap.entrySet().stream().map(item ->
                 SelectVO.builder()
                         .id(Long.valueOf(item.getKey()))

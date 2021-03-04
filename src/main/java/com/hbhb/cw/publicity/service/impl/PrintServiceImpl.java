@@ -441,6 +441,7 @@ public class PrintServiceImpl implements PrintService {
                     .flowNodeId(flowPropVO.getFlowNodeId())
                     .printId(id)
                     .userId(flowPropVO.getUserId())
+                    .unitId(flowPropVO.getUnitId())
                     .flowRoleId(flowPropVO.getFlowRoleId())
                     .roleDesc(flowPropVO.getRoleDesc())
                     .controlAccess(flowPropVO.getControlAccess())
