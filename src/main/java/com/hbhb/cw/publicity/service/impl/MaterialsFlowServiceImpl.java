@@ -120,10 +120,7 @@ class MaterialsFlowServiceImpl implements MaterialsFlowService {
         Integer flowState = null;
 
         // 更新当前节点之前的所有节点提醒状态为已读
-        noticeMapper.updateTemplateById(MaterialsNotice.builder()
-                .id(materialsId)
-                .state(1)
-                .build());
+        noticeMapper.updateNoticeState(materialsId, 1);
 
         // 同意
         if (FlowOperationType.AGREE.value().equals(approveVO.getOperation())) {

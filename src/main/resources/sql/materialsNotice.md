@@ -32,3 +32,8 @@ selectPageByCond
         order by mn.create_time desc, mn.state
     -- @}
 ```
+updateNoticeState
+===
+```sql
+update  materials_notice set state = #{state} where materials_id =#{materialsId}
+```
